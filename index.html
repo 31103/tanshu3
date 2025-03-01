@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短期滞在手術等基本料３判定プログラム</title>
+    <style>
+        /* 基本スタイル */
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        /* 説明セクション */
+        .info-section {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ファイル入力セクション */
+        .input-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .custom-file-input {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .custom-file-input:hover {
+            background-color: #2980b9;
+        }
+
+        .file-input-label {
+            margin-left: 10px;
+            color: #666;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* ボタン */
+        button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* 結果セクション */
+        .results-section {
+            margin-top: 20px;
+        }
+
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* フッター */
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        /* レスポンシブデザイン */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>短期滞在手術等基本料３判定プログラム</h1>
+
+        <div class="info-section">
+            <h2>プログラムについて</h2>
+            <p>このプログラムは、入院EF統合ファイルを読み込み、短期滞在手術等基本料３に該当する症例を抽出します。</p>
+            <p>複数月のファイルを一度に処理することが可能です。同一患者IDの場合、退院情報が更新された場合は最新の情報が使用されます。</p>
+        </div>
+
+        <div class="input-section">
+            <h2>ファイル選択</h2>
+            <div class="file-input-wrapper">
+                <label for="fileInput" class="custom-file-input">ファイルを選択</label>
+                <input type="file" id="fileInput" multiple accept=".txt">
+                <span class="file-input-label">ファイルが選択されていません</span>
+            </div>
+            <button id="executeButton" disabled>実行</button>
+        </div>
+
+        <div class="results-section">
+            <h2>処理結果</h2>
+            <!-- 処理結果が表示されるエリア -->
+            <pre id="resultArea">結果はここに表示されます。</pre>
+        </div>
+
+        <footer>
+            <p>短期滞在手術等基本料３判定プログラム ©2025</p>
+        </footer>
+    </div>
+
+    <!-- スクリプト読み込み -->
+    <script src="common.js"></script>
+    <script src="main.js"></script>
+
+    <!-- ファイル選択UI向けのスクリプト -->
+    <script>
+        // ファイル選択UIの改善
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('fileInput');
+            const fileLabel = document.querySelector('.file-input-label');
+
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files.length > 0) {
+                    if (fileInput.files.length === 1) {
+                        fileLabel.textContent = `1 ファイルが選択されました: ${fileInput.files[0].name}`;
+                    } else {
+                        fileLabel.textContent = `${fileInput.files.length} ファイルが選択されました`;
+                    }
+                    document.getElementById('executeButton').disabled = false;
+                } else {
+                    fileLabel.textContent = 'ファイルが選択されていません';
+                    document.getElementById('executeButton').disabled = true;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
