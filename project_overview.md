@@ -1,4 +1,4 @@
-# プログラムの仕様
+# Project Overview
 
 ## 前提条件
 
