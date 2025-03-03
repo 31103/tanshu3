@@ -1,15 +1,34 @@
 /**
- * 短期滞在手術等基本料３判定プログラム - 共通関数
- * このファイルには、main.jsとtest.jsで共通して使用される関数を定義しています。
+ * 短期滞在手術等基本料３判定プログラム - 共通関数（ブラウザ環境用）
+ * このファイルには、ブラウザ環境で使用される共通関数を定義しています。
  * 入院EF統合ファイルを解析し、短期滞在手術等基本料３に該当する症例を抽出します。
  */
 
 /**
+ * 症例データの型定義
+ */
+interface CaseData {
+    id: string;
+    admission: string;
+    discharge: string;
+    procedures: string[];
+}
+
+/**
+ * EFファイルから抽出した生データの型定義
+ */
+interface RawCaseData {
+    dataId: string;
+    discharge: string;
+    admission: string;
+    procedure: string;
+}
+
+/**
  * 対象手術等のコード一覧
  * 短期滞在手術等基本料３の対象となる診療行為コードのリスト
- * @type {string[]}
  */
-const targetProcedures = [
+const targetProcedures: string[] = [
     "160218510", "160218610", "160183110", "160119710", "160180410",
     "160098110", "150351910", "150011310", "150294810", "150020810",
     "150021010", "150021210", "150041010", "150314110", "150273810",
@@ -27,26 +46,16 @@ const targetProcedures = [
 
 /**
  * 内視鏡的大腸ポリープ・粘膜切除術の特定加算コード
- * @type {string[]}
  */
-const colonoscopySpecialAdditions = ["150429570", "150437170"];
-
-/**
- * 症例データの型定義
- * @typedef {Object} CaseData
- * @property {string} id - データ識別番号
- * @property {string} admission - 入院年月日（yyyymmdd形式）
- * @property {string} discharge - 退院年月日（yyyymmdd形式、未確定の場合は00000000）
- * @property {string[]} procedures - 実施された診療行為コードのリスト
- */
+const colonoscopySpecialAdditions: string[] = ["150429570", "150437170"];
 
 /**
  * EFファイルの行からデータを抽出する共通関数
- * @param {string[]} columns - データ列の配列
- * @returns {Object|null} 患者データまたはnull（データが不十分な場合）
+ * @param columns - データ列の配列
+ * @returns 患者データまたはnull（データが不十分な場合）
  * @private
  */
-function _extractCaseData(columns) {
+function _extractCaseData(columns: string[]): RawCaseData | null {
     // 少なくとも9列（レセプト電算コードまで）必要
     if (columns.length < 9) return null;
 
@@ -68,12 +77,12 @@ function _extractCaseData(columns) {
 /**
  * 入院EF統合ファイルの内容をパースする関数
  * ファイルの内容を解析し、患者ごとのデータを抽出します
- * @param {string} content - ファイルの内容
- * @returns {CaseData[]} - 患者データの配列
+ * @param content - ファイルの内容
+ * @returns 患者データの配列
  */
-function parseEFFile(content) {
+function parseEFFile(content: string): CaseData[] {
     const lines = content.split(/\r?\n/);
-    const caseMap = {}; // 同一患者の情報を一時的に保持するためのマップ
+    const caseMap: Record<string, CaseData> = {}; // 同一患者の情報を一時的に保持するためのマップ
 
     // ヘッダー行を除いたデータ行を処理
     for (let i = 1; i < lines.length; i++) {
@@ -81,7 +90,7 @@ function parseEFFile(content) {
         if (!line) continue; // 空行をスキップ
 
         try {
-            let caseData = null;
+            let caseData: RawCaseData | null = null;
 
             // パイプ区切りの場合
             if (line.includes('|')) {
@@ -118,7 +127,7 @@ function parseEFFile(content) {
             }
         } catch (error) {
             // 解析エラーの場合はその行をスキップして続行
-            console.error(`Line ${i + 1}の解析中にエラーが発生しました: ${error.message}`);
+            console.error(`Line ${i + 1}の解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
             continue;
         }
     }
@@ -130,12 +139,12 @@ function parseEFFile(content) {
 /**
  * 複数ファイルからの症例データを統合する関数
  * 同一IDの症例については、退院日が更新されている場合に差し替え、手術コードは統合します
- * @param {CaseData[]} existingCases - 既存の症例データ
- * @param {CaseData[]} newCases - 新しい症例データ
- * @returns {CaseData[]} - 統合された症例データ
+ * @param existingCases - 既存の症例データ
+ * @param newCases - 新しい症例データ
+ * @returns 統合された症例データ
  */
-function mergeCases(existingCases, newCases) {
-    const caseMap = {};
+function mergeCases(existingCases: CaseData[], newCases: CaseData[]): CaseData[] {
+    const caseMap: Record<string, CaseData> = {};
 
     // 既存のケースをマップに追加
     for (const c of existingCases) {
@@ -174,11 +183,11 @@ function mergeCases(existingCases, newCases) {
 
 /**
  * 日付文字列（yyyymmdd）をDateオブジェクトに変換する関数
- * @param {string} dateStr - 変換する日付文字列（yyyymmdd形式）
- * @returns {Date|null} - Dateオブジェクトまたはnull（無効な日付の場合）
+ * @param dateStr - 変換する日付文字列（yyyymmdd形式）
+ * @returns Dateオブジェクトまたはnull（無効な日付の場合）
  * @private
  */
-function _parseDate(dateStr) {
+function _parseDate(dateStr: string): Date | null {
     if (!dateStr || dateStr === '00000000') return null;
 
     try {
@@ -193,35 +202,35 @@ function _parseDate(dateStr) {
 
         return date;
     } catch (error) {
-        console.error(`日付の解析中にエラーが発生しました: ${dateStr} - ${error.message}`);
+        console.error(`日付の解析中にエラーが発生しました: ${dateStr} - ${error instanceof Error ? error.message : String(error)}`);
         return null;
     }
 }
 
 /**
  * 入院期間（日数）を計算する関数
- * @param {string} admissionStr - 入院日（yyyymmdd形式）
- * @param {string} dischargeStr - 退院日（yyyymmdd形式）
- * @returns {number|null} - 入院日数または null（日付が無効な場合）
+ * @param admissionStr - 入院日（yyyymmdd形式）
+ * @param dischargeStr - 退院日（yyyymmdd形式）
+ * @returns 入院日数または null（日付が無効な場合）
  * @private
  */
-function _calculateHospitalDays(admissionStr, dischargeStr) {
+function _calculateHospitalDays(admissionStr: string, dischargeStr: string): number | null {
     const admissionDate = _parseDate(admissionStr);
     const dischargeDate = _parseDate(dischargeStr);
 
     if (!admissionDate || !dischargeDate) return null;
 
     // ミリ秒数を日数に変換（1日 = 24 * 60 * 60 * 1000 ミリ秒）
-    return Math.round((dischargeDate - admissionDate) / (1000 * 60 * 60 * 24));
+    return Math.round((dischargeDate.getTime() - admissionDate.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 /**
  * 短手３該当症例を判定する関数
  * 各症例が短期滞在手術等基本料３の条件に該当するかを判定します
- * @param {CaseData[]} cases - 判定対象の症例データ
- * @returns {CaseData[]} - 短手３に該当する症例データ（ID昇順でソート済み）
+ * @param cases - 判定対象の症例データ
+ * @returns 短手３に該当する症例データ（ID昇順でソート済み）
  */
-function evaluateCases(cases) {
+function evaluateCases(cases: CaseData[]): CaseData[] {
     return cases.filter(c => {
         try {
             // 1. 退院日が '00000000' でない（退院が確定している）
@@ -253,7 +262,7 @@ function evaluateCases(cases) {
 
             return true;
         } catch (error) {
-            console.error(`症例ID ${c.id} の評価中にエラーが発生しました: ${error.message}`);
+            console.error(`症例ID ${c.id} の評価中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
             return false;
         }
     }).sort((a, b) => a.id.localeCompare(b.id));
@@ -261,11 +270,11 @@ function evaluateCases(cases) {
 
 /**
  * 結果をタブ区切りテキストにフォーマットする関数
- * @param {CaseData[]} cases - フォーマット対象の症例データ
- * @param {string} headerLine - ヘッダー行（省略時は「データ識別番号\t入院年月日\t退院年月日」）
- * @returns {string} - フォーマットされたテキスト
+ * @param cases - フォーマット対象の症例データ
+ * @param headerLine - ヘッダー行（省略時は「データ識別番号\t入院年月日\t退院年月日」）
+ * @returns フォーマットされたテキスト
  */
-function formatResults(cases, headerLine = "データ識別番号\t入院年月日\t退院年月日") {
+function formatResults(cases: CaseData[], headerLine = "データ識別番号\t入院年月日\t退院年月日"): string {
     try {
         let result = headerLine + '\n';
         for (const c of cases) {
@@ -273,29 +282,7 @@ function formatResults(cases, headerLine = "データ識別番号\t入院年月�
         }
         return result;
     } catch (error) {
-        console.error(`結果のフォーマット中にエラーが発生しました: ${error.message}`);
+        console.error(`結果のフォーマット中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
         return headerLine + '\n'; // 最低限ヘッダーは返す
     }
-}
-
-// Node.js環境とブラウザ環境の両方で動作するようにエクスポート
-if (typeof module !== 'undefined' && module.exports) {
-    // Node.js環境
-    module.exports = {
-        targetProcedures,
-        colonoscopySpecialAdditions,
-        parseEFFile,
-        mergeCases,
-        evaluateCases,
-        formatResults
-    };
-} else if (typeof window !== 'undefined') {
-    // ブラウザ環境
-    // グローバルスコープに関数を公開
-    window.targetProcedures = targetProcedures;
-    window.colonoscopySpecialAdditions = colonoscopySpecialAdditions;
-    window.parseEFFile = parseEFFile;
-    window.mergeCases = mergeCases;
-    window.evaluateCases = evaluateCases;
-    window.formatResults = formatResults;
 }

@@ -1,10 +1,10 @@
-import {
-    parseEFFile,
-    evaluateCases,
-    formatResults,
-    mergeCases,
-    CaseData
-} from './common.js';
+// CaseDataインターフェースの定義
+interface CaseData {
+    id: string;
+    admission: string;
+    discharge: string;
+    procedures: string[];
+}
 
 /**
  * 短期滞在手術等基本料３判定プログラム - メイン処理
