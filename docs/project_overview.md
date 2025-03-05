@@ -12,25 +12,61 @@
 ## プログラム構成
 
 * プログラムは以下のファイルで構成される：
-  * `index.html` - ユーザーインターフェース
-  * `common.ts` - 共通のビジネスロジック（データ解析、判定処理など）
-  * `common.browser.ts` - ブラウザ環境用の共通ロジック
-  * `main.ts` - ブラウザ環境での実行に関する処理
-  * `test.ts` - 自動テスト実行用スクリプト
-  * `types.d.ts` - 型定義ファイル
+  * `public/index.html` - ユーザーインターフェース
+  * `src/core/common.ts` - 共通のビジネスロジック（データ解析、判定処理など）
+  * `src/browser/common.browser.ts` - ブラウザ環境用の共通ロジック
+  * `src/browser/main.ts` - ブラウザ環境での実行に関する処理
+  * `src/types/types.d.ts` - 型定義ファイル
+  * `test/unit/test.ts` - 自動テスト実行用スクリプト
 
-* 各ファイルの役割：
-  * `common.ts` - Node.js環境で使用される共通関数を定義（ESモジュール形式）
-  * `common.browser.ts` - ブラウザ環境で使用される共通関数を定義（グローバル変数形式）
-  * `main.ts` - ブラウザ上でのUI処理（ファイル読み込み、結果表示など）
-  * `test.ts` - Node.js環境でのテスト実行（サンプルデータの処理と結果検証）
-  * `types.d.ts` - プログラム全体で使用される型定義
+### ドキュメント
+* `docs/project_overview.md` - プロジェクト概要と仕様書（本ドキュメント）
+* `docs/入院EF統合ファイルについて.md` - 入院EF統合ファイルの仕様説明
+* `docs/短期滞在手術等基本料３について.md` - 短期滞在手術等基本料３の説明
+
+### プロジェクトの構造
+```
+src/
+  browser/      - ブラウザ環境用のコード
+  core/         - 共通のビジネスロジック
+  types/        - 型定義ファイル
+test/
+  fixtures/     - テストデータと期待値
+  unit/         - ユニットテスト
+  integration/  - 統合テスト
+public/         - 静的ファイル
+docs/           - ドキュメント
+```
+
+### その他
+* `package.json` - プロジェクト設定とスクリプト
+* `tsconfig.json` - TypeScriptコンパイラ設定
+* `tanshu3.code-workspace` - VSCode ワークスペース設定
+
+### 各ファイルの役割：
+  * `src/core/common.ts` - Node.js環境で使用される共通関数を定義（ESモジュール形式）
+  * `src/browser/common.browser.ts` - ブラウザ環境で使用される共通関数を定義（グローバル変数形式）
+  * `src/browser/main.ts` - ブラウザ上でのUI処理（ファイル読み込み、結果表示など）
+  * `test/unit/test.ts` - Node.js環境でのテスト実行（サンプルデータの処理と結果検証）
+  * `src/types/types.d.ts` - プログラム全体で使用される型定義
 
 * ビルド後のファイル：
-  * `dist/common.js` - コンパイル後の共通ロジック（Node.js環境用）
-  * `dist/common.browser.js` - コンパイル後の共通ロジック（ブラウザ環境用）
-  * `dist/main.js` - コンパイル後のUI処理
+  * `dist/core/common.js` - コンパイル後の共通ロジック（Node.js環境用）
+  * `dist/browser/common.browser.js` - コンパイル後の共通ロジック（ブラウザ環境用）
+  * `dist/browser/main.js` - コンパイル後のUI処理
   * `dist/test.js` - コンパイル後のテストスクリプト
+
+## 開発フロー
+
+1. TypeScriptファイル（`.ts`）を編集
+2. `npm run build` コマンドでJavaScriptにコンパイル
+3. ブラウザで `index.html` を開いて動作確認
+
+### 環境別の実装について
+
+* **Node.js環境（テスト実行時）**: ESモジュールを使用し、`common.ts`から関数をインポート
+* **ブラウザ環境（ユーザー実行時）**: ローカルファイル（file://プロトコル）でのCORSポリシーに対応するため、`common.browser.ts`を使用してグローバル変数として関数を公開
+* この二重実装により、テスト環境と実行環境の両方で正常に動作することを保証
 
 ## 仕様
 

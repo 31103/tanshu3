@@ -15,18 +15,31 @@
         "isolatedModules": true,
         "noEmit": false,
         "outDir": "./dist",
-        "rootDir": "./",
+        "rootDir": "./src",
         "sourceMap": true,
+        "baseUrl": "./src",
+        "paths": {
+            "@core/*": [
+                "core/*"
+            ],
+            "@browser/*": [
+                "browser/*"
+            ],
+            "@types/*": [
+                "types/*"
+            ]
+        },
         "typeRoots": [
-            "./types",
+            "./src/types",
             "./node_modules/@types"
         ]
     },
     "include": [
-        "**/*.ts",
-        "types.d.ts"
+        "src/**/*.ts"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist",
+        "test"
     ]
 }
