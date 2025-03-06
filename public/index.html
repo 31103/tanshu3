@@ -25,18 +25,55 @@
 
         <section class="input-section" aria-labelledby="file-selection">
             <h2 id="file-selection">ファイル選択</h2>
-            <div class="file-input-wrapper">
-                <label for="fileInput" class="custom-file-input" role="button" tabindex="0">ファイルを選択</label>
-                <input type="file" id="fileInput" multiple accept=".txt" aria-label="入院EF統合ファイルを選択">
-                <span class="file-input-label" aria-live="polite">ファイルが選択されていません</span>
+
+            <!-- ドラッグ&ドロップエリア -->
+            <div id="dropArea" class="drop-area" aria-label="ファイルをドラッグ&ドロップするエリア">
+                <div class="drop-area-content">
+                    <p>ファイルをここにドラッグ&ドロップ</p>
+                    <p>または</p>
+                    <div class="file-input-wrapper">
+                        <label for="fileInput" class="custom-file-input" role="button" tabindex="0">ファイルを追加</label>
+                        <input type="file" id="fileInput" multiple accept=".txt" aria-label="入院EF統合ファイルを選択">
+                    </div>
+                </div>
             </div>
-            <button id="executeButton" disabled aria-label="処理を実行">実行</button>
+
+            <!-- 選択されたファイル情報 -->
+            <div id="fileInfoArea" class="file-info-area" aria-live="polite">
+                <span class="file-input-label">ファイルが選択されていません</span>
+            </div>
+
+            <!-- ボタンエリア -->
+            <div class="button-group">
+                <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">クリア</button>
+                <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">実行</button>
+            </div>
+
             <div id="loadingIndicator" class="loading" aria-live="polite">処理中...</div>
         </section>
 
         <section class="results-section" aria-labelledby="processing-results">
             <h2 id="processing-results">処理結果</h2>
-            <pre id="resultArea" aria-live="polite" tabindex="0">結果はここに表示されます。</pre>
+
+            <!-- 結果表示エリア -->
+            <div class="result-container">
+                <textarea id="resultTextarea" class="result-textarea" readonly aria-label="処理結果"
+                    placeholder="結果はここに表示されます。"></textarea>
+
+                <!-- 結果操作ボタン -->
+                <div class="result-actions">
+                    <button id="copyButton" class="action-button" disabled aria-label="結果をクリップボードにコピー">
+                        <span class="button-icon">📋</span> クリップボードにコピー
+                    </button>
+                    <a id="downloadLink" class="action-button download-link" style="display: none;"
+                        download="result.txt" aria-label="結果をファイルとしてダウンロード">
+                        <span class="button-icon">💾</span> ダウンロード
+                    </a>
+                </div>
+
+                <!-- コピー成功メッセージ -->
+                <div id="copyMessage" class="copy-message" aria-live="polite"></div>
+            </div>
         </section>
 
         <footer>

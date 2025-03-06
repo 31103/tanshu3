@@ -182,9 +182,17 @@ function handleExecute(): void {
         .then(cases => {
             const resultCases = evaluateCases(cases);
             const outputText = formatResults(resultCases);
-            const resultArea = document.getElementById('resultArea') as HTMLPreElement;
-            if (resultArea) {
-                resultArea.textContent = outputText;
+
+            // 結果をテキストエリアに表示
+            const resultTextarea = document.getElementById('resultTextarea') as HTMLTextAreaElement;
+            if (resultTextarea) {
+                resultTextarea.value = outputText;
+            }
+
+            // コピーボタンを有効化
+            const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
+            if (copyButton) {
+                copyButton.disabled = false;
             }
 
             createDownloadLink(outputText);
@@ -238,39 +246,47 @@ function updateProgress(): void {
 
 function updateUI(state: 'idle' | 'processing' | 'completed' | 'error'): void {
     const executeButton = document.getElementById('executeButton') as HTMLButtonElement;
+    const clearButton = document.getElementById('clearButton') as HTMLButtonElement;
     const progressArea = document.getElementById('progressArea') as HTMLDivElement;
-    const resultArea = document.getElementById('resultArea') as HTMLPreElement;
+    const resultTextarea = document.getElementById('resultTextarea') as HTMLTextAreaElement;
     const statsArea = document.getElementById('statsArea') as HTMLDivElement;
+    const copyButton = document.getElementById('copyButton') as HTMLButtonElement;
+    const downloadLink = document.getElementById('downloadLink') as HTMLAnchorElement;
 
-    if (!executeButton || !progressArea || !resultArea || !statsArea) return;
+    if (!executeButton || !progressArea || !resultTextarea || !statsArea) return;
 
     switch (state) {
         case 'processing':
             executeButton.disabled = true;
+            clearButton.disabled = true;
             executeButton.textContent = '処理中...';
             progressArea.style.display = 'block';
-            resultArea.textContent = '';
-            statsArea.style.display = 'none';
+            resultTextarea.value = '処理中...';
+            copyButton.disabled = true;
+            downloadLink.style.display = 'none';
             break;
-
         case 'completed':
             executeButton.disabled = false;
+            clearButton.disabled = false;
             executeButton.textContent = '実行';
             progressArea.style.display = 'none';
             statsArea.style.display = 'block';
             break;
-
         case 'error':
             executeButton.disabled = false;
-            executeButton.textContent = '再実行';
-            progressArea.style.display = 'none';
-            break;
-
-        case 'idle':
-        default:
-            executeButton.disabled = false;
+            clearButton.disabled = false;
             executeButton.textContent = '実行';
             progressArea.style.display = 'none';
+            break;
+        case 'idle':
+            executeButton.disabled = true;
+            clearButton.disabled = true;
+            executeButton.textContent = '実行';
+            progressArea.style.display = 'none';
+            resultTextarea.value = '';
+            statsArea.style.display = 'none';
+            copyButton.disabled = true;
+            downloadLink.style.display = 'none';
             break;
     }
 }
@@ -349,30 +365,22 @@ function readFile(file: File): Promise<string> {
 }
 
 function createDownloadLink(text: string): void {
-    let link = document.getElementById('downloadLink') as HTMLAnchorElement | null;
-    if (!link) {
-        link = document.createElement('a');
-        link.id = 'downloadLink';
-        link.className = 'download-link';
-        link.textContent = '結果をダウンロード';
+    if (!text) return;
 
-        const resultArea = document.getElementById('resultArea') as HTMLPreElement;
-        if (resultArea) {
-            resultArea.parentNode?.insertBefore(link, resultArea.nextSibling);
-        }
-    }
+    const downloadLink = document.getElementById('downloadLink') as HTMLAnchorElement;
+    if (!downloadLink) return;
 
+    // Blobオブジェクトを作成
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    // ダウンロードリンクを設定
+    downloadLink.href = url;
+    downloadLink.style.display = 'inline-flex';
+
+    // 現在の日時を取得してファイル名に使用
     const now = new Date();
     const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
     const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
-
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `短手３該当症例_${dateStr}_${timeStr}.txt`);
-    link.style.display = 'inline-block';
-
-    link.addEventListener('click', () => {
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-    });
+    downloadLink.download = `短手３該当症例_${dateStr}_${timeStr}.txt`;
 }

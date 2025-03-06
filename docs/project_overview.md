@@ -47,6 +47,7 @@
 * `docs/短期滞在手術等基本料３について.md` - 短期滞在手術等基本料３の説明
 * `docs/test_enhancement_plan.md` - テスト強化計画書
 * `docs/test_migration_guide.md` - テスト移行ガイド
+* `docs/ui_ux_enhancement_plan.md` - UI/UX機能強化計画書
 
 ### プロジェクトの構造
 ```
@@ -96,6 +97,7 @@ docs/                 - ドキュメント
   短期滞在手術等基本料３について.md - 短期滞在手術等基本料３の説明
   test_enhancement_plan.md - テスト強化計画書
   test_migration_guide.md - テスト移行ガイド
+  ui_ux_enhancement_plan.md - UI/UX機能強化計画書
 ```
 
 ### その他

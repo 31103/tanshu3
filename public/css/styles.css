@@ -24,6 +24,13 @@ h1 {
     border-bottom: 2px solid #eee;
 }
 
+h2 {
+    color: #3498db;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    font-size: 1.5em;
+}
+
 /* 説明セクション */
 .info-section {
     background-color: #f0f7ff;
@@ -41,9 +48,40 @@ h1 {
     border-radius: 4px;
 }
 
+/* ドラッグ&ドロップエリア */
+.drop-area {
+    border: 2px dashed #3498db;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f0f7ff;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.drop-area.drag-over {
+    background-color: #d6eaff;
+    border-color: #2980b9;
+    transform: scale(1.01);
+}
+
+.drop-area-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-area p {
+    margin: 5px 0;
+    color: #666;
+}
+
+/* ファイル入力 */
 .file-input-wrapper {
     position: relative;
-    margin-bottom: 10px;
+    margin: 10px 0;
 }
 
 .custom-file-input {
@@ -54,43 +92,72 @@ h1 {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 10px;
     transition: background-color 0.3s;
+    font-size: 14px;
 }
 
 .custom-file-input:hover {
     background-color: #2980b9;
 }
 
-.file-input-label {
-    margin-left: 10px;
-    color: #666;
-}
-
 #fileInput {
     display: none;
 }
 
+/* ファイル情報エリア */
+.file-info-area {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.file-input-label {
+    color: #666;
+}
+
+/* ボタングループ */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
 /* ボタン */
 button {
-    margin: 10px 0;
     padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
 }
 
-button:hover {
+.primary-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.primary-button:hover:not(:disabled) {
     background-color: #45a049;
+}
+
+.secondary-button {
+    background-color: #f1f1f1;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background-color: #e7e7e7;
 }
 
 button:disabled {
     background-color: #cccccc;
+    color: #888;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 /* 結果セクション */
@@ -98,15 +165,74 @@ button:disabled {
     margin-top: 20px;
 }
 
-pre {
-    background-color: #f5f5f5;
+.result-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.result-textarea {
+    width: 100%;
+    min-height: 200px;
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    white-space: pre-wrap;
-    overflow-x: auto;
+    background-color: #f5f5f5;
+    font-family: monospace;
     font-size: 14px;
     line-height: 1.5;
+    resize: vertical;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.action-button:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.action-button:disabled {
+    background-color: #cccccc;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.button-icon {
+    margin-right: 8px;
+}
+
+.download-link {
+    background-color: #2196F3;
+}
+
+.download-link:hover {
+    background-color: #0b7dda;
+}
+
+/* コピー成功メッセージ */
+.copy-message {
+    margin-top: 5px;
+    color: #4CAF50;
+    font-size: 14px;
+    height: 20px;
+    transition: opacity 0.5s;
 }
 
 /* フッター */
@@ -134,13 +260,54 @@ footer {
     display: block;
 }
 
+/* プログレスバー */
+.progress-container {
+    width: 100%;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 20px;
+    width: 0;
+    background-color: #4CAF50;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+/* 統計情報エリア */
+#statsArea {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #e7f3fe;
+    border-left: 5px solid #2196F3;
+}
+
+/* エラーメッセージ */
+.error-message {
+    color: #D32F2F;
+    background-color: #FFEBEE;
+    padding: 10px;
+    border-left: 5px solid #D32F2F;
+    margin: 10px 0;
+}
+
 /* レスポンシブデザイン */
 @media (max-width: 600px) {
     .container {
         padding: 15px;
     }
 
-    button {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .result-actions {
+        flex-direction: column;
+    }
+
+    .action-button {
         width: 100%;
     }
 }
