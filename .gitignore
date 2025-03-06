@@ -6,6 +6,10 @@ dist/
 *.js
 *.js.map
 
+# 除外しないJavaScriptファイル
+!public/**/*.js
+!jest.config.js
+
 # TypeScriptの設定ファイルなど、手動で作成したJavaScriptファイルは除外
 !tsconfig.json
 
