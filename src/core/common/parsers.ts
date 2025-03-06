@@ -21,11 +21,15 @@ function extractCaseData(columns: string[]): RawCaseData | null {
     const admission = columns[3].trim(); // 入院年月日
     const procedure = columns[8].trim(); // レセプト電算コード
 
+    // 診療明細名称（10列目、存在する場合のみ）
+    const procedureName = columns.length > 9 ? columns[9].trim() : undefined;
+
     return {
         dataId,
         discharge,
         admission,
-        procedure
+        procedure,
+        procedureName
     };
 }
 
@@ -63,7 +67,7 @@ export function parseEFFile(content: string): CaseData[] {
             }
 
             if (caseData) {
-                const { dataId, discharge, admission, procedure } = caseData;
+                const { dataId, discharge, admission, procedure, procedureName } = caseData;
 
                 // 同一患者のデータを統合
                 if (!caseMap[dataId]) {
@@ -71,13 +75,22 @@ export function parseEFFile(content: string): CaseData[] {
                         id: dataId,
                         admission: admission,
                         discharge: discharge,
-                        procedures: []
+                        procedures: [],
+                        procedureNames: []
                     };
                 }
 
                 // 手術コードを追加（重複を避ける）
                 if (procedure && !caseMap[dataId].procedures.includes(procedure)) {
                     caseMap[dataId].procedures.push(procedure);
+                    // 診療明細名称も同じインデックスで追加
+                    if (procedureName) {
+                        // procedureNamesが未定義の場合は初期化
+                        if (!caseMap[dataId].procedureNames) {
+                            caseMap[dataId].procedureNames = [];
+                        }
+                        caseMap[dataId].procedureNames.push(procedureName);
+                    }
                 }
             }
         } catch (error) {
@@ -103,7 +116,11 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
 
     // 既存のケースをマップに追加
     for (const c of existingCases) {
-        caseMap[c.id] = { ...c, procedures: [...c.procedures] };
+        caseMap[c.id] = {
+            ...c,
+            procedures: [...c.procedures],
+            procedureNames: c.procedureNames ? [...c.procedureNames] : []
+        };
     }
 
     // 新しいケースをマージ
@@ -119,17 +136,34 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
                 caseMap[c.id].procedures = [];
             }
 
-            // 新しい手術コードを追加（重複を避ける）
+            // 診療明細名称を統合（存在しない場合は初期化）
+            if (!caseMap[c.id].procedureNames) {
+                caseMap[c.id].procedureNames = [];
+            }
+
+            // 新しい手術コードと診療明細名称を追加（重複を避ける）
             if (c.procedures && Array.isArray(c.procedures)) {
-                for (const proc of c.procedures) {
+                for (let i = 0; i < c.procedures.length; i++) {
+                    const proc = c.procedures[i];
                     if (!caseMap[c.id].procedures.includes(proc)) {
                         caseMap[c.id].procedures.push(proc);
+
+                        // 対応する診療明細名称も追加（存在する場合）
+                        const procedureNames = caseMap[c.id].procedureNames || [];
+                        if (c.procedureNames && Array.isArray(c.procedureNames) && i < c.procedureNames.length) {
+                            procedureNames.push(c.procedureNames[i]);
+                        }
+                        caseMap[c.id].procedureNames = procedureNames;
                     }
                 }
             }
         } else {
             // 新しい症例を追加
-            caseMap[c.id] = { ...c, procedures: [...c.procedures] };
+            caseMap[c.id] = {
+                ...c,
+                procedures: [...c.procedures],
+                procedureNames: c.procedureNames ? [...c.procedureNames] : []
+            };
         }
     }
 

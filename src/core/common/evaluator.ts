@@ -36,17 +36,18 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
             }
 
             // 5. 入院期間中に対象手術等に加えて、他の手術を実施していないかチェック
-            // 手術コードは通常 '15' で始まるが、「加算」が含まれるコードは手術ではないため除外
-            const surgeryProcedures = c.procedures.filter(p => {
+            // 手術コードは通常 '15' で始まるが、診療明細名称に「加算」が含まれるコードは手術ではないため除外
+            const surgeryProcedures = c.procedures.filter((p, index) => {
                 // 対象手術等に含まれるコードは除外
                 if (TARGET_PROCEDURES.includes(p)) return false;
 
                 // '15'で始まるコードのみを対象
                 if (!p.startsWith('15')) return false;
 
-                // 「加算」が含まれるコードは手術ではないため除外
-                // 加算コードは通常、末尾に数字が付く（例：150000490 時間外加算２（手術））
-                if (p.includes('加算')) return false;
+                // 診療明細名称に「加算」が含まれるコードは手術ではないため除外
+                if (c.procedureNames && c.procedureNames[index] && c.procedureNames[index].includes('加算')) {
+                    return false;
+                }
 
                 // 加算コードは通常、特定のパターンを持つ（例：150000490）
                 // 多くの加算コードは '1500' で始まり、その後に '00' が続く

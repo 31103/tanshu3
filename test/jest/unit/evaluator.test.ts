@@ -121,7 +121,7 @@ describe('evaluateCases関数', () => {
         expect(result.length).toBe(0);
     });
 
-    it('対象手術等に加えて手術の加算コードがある場合は対象とする', () => {
+    it('診療明細名称に「加算」が含まれるコードは手術とみなさない', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -130,32 +130,17 @@ describe('evaluateCases関数', () => {
                 procedures: [
                     '150194510', // 体外衝撃波腎・尿管結石破砕術（対象手術等）
                     '150000490'  // 時間外加算２（手術）
+                ],
+                procedureNames: [
+                    '体外衝撃波腎・尿管結石破砕術',
+                    '時間外加算２（手術）'
                 ]
             }
         ];
 
         const result = evaluateCases(cases);
 
-        // 加算コードは手術とみなさないため、対象となる
-        expect(result.length).toBe(1);
-    });
-
-    it('「加算」という文字列を含むコードは手術とみなさない', () => {
-        const cases: CaseData[] = [
-            {
-                id: '12345',
-                admission: '20220101',
-                discharge: '20220103',
-                procedures: [
-                    '160218510',   // 対象手術等
-                    '150123456加算' // 「加算」を含む架空のコード
-                ]
-            }
-        ];
-
-        const result = evaluateCases(cases);
-
-        // 「加算」を含むコードは手術とみなさないため、対象となる
+        // 診療明細名称に「加算」が含まれるコードは手術とみなさないため、対象となる
         expect(result.length).toBe(1);
     });
 

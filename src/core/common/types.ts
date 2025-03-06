@@ -8,10 +8,11 @@
  * ファイルから抽出された患者の症例情報を表します。
  */
 export interface CaseData {
-    id: string;           // データ識別番号
-    admission: string;    // 入院年月日（yyyymmdd形式）
-    discharge: string;    // 退院年月日（yyyymmdd形式）
-    procedures: string[]; // 実施された診療行為コードのリスト
+    id: string;                 // データ識別番号
+    admission: string;          // 入院年月日（yyyymmdd形式）
+    discharge: string;          // 退院年月日（yyyymmdd形式）
+    procedures: string[];       // 実施された診療行為コードのリスト
+    procedureNames?: string[];  // 診療明細名称のリスト（procedures配列と同じ順序）
 }
 
 /**
@@ -23,6 +24,7 @@ export interface RawCaseData {
     discharge: string;  // 退院年月日
     admission: string;  // 入院年月日
     procedure: string;  // レセプト電算コード
+    procedureName?: string; // 診療明細名称
 }
 
 /**
