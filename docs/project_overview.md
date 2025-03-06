@@ -28,14 +28,18 @@
   * `src/ui/components/` - UI処理を小さなコンポーネントに分割
   * `src/browser/main.ts` - ブラウザ環境での実行に関する処理（レガシーコード）
   * `src/browser/common.browser.ts` - ブラウザ環境用の共通ロジック（レガシーコード）
-  * `test/unit/*.ts` - 単体テスト
-  * `test/integration/*.ts` - 統合テスト
+  * `test/unit/*.ts` - 旧式の単体テスト
+  * `test/integration/*.ts` - 旧式の統合テスト
+  * `test/jest/unit/*.ts` - Jestを使用した単体テスト
+  * `test/jest/integration/*.ts` - Jestを使用した統合テスト
+  * `test/jest/e2e/*.ts` - Jestを使用したE2Eテスト
 
 ### ドキュメント
 * `docs/project_overview.md` - プロジェクト概要と仕様書（本ドキュメント）
 * `docs/入院EF統合ファイルについて.md` - 入院EF統合ファイルの仕様説明
 * `docs/短期滞在手術等基本料３について.md` - 短期滞在手術等基本料３の説明
-* `docs/refactoring_plan.md` - リファクタリング計画書
+* `docs/test_enhancement_plan.md` - テスト強化計画書
+* `docs/test_migration_guide.md` - テスト移行ガイド
 
 ### プロジェクトの構造
 ```
@@ -60,8 +64,12 @@ src/
   types/              - レガシーの型定義ファイル
 test/
   fixtures/           - テストデータと期待値
-  unit/               - ユニットテスト
-  integration/        - 統合テスト
+  unit/               - 旧式のユニットテスト
+  integration/        - 旧式の統合テスト
+  jest/               - Jestテストフレームワークを使用したテスト
+    unit/             - Jestユニットテスト
+    integration/      - Jest統合テスト
+    e2e/              - JestのE2Eテスト
 public/               - 静的ファイル
   index.html          - メインHTMLファイル
   css/                - スタイルシート
@@ -72,12 +80,14 @@ docs/                 - ドキュメント
   project_overview.md - プロジェクト概要と仕様書
   入院EF統合ファイルについて.md - 入院EF統合ファイルの仕様説明
   短期滞在手術等基本料３について.md - 短期滞在手術等基本料３の説明
-  refactoring_plan.md - リファクタリング計画書
+  test_enhancement_plan.md - テスト強化計画書
+  test_migration_guide.md - テスト移行ガイド
 ```
 
 ### その他
 * `package.json` - プロジェクト設定とスクリプト
 * `tsconfig.json` - TypeScriptコンパイラ設定
+* `jest.config.js` - Jestテストフレームワーク設定
 * `tanshu3.code-workspace` - VSCode ワークスペース設定
 * `.eslintrc.json` - ESLint設定
 * `.prettierrc.json` - Prettier設定
@@ -99,6 +109,12 @@ docs/                 - ドキュメント
   * `src/browser/common.browser.ts` - ブラウザ環境用の共通ロジック
   * `src/browser/main.ts` - ブラウザ環境でのUI処理
   * `src/types/types.d.ts` - レガシーの型定義
+
+* テスト関連：
+  * `test/jest/unit/*.test.ts` - 各モジュールのユニットテスト
+  * `test/jest/integration/*.test.ts` - モジュール間の連携テスト
+  * `test/jest/e2e/*.test.ts` - ブラウザ環境でのE2Eテスト
+  * `jest.config.js` - Jestの設定（モジュール解決、カバレッジなど）
 
 * ビルド後のファイル：
   * `dist/core/common.js` - コンパイル後の共通ロジック（Node.js環境用）
@@ -148,14 +164,16 @@ docs/                 - ドキュメント
 * テストデータは`test/fixtures`ディレクトリに格納されている入院EF統合ファイルです。
 * 仕様通り処理を行った場合の期待される結果は`test/fixtures/expect.txt`です。
 * テストの実行方法：
-  * コマンドラインで``npm run test``を実行（`npm run build`でコンパイル後）
-  * 正常に動作する場合は「テスト成功: 出力結果が期待される結果と一致しました。」と表示される
+  * 新しいJestテストの実行: `npm test`
+  * 監視モードでのテスト実行: `npm run test:watch`
+  * カバレッジレポート付きのテスト実行: `npm run test:coverage`
+  * 旧式のテスト実行: `npm run test:legacy`
 
 ## 開発とメンテナンス
 
 * ビジネスロジックの変更が必要な場合は`src/core/common/`ディレクトリ内の対応するファイルを修正する
 * UI関連の変更が必要な場合は`public/index.html`と`src/ui/components/`を修正する
-* テスト関連の変更が必要な場合は`test/unit/`または`test/integration/`を修正する
+* テスト関連の変更が必要な場合は`test/jest/unit/`または`test/jest/integration/`のJestテストを修正する
 * 型定義の変更が必要な場合は`src/core/common/types.ts`を修正する
 * 新しい機能を追加する場合は、適切なファイルに実装し、必要に応じてテストを追加する
 * コード変更後は`npm run build`でTypeScriptをコンパイルする
@@ -181,8 +199,11 @@ docs/                 - ドキュメント
     * 出力先は`dist`ディレクトリ
     * ソースマップを生成して、デバッグを容易に
 * **テスト**:
+    * Jest テストフレームワークを採用
+    * TypeScript対応のts-jestプリプロセッサを使用
+    * ユニットテスト、統合テスト、E2Eテストの3層構造
+    * コードカバレッジの計測と可視化
     * Node.js環境でESモジュールとして実行
-    * `npm run test`コマンドで自動テストを実行
 * **ブラウザ互換性**:
     * ローカルファイル（file://プロトコル）でのCORSポリシーに対応するためのアダプター実装
     * アダプターパターンを使用して環境依存のコードを分離
