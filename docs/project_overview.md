@@ -13,6 +13,8 @@
 
 * プログラムは以下のファイルで構成される：
   * `public/index.html` - ユーザーインターフェース
+  * `public/css/styles.css` - スタイルシート
+  * `public/js/main.js` - クライアントサイドのUIロジック
   * `src/core/common/*.ts` - 共通のビジネスロジック（データ解析、判定処理など）
     * `types.ts` - 型定義
     * `constants.ts` - 定数
@@ -49,6 +51,7 @@ src/
       browser.ts      - ブラウザ環境用アダプター
       node.ts         - Node.js環境用アダプター
     index.ts          - コアモジュールのエントリーポイント
+    common.ts         - レガシーコード
   browser/            - ブラウザ環境用のレガシーコード
     common.browser.ts - ブラウザ環境用の共通ロジック
     main.ts           - ブラウザ環境でのUI処理
@@ -61,6 +64,10 @@ test/
   integration/        - 統合テスト
 public/               - 静的ファイル
   index.html          - メインHTMLファイル
+  css/                - スタイルシート
+    styles.css        - メインのスタイルシート
+  js/                 - クライアントサイドJavaScript
+    main.js           - クライアントサイドのUIロジック
 docs/                 - ドキュメント
   project_overview.md - プロジェクト概要と仕様書
   入院EF統合ファイルについて.md - 入院EF統合ファイルの仕様説明
@@ -72,6 +79,9 @@ docs/                 - ドキュメント
 * `package.json` - プロジェクト設定とスクリプト
 * `tsconfig.json` - TypeScriptコンパイラ設定
 * `tanshu3.code-workspace` - VSCode ワークスペース設定
+* `.eslintrc.json` - ESLint設定
+* `.prettierrc.json` - Prettier設定
+* `.gitignore` - git除外ファイル設定
 
 ### 各ファイルの役割：
 * コアモジュール：
@@ -83,6 +93,7 @@ docs/                 - ドキュメント
   * `src/core/adapters/browser.ts` - ブラウザ環境固有の実装
   * `src/core/adapters/node.ts` - Node.js 環境固有の実装
   * `src/core/index.ts` - コアモジュールのエントリーポイント
+  * `src/core/common.ts` - レガシーコード
 
 * レガシーコード（リファクタリング中）：
   * `src/browser/common.browser.ts` - ブラウザ環境用の共通ロジック
