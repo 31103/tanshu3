@@ -48,14 +48,15 @@
                 <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">クリア</button>
                 <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">実行</button>
             </div>
-
-            <div id="loadingIndicator" class="loading" aria-live="polite">処理中...</div>
         </section>
 
-        <section class="results-section" aria-labelledby="processing-results">
-            <h2 id="processing-results">処理結果</h2>
+        <section class="result-section" aria-labelledby="results">
+            <h2 id="results">処理結果</h2>
+            <div id="loadingIndicator" class="loading-indicator">
+                <div class="spinner"></div>
+                <p>処理中...</p>
+            </div>
 
-            <!-- 結果表示エリア -->
             <div class="result-container">
                 <textarea id="resultTextarea" class="result-textarea" readonly aria-label="処理結果"
                     placeholder="結果はここに表示されます。"></textarea>
@@ -82,8 +83,11 @@
     </div>
 
     <!-- スクリプト読み込み -->
+    <!-- 1. まず共通ロジックを読み込む -->
     <script src="../dist/browser/common.browser.js"></script>
+    <!-- 2. その後メインロジックを読み込む -->
     <script src="../dist/browser/main.js"></script>
+    <!-- 3. 最後にUI処理を読み込む -->
     <script src="js/main.js"></script>
 </body>
 
