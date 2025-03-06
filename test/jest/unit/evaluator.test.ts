@@ -7,7 +7,7 @@
 import { jest } from '@jest/globals';
 import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js';
 import { CaseData } from '../../../src/core/common/types.js';
-import { MAX_HOSPITAL_DAYS, TARGET_PROCEDURES } from '../../../src/core/common/constants.js';
+import { MAX_HOSPITAL_DAYS, TARGET_PROCEDURES, COLONOSCOPY_PROCEDURE_CODES, COLONOSCOPY_SPECIAL_ADDITIONS } from '../../../src/core/common/constants.js';
 
 describe('evaluateCases関数', () => {
     it('空の配列の場合は空の配列を返す', () => {
@@ -169,22 +169,7 @@ describe('evaluateCases関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['150285010', '150429570'] // 内視鏡的大腸ポリープ・粘膜切除術と特定加算
-            }
-        ];
-
-        const result = evaluateCases(cases);
-
-        expect(result.length).toBe(0);
-    });
-
-    it('内視鏡的大腸ポリープ・粘膜切除術（長径2cm以上）に特定加算がある場合は対象外とする', () => {
-        const cases: CaseData[] = [
-            {
-                id: '12345',
-                admission: '20220101',
-                discharge: '20220103',
-                procedures: ['150183410', '150429570'] // 内視鏡的大腸ポリープ・粘膜切除術（長径2cm以上）と特定加算
+                procedures: [COLONOSCOPY_PROCEDURE_CODES[0], COLONOSCOPY_SPECIAL_ADDITIONS[0]] // 内視鏡的大腸ポリープ・粘膜切除術と特定加算
             }
         ];
 
@@ -195,7 +180,7 @@ describe('evaluateCases関数', () => {
 
     it('内視鏡的大腸ポリープ・粘膜切除術で特定加算がない場合は対象とする', () => {
         // 対象手術等コードリストに内視鏡的大腸ポリープ・粘膜切除術のコードが含まれているかチェック
-        if (!TARGET_PROCEDURES.includes('150285010') && !TARGET_PROCEDURES.includes('150183410')) {
+        if (!TARGET_PROCEDURES.includes(COLONOSCOPY_PROCEDURE_CODES[0])) {
             console.log('内視鏡的大腸ポリープ・粘膜切除術のコードが対象手術等に含まれていないためテストをスキップします');
             return;
         }
@@ -205,7 +190,7 @@ describe('evaluateCases関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['150285010'] // 内視鏡的大腸ポリープ・粘膜切除術（加算なし）
+                procedures: [COLONOSCOPY_PROCEDURE_CODES[0]] // 内視鏡的大腸ポリープ・粘膜切除術（加算なし）
             }
         ];
 

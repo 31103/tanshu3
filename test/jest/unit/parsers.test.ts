@@ -30,7 +30,8 @@ describe('parseEFFile関数', () => {
             id: '12345',
             admission: '20220101',
             discharge: '20220101',
-            procedures: ['123456']
+            procedures: ['123456'],
+            procedureNames: []
         });
     });
 
@@ -58,7 +59,8 @@ describe('parseEFFile関数', () => {
             id: '12345',
             admission: '20220101',
             discharge: '20220101',
-            procedures: ['123456']
+            procedures: ['123456'],
+            procedureNames: []
         });
     });
 

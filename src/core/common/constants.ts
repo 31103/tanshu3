@@ -4,6 +4,13 @@
  */
 
 /**
+ * 内視鏡的大腸ポリープ・粘膜切除術の診療行為コード
+ */
+export const COLONOSCOPY_PROCEDURE_CODE_SMALL = "150285010"; // 長径２センチメートル未満
+export const COLONOSCOPY_PROCEDURE_CODE_LARGE = "150183410"; // 長径２センチメートル以上
+export const COLONOSCOPY_PROCEDURE_CODES: string[] = [COLONOSCOPY_PROCEDURE_CODE_SMALL, COLONOSCOPY_PROCEDURE_CODE_LARGE]; // 小・大の両方のコードをまとめた配列
+
+/**
  * 対象手術等のコード一覧
  * 短期滞在手術等基本料３の対象となる診療行為コードのリスト
  */

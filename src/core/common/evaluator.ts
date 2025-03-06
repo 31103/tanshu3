@@ -5,7 +5,13 @@
 
 import { CaseData } from './types';
 import { calculateHospitalDays } from './utils';
-import { TARGET_PROCEDURES, COLONOSCOPY_SPECIAL_ADDITIONS, DEFAULT_RESULT_HEADER, MAX_HOSPITAL_DAYS } from './constants';
+import {
+    TARGET_PROCEDURES,
+    COLONOSCOPY_SPECIAL_ADDITIONS,
+    DEFAULT_RESULT_HEADER,
+    MAX_HOSPITAL_DAYS,
+    COLONOSCOPY_PROCEDURE_CODES
+} from './constants';
 
 /**
  * 短手３該当症例を判定する関数
@@ -59,11 +65,8 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
             if (surgeryProcedures.length > 0) return false;
 
             // 6. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック
-            // 内視鏡的大腸ポリープ・粘膜切除術のコード
-            const colonoscopyProcedures = ["150285010", "150183410"];
-
-            // 内視鏡的大腸ポリープ術を実施したかどうか
-            const hasColonoscopy = targetProceduresFound.some(p => colonoscopyProcedures.includes(p));
+            // 内視鏡的大腸ポリープ・粘膜切除術を実施したかどうか
+            const hasColonoscopy = c.procedures.some(p => COLONOSCOPY_PROCEDURE_CODES.includes(p));
 
             // 特定加算が含まれているかどうか
             const hasSpecialAddition = c.procedures.some(p => COLONOSCOPY_SPECIAL_ADDITIONS.includes(p));
