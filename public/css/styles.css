@@ -193,7 +193,9 @@ button:disabled {
 .action-button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: 8px 16px;
+    height: 36px;
     background-color: #3498db;
     color: white;
     border: none;
@@ -202,6 +204,8 @@ button:disabled {
     font-size: 14px;
     text-decoration: none;
     transition: background-color 0.3s;
+    box-sizing: border-box;
+    line-height: 1;
 }
 
 .action-button:hover:not(:disabled) {
@@ -216,6 +220,8 @@ button:disabled {
 
 .button-icon {
     margin-right: 8px;
+    font-size: 16px;
+    line-height: 1;
 }
 
 .download-link {
