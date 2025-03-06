@@ -82,6 +82,7 @@ h2 {
 .file-input-wrapper {
     position: relative;
     margin: 10px 0;
+    display: inline-block;
 }
 
 .custom-file-input {
@@ -94,6 +95,8 @@ h2 {
     cursor: pointer;
     transition: background-color 0.3s;
     font-size: 14px;
+    text-align: center;
+    min-width: 120px;
 }
 
 .custom-file-input:hover {
@@ -101,7 +104,14 @@ h2 {
 }
 
 #fileInput {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 /* ファイル情報エリア */
@@ -169,6 +179,7 @@ button:disabled {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
 }
 
 .result-textarea {
@@ -182,12 +193,16 @@ button:disabled {
     font-size: 14px;
     line-height: 1.5;
     resize: vertical;
+    box-sizing: border-box;
+    white-space: pre;
+    overflow-x: auto;
 }
 
 .result-actions {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
 .action-button {
@@ -196,6 +211,7 @@ button:disabled {
     justify-content: center;
     padding: 8px 16px;
     height: 36px;
+    min-width: 180px;
     background-color: #3498db;
     color: white;
     border: none;
@@ -206,6 +222,7 @@ button:disabled {
     transition: background-color 0.3s;
     box-sizing: border-box;
     line-height: 1;
+    flex: 1;
 }
 
 .action-button:hover:not(:disabled) {
@@ -311,9 +328,11 @@ footer {
 
     .result-actions {
         flex-direction: column;
+        gap: 8px;
     }
 
     .action-button {
         width: 100%;
+        min-width: unset;
     }
 }
