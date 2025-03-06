@@ -76,13 +76,43 @@ describe('evaluateCases関数', () => {
         expect(result.length).toBe(0);
     });
 
-    it('対象手術等を複数実施している症例は対象外とする', () => {
+    it('異なる対象手術等を複数実施している症例は対象外とする', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['160218510', '160218610'] // 対象手術コードを2つ含む
+                procedures: ['160218510', '160218610'] // 異なる対象手術コードを2つ含む
+            }
+        ];
+
+        const result = evaluateCases(cases);
+
+        expect(result.length).toBe(0);
+    });
+
+    it('同一の対象手術等を複数回実施している症例は対象とする（例外処理）', () => {
+        const cases: CaseData[] = [
+            {
+                id: '12345',
+                admission: '20220101',
+                discharge: '20220103',
+                procedures: ['150253010', '150253010'] // 同一の対象手術コード（水晶体再建術）を2回実施
+            }
+        ];
+
+        const result = evaluateCases(cases);
+
+        expect(result.length).toBe(1);
+    });
+
+    it('対象手術等に加えて他の手術を実施している症例は対象外とする', () => {
+        const cases: CaseData[] = [
+            {
+                id: '12345',
+                admission: '20220101',
+                discharge: '20220103',
+                procedures: ['160218510', '150999999'] // 対象手術コードと対象外の手術コード
             }
         ];
 
@@ -97,7 +127,7 @@ describe('evaluateCases関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['150292910', '150429570'] // 内視鏡的大腸ポリープ・粘膜切除術と特定加算
+                procedures: ['150285010', '150429570'] // 内視鏡的大腸ポリープ・粘膜切除術と特定加算
             }
         ];
 
@@ -106,10 +136,24 @@ describe('evaluateCases関数', () => {
         expect(result.length).toBe(0);
     });
 
-    // このテストは内視鏡的大腸ポリープ・粘膜切除術のコードが対象手術等に含まれていない場合はスキップ
-    it('内視鏡的大腸ポリープ・粘膜切除術で特定加算がない場合のテスト', () => {
+    it('内視鏡的大腸ポリープ・粘膜切除術（長径2cm以上）に特定加算がある場合は対象外とする', () => {
+        const cases: CaseData[] = [
+            {
+                id: '12345',
+                admission: '20220101',
+                discharge: '20220103',
+                procedures: ['150183410', '150429570'] // 内視鏡的大腸ポリープ・粘膜切除術（長径2cm以上）と特定加算
+            }
+        ];
+
+        const result = evaluateCases(cases);
+
+        expect(result.length).toBe(0);
+    });
+
+    it('内視鏡的大腸ポリープ・粘膜切除術で特定加算がない場合は対象とする', () => {
         // 対象手術等コードリストに内視鏡的大腸ポリープ・粘膜切除術のコードが含まれているかチェック
-        if (!TARGET_PROCEDURES.includes('150292910')) {
+        if (!TARGET_PROCEDURES.includes('150285010') && !TARGET_PROCEDURES.includes('150183410')) {
             console.log('内視鏡的大腸ポリープ・粘膜切除術のコードが対象手術等に含まれていないためテストをスキップします');
             return;
         }
@@ -119,7 +163,7 @@ describe('evaluateCases関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['150292910'] // 内視鏡的大腸ポリープ・粘膜切除術（加算なし）
+                procedures: ['150285010'] // 内視鏡的大腸ポリープ・粘膜切除術（加算なし）
             }
         ];
 

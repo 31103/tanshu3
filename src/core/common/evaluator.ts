@@ -27,13 +27,32 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
             const hospitalDays = calculateHospitalDays(c.admission, c.discharge);
             if (hospitalDays === null || hospitalDays > MAX_HOSPITAL_DAYS) return false;
 
-            // 4. 入院期間中に対象手術等を2以上実施していない
-            if (targetProceduresFound.length > 1) return false;
+            // 4. 入院期間中に対象手術等を2以上実施していないかチェック
+            // ただし、同一の対象手術等を複数回実施する場合は例外とする
+            if (targetProceduresFound.length > 1) {
+                // 対象手術等の種類数をカウント（重複を除外）
+                const uniqueTargetProcedures = new Set(targetProceduresFound);
+                if (uniqueTargetProcedures.size > 1) return false;
+            }
 
-            // 5. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック
-            // 「内視鏡的大腸ポリープ・粘膜切除術（150292910）」に特定の加算がある場合は対象外
-            const hasColonoscopy = c.procedures.includes('150292910');
+            // 5. 入院期間中に対象手術等に加えて、他の手術を実施していないかチェック
+            // 手術コードは通常 '15' で始まる
+            const surgeryProcedures = c.procedures.filter(p =>
+                p.startsWith('15') && !TARGET_PROCEDURES.includes(p)
+            );
+            if (surgeryProcedures.length > 0) return false;
+
+            // 6. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック
+            // 内視鏡的大腸ポリープ・粘膜切除術のコード
+            const colonoscopyProcedures = ["150285010", "150183410"];
+
+            // 内視鏡的大腸ポリープ術を実施したかどうか
+            const hasColonoscopy = targetProceduresFound.some(p => colonoscopyProcedures.includes(p));
+
+            // 特定加算が含まれているかどうか
             const hasSpecialAddition = c.procedures.some(p => COLONOSCOPY_SPECIAL_ADDITIONS.includes(p));
+
+            // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
             if (hasColonoscopy && hasSpecialAddition) return false;
 
             return true;
