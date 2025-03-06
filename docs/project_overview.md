@@ -37,6 +37,8 @@
     * `constants.test.ts` - 定数の検証テスト
     * `sample.test.ts` - サンプルテスト
   * `test/jest/integration/*.ts` - Jestを使用した統合テスト
+    * `data-flow.test.ts` - 複数月データのフローテスト
+    * `module-integration.test.ts` - モジュール間の連携テスト
   * `test/jest/e2e/*.ts` - Jestを使用したE2Eテスト
 
 ### ドキュメント
@@ -79,6 +81,8 @@ test/
       constants.test.ts - 定数検証テスト
       sample.test.ts  - サンプルテスト
     integration/      - Jest統合テスト
+      data-flow.test.ts - 複数月データのフローテスト
+      module-integration.test.ts - モジュール間の連携テスト
     e2e/              - JestのE2Eテスト
 public/               - 静的ファイル
   index.html          - メインHTMLファイル
@@ -122,11 +126,13 @@ docs/                 - ドキュメント
 
 * テスト関連：
   * `test/jest/unit/*.test.ts` - 各モジュールのユニットテスト
-    * `parsers.test.ts` - ファイル解析機能のテスト（カバレッジ: 93.47%）
-    * `utils.test.ts` - ユーティリティ関数のテスト（カバレッジ: 87.5%）
-    * `evaluator.test.ts` - 評価ロジックのテスト（カバレッジ: 89.47%）
+    * `parsers.test.ts` - ファイル解析機能のテスト（カバレッジ: 80.43%）
+    * `utils.test.ts` - ユーティリティ関数のテスト（カバレッジ: 75%）
+    * `evaluator.test.ts` - 評価ロジックのテスト（カバレッジ: 84.21%）
     * `constants.test.ts` - 定数の検証テスト（カバレッジ: 100%）
   * `test/jest/integration/*.test.ts` - モジュール間の連携テスト
+    * `data-flow.test.ts` - 複数月データのフローテスト
+    * `module-integration.test.ts` - モジュール間の連携テスト
   * `test/jest/e2e/*.test.ts` - ブラウザ環境でのE2Eテスト
   * `jest.config.js` - Jestの設定（モジュール解決、カバレッジなど）
 
@@ -185,12 +191,15 @@ docs/                 - ドキュメント
 
 ## テスト状況
 
-* コアモジュールに対する単体テストを実装済み（カバレッジ: 90.09%）
+* コアモジュールに対する単体テストを実装済み（単体テストカバレッジ: 90.09%）
   * constants.ts: 100%
   * evaluator.ts: 89.47%
   * parsers.ts: 93.47%
   * utils.ts: 87.5%
-* 今後予定：統合テスト、E2Eテストの実装
+* 統合テストを実装済み（統合後の全体カバレッジ: 81.17%）
+  * `data-flow.test.ts`: 複数月データのフローテスト
+  * `module-integration.test.ts`: モジュール間の連携テスト（パーサー、評価ロジック、ユーティリティ関数）
+* 今後予定：テストデータの拡充、E2Eテストの実装
 * 詳細な実装状況と計画は`docs/test_enhancement_plan.md`を参照
 
 ## 開発とメンテナンス
