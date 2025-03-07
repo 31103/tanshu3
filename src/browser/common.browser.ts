@@ -12,6 +12,9 @@ interface CaseData {
     admission: string;
     discharge: string;
     procedures: string[];
+    procedureNames?: string[];  // 診療明細名称のリスト（procedures配列と同じ順序）
+    isEligible?: boolean;       // 短手３対象症例かどうか
+    reason?: string;            // 対象/非対象の理由
 }
 
 /**
@@ -57,6 +60,13 @@ const targetProcedures: string[] = [
  * 内視鏡的大腸ポリープ・粘膜切除術の特定加算コード
  */
 const colonoscopySpecialAdditions: string[] = ["150429570", "150437170"];
+
+/**
+ * 出力設定の型定義
+ */
+interface OutputSettings {
+    showAllCases: boolean;   // 全症例を表示するかどうか（falseの場合は短手３対象症例のみ）
+}
 
 /**
  * EFファイルの行からデータを抽出する共通関数
@@ -235,26 +245,50 @@ function _calculateHospitalDays(admissionStr: string, dischargeStr: string): num
 
 /**
  * 短手３該当症例を判定する関数
- * 各症例が短期滞在手術等基本料３の条件に該当するかを判定します
  * @param cases - 判定対象の症例データ
  * @returns 短手３に該当する症例データ（ID昇順でソート済み）
  */
 function evaluateCases(cases: CaseData[]): CaseData[] {
-    return cases.filter(c => {
+    // 全症例に対して適格性と理由を設定
+    const evaluatedCases = cases.map(c => {
         try {
+            // 評価結果を格納するオブジェクトを作成（元のオブジェクトをコピー）
+            const evaluatedCase = { ...c };
+
             // 1. 退院日が '00000000' でない（退院が確定している）
-            if (!c.discharge || c.discharge === '00000000') return false;
+            if (!c.discharge || c.discharge === '00000000') {
+                evaluatedCase.isEligible = false;
+                evaluatedCase.reason = "退院日未確定";
+                return evaluatedCase;
+            }
 
             // 2. 対象手術等の実施（少なくとも1つの対象手術等が実施されている）
             const targetProceduresFound = c.procedures.filter(p => targetProcedures.includes(p));
-            if (targetProceduresFound.length === 0) return false;
+            if (targetProceduresFound.length === 0) {
+                evaluatedCase.isEligible = false;
+                evaluatedCase.reason = "対象手術等なし";
+                return evaluatedCase;
+            }
 
             // 3. 入院期間が5日以内
             const hospitalDays = _calculateHospitalDays(c.admission, c.discharge);
-            if (hospitalDays === null || hospitalDays > 5) return false;
+            if (hospitalDays === null || hospitalDays > 5) {
+                evaluatedCase.isEligible = false;
+                evaluatedCase.reason = "入院期間が６日以上";
+                return evaluatedCase;
+            }
 
-            // 4. 入院期間中に対象手術等を2以上実施していない
-            if (targetProceduresFound.length > 1) return false;
+            // 4. 入院期間中に対象手術等を2以上実施していないかチェック
+            // ただし、同一の対象手術等を複数回実施する場合は例外とする
+            if (targetProceduresFound.length > 1) {
+                // 対象手術等の種類数をカウント（重複を除外）
+                const uniqueTargetProcedures = new Set(targetProceduresFound);
+                if (uniqueTargetProcedures.size > 1) {
+                    evaluatedCase.isEligible = false;
+                    evaluatedCase.reason = "対象手術等を２以上実施";
+                    return evaluatedCase;
+                }
+            }
 
             // 5. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック
             // 大腸ポリープ切除術のコード
@@ -267,29 +301,80 @@ function evaluateCases(cases: CaseData[]): CaseData[] {
             const hasSpecialAddition = c.procedures.some(p => colonoscopySpecialAdditions.includes(p));
 
             // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
-            if (hasColonoscopy && hasSpecialAddition) return false;
+            if (hasColonoscopy && hasSpecialAddition) {
+                evaluatedCase.isEligible = false;
+                evaluatedCase.reason = "内視鏡的大腸ポリープ術に特定加算あり";
+                return evaluatedCase;
+            }
 
-            return true;
+            // すべての条件を満たす場合は短手３対象症例
+            evaluatedCase.isEligible = true;
+
+            // 実施された対象手術の名称を理由として設定
+            // 対象手術名のマッピング（簡易版）
+            const procedureNameMap: Record<string, string> = {
+                "160218510": "終夜睡眠ポリグラフィー（１及び２以外の場合）（安全精度管理下で行うもの）",
+                "160218610": "終夜睡眠ポリグラフィー（１及び２以外の場合）（その他のもの）",
+                "160183110": "反復睡眠潜時試験（ＭＳＬＴ）",
+                "160119710": "下垂体前葉負荷試験成長ホルモン（ＧＨ）（一連として）",
+                "160180410": "小児食物アレルギー負荷検査",
+                "160098110": "前立腺針生検法（その他のもの）",
+                "150285010": "内視鏡的大腸ポリープ・粘膜切除術（長径２センチメートル未満）",
+                "150183410": "内視鏡的大腸ポリープ・粘膜切除術（長径２センチメートル以上）",
+                "150253010": "水晶体再建術（眼内レンズを挿入する場合）（その他のもの）"
+                // 他の対象手術も必要に応じて追加
+            };
+
+            const procedureCode = targetProceduresFound[0]; // 最初の対象手術コード
+            evaluatedCase.reason = procedureNameMap[procedureCode] || "対象手術等";
+
+            return evaluatedCase;
         } catch (error) {
             console.error(`症例ID ${c.id} の評価中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
-            return false;
+            // エラーが発生した場合は該当しないと判断
+            return {
+                ...c,
+                isEligible: false,
+                reason: `評価エラー: ${error instanceof Error ? error.message : String(error)}`
+            };
         }
-    }).sort((a, b) => a.id.localeCompare(b.id));
+    });
+
+    // ID順にソート
+    return evaluatedCases.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /**
  * 結果をタブ区切りテキストにフォーマットする関数
  * @param cases - フォーマット対象の症例データ
- * @param headerLine - ヘッダー行（省略時は「データ識別番号\t入院年月日\t退院年月日」）
+ * @param settings - 出力設定（デフォルト: 短手３対象症例のみ）
+ * @param headerLine - ヘッダー行（省略時は「データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由」）
  * @returns フォーマットされたテキスト
  */
-function formatResults(cases: CaseData[], headerLine = "データ識別番号\t入院年月日\t退院年月日"): string {
+function formatResults(
+    cases: CaseData[],
+    settings: OutputSettings = { showAllCases: false },
+    headerLine = "データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由"
+): string {
     try {
-        let result = headerLine + '\n';
-        for (const c of cases) {
-            result += `${c.id}\t${c.admission}\t${c.discharge}\n`;
+        // 設定に基づいて出力する症例をフィルタリング
+        const filteredCases = settings.showAllCases
+            ? cases
+            : cases.filter(c => c.isEligible === true);
+
+        if (filteredCases.length === 0) {
+            return "該当する症例はありません。";
         }
-        return result;
+
+        // 各症例の行をフォーマット
+        const rows = filteredCases.map(c => {
+            const eligibilityText = c.isEligible ? "Yes" : "No";
+            const reasonText = c.reason || "";
+            return `${c.id}\t${c.admission}\t${c.discharge}\t${eligibilityText}\t${reasonText}`;
+        });
+
+        // ヘッダー行と症例行を結合
+        return [headerLine, ...rows].join('\n');
     } catch (error) {
         console.error(`結果のフォーマット中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
         return headerLine + '\n'; // 最低限ヘッダーは返す
