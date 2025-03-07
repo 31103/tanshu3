@@ -1250,3 +1250,311 @@ footer {
         display: none !important;
     }
 }
+
+/* 
+ * 通知履歴ボタン
+ * --------------------------------------------------
+ */
+.notification-history-button {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+}
+
+.notification-history-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.notification-history-button .notification-icon {
+    font-size: var(--font-size-lg);
+}
+
+.notification-history-button .notification-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--color-error);
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--spacing-xs);
+}
+
+.notification-history-button.hidden {
+    display: none;
+}
+
+.notification-history-button::after {
+    content: attr(data-count);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--color-error);
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 
+ * 通知履歴モーダル
+ * --------------------------------------------------
+ */
+.notification-history-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-index-modal);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.notification-history-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.notification-history-content {
+    background-color: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(-20px);
+    transition: transform var(--transition-normal);
+}
+
+.notification-history-modal.active .notification-history-content {
+    transform: translateY(0);
+}
+
+.notification-history-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-history-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.notification-history-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    cursor: pointer;
+    color: var(--text-tertiary);
+    padding: 0;
+    line-height: 1;
+}
+
+.notification-history-close:hover {
+    color: var(--text-primary);
+}
+
+.notification-history-list {
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    max-height: 50vh;
+}
+
+.history-item {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-md);
+    border-left: 4px solid transparent;
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+.history-item-success {
+    background-color: var(--color-success-light);
+    border-left-color: var(--color-success);
+}
+
+.history-item-warning {
+    background-color: var(--color-warning-light);
+    border-left-color: var(--color-warning);
+}
+
+.history-item-error {
+    background-color: var(--color-error-light);
+    border-left-color: var(--color-error);
+}
+
+.history-item-info {
+    background-color: var(--color-info-light);
+    border-left-color: var(--color-info);
+}
+
+.history-item-time {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    min-width: 80px;
+}
+
+.history-item-content {
+    flex: 1;
+}
+
+.history-item-title {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-weight: var(--font-weight-medium);
+}
+
+.history-item-message {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+.notification-history-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+}
+
+.no-history {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: var(--spacing-lg);
+}
+
+/* 
+ * トースト通知の拡張スタイル
+ * --------------------------------------------------
+ */
+.toast-view-all {
+    background: none;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--border-radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.toast-view-all:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.toast-view-all:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+/* 既存のトーストスタイルの拡張 */
+.toast {
+    position: relative;
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+/* 
+ * レスポンシブ対応
+ * --------------------------------------------------
+ */
+@media (max-width: 480px) {
+    .notification-history-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .history-item {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .history-item-time {
+        min-width: auto;
+    }
+
+    .toast-container {
+        max-width: 90%;
+        right: 5%;
+    }
+}
+
+/* 
+ * エラー解決策と回復アクション
+ * --------------------------------------------------
+ */
+.error-solution {
+    display: block;
+    margin-top: var(--spacing-sm);
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.toast-action {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    margin-right: var(--spacing-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.toast-action:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.toast-action:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+/* エラーメッセージの強調表示 */
+.validation-message.error .validation-text {
+    color: var(--color-error);
+}
+
+.validation-message.warning .validation-text {
+    color: var(--color-warning);
+}
+
+.validation-message.success .validation-text {
+    color: var(--color-success);
+}
