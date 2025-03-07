@@ -5,7 +5,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { parseDate, calculateHospitalDays, getErrorMessage } from '../../../src/core/common/utils.js';
+import { parseDate, calculateHospitalDays, getErrorMessage, formatDate } from '../../../src/core/common/utils.js';
 
 describe('parseDate関数', () => {
     it('有効な日付文字列をDateオブジェクトに変換する', () => {
@@ -97,6 +97,43 @@ describe('calculateHospitalDays関数', () => {
     it('入院日と退院日の両方が無効な場合はnullを返す', () => {
         const result = calculateHospitalDays('00000000', '00000000');
         expect(result).toBeNull();
+    });
+});
+
+describe('formatDate関数', () => {
+    it('デフォルトでyyyymmdd形式を返す', () => {
+        const result = formatDate('20241025');
+        expect(result).toBe('20241025');
+    });
+
+    it('yyyy/mm/dd形式に変換する', () => {
+        const result = formatDate('20241025', 'yyyy/mm/dd');
+        expect(result).toBe('2024/10/25');
+    });
+
+    it('00000000はそのまま返す', () => {
+        const result = formatDate('00000000', 'yyyy/mm/dd');
+        expect(result).toBe('00000000');
+    });
+
+    it('無効な日付文字列はそのまま返す', () => {
+        const result = formatDate('invalid', 'yyyy/mm/dd');
+        expect(result).toBe('invalid');
+    });
+
+    it('月と日が1桁の場合も正しくフォーマットする', () => {
+        const result = formatDate('20240105', 'yyyy/mm/dd');
+        expect(result).toBe('2024/01/05');
+    });
+
+    it('空の文字列はそのまま返す', () => {
+        const result = formatDate('', 'yyyy/mm/dd');
+        expect(result).toBe('');
+    });
+
+    it('nullはそのまま返す', () => {
+        const result = formatDate(null as unknown as string, 'yyyy/mm/dd');
+        expect(result).toBe(null as unknown as string);
     });
 });
 

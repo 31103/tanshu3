@@ -203,8 +203,23 @@ document.addEventListener('DOMContentLoaded', function () {
      * @returns {Object} 出力設定オブジェクト
      */
     function getOutputSettings() {
+        // 出力モード設定の取得
+        const showAllCases = document.getElementById('allCases').checked;
+
+        // 日付フォーマット設定の取得
+        const dateFormatElements = document.getElementsByName('dateFormat');
+        let dateFormat = 'yyyymmdd'; // デフォルト値
+
+        for (const element of dateFormatElements) {
+            if (element.checked) {
+                dateFormat = element.value;
+                break;
+            }
+        }
+
         return {
-            showAllCases: allCasesRadio.checked
+            showAllCases: showAllCases,
+            dateFormat: dateFormat
         };
     }
 

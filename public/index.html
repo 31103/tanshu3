@@ -48,14 +48,31 @@
             <div class="settings-section">
                 <h3>出力設定</h3>
                 <div class="settings-options">
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="eligibleOnly" name="outputMode" value="eligibleOnly" checked>
-                            <label for="eligibleOnly">短手３対象症例のみ</label>
+                    <div class="setting-group">
+                        <h4>出力対象</h4>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="eligibleOnly" name="outputMode" value="eligibleOnly" checked>
+                                <label for="eligibleOnly">短手３対象症例のみ</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="allCases" name="outputMode" value="allCases">
+                                <label for="allCases">全症例</label>
+                            </div>
                         </div>
-                        <div class="radio-option">
-                            <input type="radio" id="allCases" name="outputMode" value="allCases">
-                            <label for="allCases">全症例</label>
+                    </div>
+
+                    <div class="setting-group">
+                        <h4>日付フォーマット</h4>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="dateFormatYYYYMMDD" name="dateFormat" value="yyyymmdd" checked>
+                                <label for="dateFormatYYYYMMDD">YYYYMMDD（例: 20241025）</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="dateFormatYYYY/MM/DD" name="dateFormat" value="yyyy/mm/dd">
+                                <label for="dateFormatYYYY/MM/DD">YYYY/MM/DD（例: 2024/10/25）</label>
+                            </div>
                         </div>
                     </div>
                 </div>

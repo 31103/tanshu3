@@ -66,6 +66,7 @@ const colonoscopySpecialAdditions: string[] = ["150429570", "150437170"];
  */
 interface OutputSettings {
     showAllCases: boolean;   // 全症例を表示するかどうか（falseの場合は短手３対象症例のみ）
+    dateFormat: 'yyyymmdd' | 'yyyy/mm/dd';  // 日付フォーマット
 }
 
 /**
@@ -345,15 +346,42 @@ function evaluateCases(cases: CaseData[]): CaseData[] {
 }
 
 /**
- * 結果をタブ区切りテキストにフォーマットする関数
- * @param cases - フォーマット対象の症例データ
+ * 日付文字列のフォーマットを変換する関数
+ * @param dateStr - 変換する日付文字列（yyyymmdd形式）
+ * @param format - 出力フォーマット（'yyyymmdd'または'yyyy/mm/dd'）
+ * @returns フォーマットされた日付文字列、または元の文字列（無効な日付の場合）
+ */
+function formatDate(dateStr: string, format: 'yyyymmdd' | 'yyyy/mm/dd' = 'yyyymmdd'): string {
+    // 00000000の場合はそのまま返す
+    if (dateStr === '00000000') return dateStr;
+
+    // 日付オブジェクトに変換
+    const date = _parseDate(dateStr);
+    if (!date) return dateStr; // 変換できない場合は元の文字列を返す
+
+    // 年、月、日を取得
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // 月は0から始まるので+1
+    const day = date.getDate();
+
+    // 指定されたフォーマットに変換
+    if (format === 'yyyy/mm/dd') {
+        return `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+    } else {
+        return `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}`;
+    }
+}
+
+/**
+ * 結果をフォーマットする関数
+ * @param cases - 症例データの配列
  * @param settings - 出力設定（デフォルト: 短手３対象症例のみ）
  * @param headerLine - ヘッダー行（省略時は「データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由」）
  * @returns フォーマットされたテキスト
  */
 function formatResults(
     cases: CaseData[],
-    settings: OutputSettings = { showAllCases: false },
+    settings: OutputSettings = { showAllCases: false, dateFormat: 'yyyymmdd' },
     headerLine = "データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由"
 ): string {
     try {
@@ -370,7 +398,12 @@ function formatResults(
         const rows = filteredCases.map(c => {
             const eligibilityText = c.isEligible ? "Yes" : "No";
             const reasonText = c.reason || "";
-            return `${c.id}\t${c.admission}\t${c.discharge}\t${eligibilityText}\t${reasonText}`;
+
+            // 日付フォーマットの適用
+            const formattedAdmission = formatDate(c.admission, settings.dateFormat);
+            const formattedDischarge = formatDate(c.discharge, settings.dateFormat);
+
+            return `${c.id}\t${formattedAdmission}\t${formattedDischarge}\t${eligibilityText}\t${reasonText}`;
         });
 
         // ヘッダー行と症例行を結合

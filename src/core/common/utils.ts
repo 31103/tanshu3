@@ -45,6 +45,33 @@ export function calculateHospitalDays(admissionStr: string, dischargeStr: string
 }
 
 /**
+ * 日付文字列のフォーマットを変換する関数
+ * @param dateStr - 変換する日付文字列（yyyymmdd形式）
+ * @param format - 出力フォーマット（'yyyymmdd'または'yyyy/mm/dd'）
+ * @returns フォーマットされた日付文字列、または元の文字列（無効な日付の場合）
+ */
+export function formatDate(dateStr: string, format: 'yyyymmdd' | 'yyyy/mm/dd' = 'yyyymmdd'): string {
+    // 00000000の場合はそのまま返す
+    if (dateStr === '00000000') return dateStr;
+
+    // 日付オブジェクトに変換
+    const date = parseDate(dateStr);
+    if (!date) return dateStr; // 変換できない場合は元の文字列を返す
+
+    // 年、月、日を取得
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // 月は0から始まるので+1
+    const day = date.getDate();
+
+    // 指定されたフォーマットに変換
+    if (format === 'yyyy/mm/dd') {
+        return `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+    } else {
+        return `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}`;
+    }
+}
+
+/**
  * エラーオブジェクトからメッセージを取得するヘルパー関数
  * @param error - エラーオブジェクトまたは任意の値
  * @returns エラーメッセージ文字列
