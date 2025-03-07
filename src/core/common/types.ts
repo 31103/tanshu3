@@ -54,4 +54,14 @@ export interface FileInfo {
  */
 export interface ErrorWithMessage {
     message: string;  // エラーメッセージ
+}
+
+/**
+ * ファイルバリデーション結果の型定義
+ * 入院統合EFファイルのフォーマット検証結果を表します。
+ */
+export interface ValidationResult {
+    isValid: boolean;   // ファイルが有効かどうかのフラグ
+    errors: string[];   // 重大なエラーメッセージの配列
+    warnings: string[]; // 警告メッセージの配列
 } 

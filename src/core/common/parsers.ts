@@ -3,7 +3,7 @@
  * このファイルには、ファイル解析に関連する関数を含みます。
  */
 
-import { CaseData, RawCaseData } from './types';
+import { CaseData, RawCaseData, ValidationResult } from './types';
 
 /**
  * EFファイルの行からデータを抽出する共通関数
@@ -168,4 +168,133 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
     }
 
     return Object.values(caseMap);
+}
+
+/**
+ * 入院統合EFファイルのフォーマットを検証する関数
+ * @param content - ファイルの内容
+ * @returns 検証結果オブジェクト
+ */
+export function validateEFFile(content: string): ValidationResult {
+    // 初期の検証結果
+    const result: ValidationResult = {
+        isValid: true,
+        errors: [],
+        warnings: []
+    };
+
+    // 1. ファイルが空でないかチェック
+    if (!content || content.trim() === '') {
+        result.isValid = false;
+        result.errors.push('ファイルが空です。');
+        return result;
+    }
+
+    const lines = content.split(/\r?\n/);
+
+    // 2. 少なくとも2行あるかチェック（ヘッダー行 + データ行）
+    if (lines.length < 2) {
+        result.isValid = false;
+        result.errors.push('ファイルに少なくともヘッダー行とデータ行が含まれていません。');
+        return result;
+    }
+
+    // 3. ヘッダー行の存在チェック
+    const headerLine = lines[0].trim();
+    if (!headerLine) {
+        result.warnings.push('ヘッダー行が空です。');
+    }
+
+    // データ行のサンプリング（最大で10行をチェック）
+    const sampleSize = Math.min(10, lines.length - 1);
+    let validLineCount = 0;
+    let invalidLineCount = 0;
+    let columnsCountWarning = false;
+
+    for (let i = 1; i <= sampleSize; i++) {
+        const line = lines[i].trim();
+        if (!line) continue; // 空行はスキップ
+
+        // タブ区切りでデータを分割
+        let columns: string[] = [];
+        if (line.includes('|')) {
+            const parts = line.split('|');
+            if (parts.length >= 2) {
+                columns = parts[1].trim().split('\t');
+            } else {
+                columns = [];
+            }
+        } else {
+            columns = line.split('\t');
+        }
+
+        // 4. 必要な列数があるかチェック（最低30列必要）
+        if (columns.length < 30) {
+            invalidLineCount++;
+            if (!columnsCountWarning) {
+                result.warnings.push(`一部の行に必要な列数（30列以上）がありません。（最初の例：行 ${i + 1}, 列数: ${columns.length}）`);
+                columnsCountWarning = true;
+            }
+            continue;
+        }
+
+        // 5. 施設コードのフォーマットチェック（列1）- 9桁の数字
+        const facilityCode = columns[0].trim();
+        if (!/^\d{9}$/.test(facilityCode)) {
+            invalidLineCount++;
+            if (!result.warnings.some(w => w.includes('施設コード'))) {
+                result.warnings.push(`一部の行の施設コードが適切なフォーマット（9桁の数字）ではありません。（最初の例：行 ${i + 1}, 値: ${facilityCode}）`);
+            }
+        }
+
+        // 6. データ識別番号のフォーマットチェック（列2）- 非空かつ10桁以内
+        const dataId = columns[1].trim();
+        if (!dataId || dataId.length > 10) {
+            invalidLineCount++;
+            if (!result.warnings.some(w => w.includes('データ識別番号'))) {
+                result.warnings.push(`一部の行のデータ識別番号が不適切です（空または10桁超）。（最初の例：行 ${i + 1}, 値: ${dataId}）`);
+            }
+        }
+
+        // 7. 退院年月日と入院年月日のフォーマットチェック（列3, 4）- 8桁の数字または00000000
+        const discharge = columns[2].trim();
+        const admission = columns[3].trim();
+        const dateRegex = /^(\d{8}|00000000)$/;
+
+        if (!dateRegex.test(discharge)) {
+            invalidLineCount++;
+            if (!result.warnings.some(w => w.includes('退院年月日'))) {
+                result.warnings.push(`一部の行の退院年月日が適切なフォーマット（8桁の数字または00000000）ではありません。（最初の例：行 ${i + 1}, 値: ${discharge}）`);
+            }
+        }
+
+        if (!dateRegex.test(admission)) {
+            invalidLineCount++;
+            if (!result.warnings.some(w => w.includes('入院年月日'))) {
+                result.warnings.push(`一部の行の入院年月日が適切なフォーマット（8桁の数字または00000000）ではありません。（最初の例：行 ${i + 1}, 値: ${admission}）`);
+            }
+        }
+
+        // 8. データ区分のフォーマットチェック（列5）- 2桁以内の数字
+        const dataCategory = columns[4].trim();
+        if (!/^\d{1,2}$/.test(dataCategory)) {
+            invalidLineCount++;
+            if (!result.warnings.some(w => w.includes('データ区分'))) {
+                result.warnings.push(`一部の行のデータ区分が適切なフォーマット（2桁以内の数字）ではありません。（最初の例：行 ${i + 1}, 値: ${dataCategory}）`);
+            }
+        }
+
+        // 有効な行としてカウント
+        validLineCount++;
+    }
+
+    // 9. 有効なデータ行の割合をチェック
+    if (validLineCount === 0 && sampleSize > 0) {
+        result.isValid = false;
+        result.errors.push('サンプリングした行の中に有効なデータ行がありませんでした。ファイルフォーマットが入院統合EFファイルの仕様に合っていない可能性があります。');
+    } else if (invalidLineCount > validLineCount) {
+        result.warnings.push('無効なデータ行が有効な行より多く見つかりました。ファイルの内容を確認してください。');
+    }
+
+    return result;
 } 
