@@ -29,24 +29,27 @@
             <!-- ドラッグ&ドロップエリア -->
             <div id="dropArea" class="drop-area" aria-label="ファイルをドラッグ&ドロップするエリア">
                 <div class="drop-area-content">
-                    <p>ファイルをここにドラッグ&ドロップ</p>
-                    <p>または</p>
+                    <p class="drop-instruction"><span class="icon">📄</span>ファイルをここにドラッグ&ドロップ</p>
+                    <p class="or-divider">または</p>
+                    <button id="fileSelectButton" type="button" class="primary-button">ファイルを追加</button>
                     <div class="file-input-wrapper">
-                        <input type="file" id="fileInput" multiple accept=".txt" aria-label="入院EF統合ファイルを選択">
-                        <label for="fileInput" class="custom-file-input" role="button" tabindex="0">ファイルを追加</label>
+                        <input type="file" id="fileInput" multiple accept=".txt" style="display: none;"
+                            aria-label="入院EF統合ファイルを選択">
                     </div>
                 </div>
             </div>
 
             <!-- 選択されたファイル情報 -->
             <div id="fileInfoArea" class="file-info-area" aria-live="polite">
-                <span class="file-input-label">ファイルが選択されていません</span>
+                <p class="no-file-message">ファイルが選択されていません</p>
             </div>
 
-            <!-- ボタンエリア -->
-            <div class="button-group">
-                <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">クリア</button>
-                <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">実行</button>
+            <!-- 操作ボタンエリア -->
+            <div class="action-container">
+                <div class="button-group">
+                    <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">クリア</button>
+                    <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">実行</button>
+                </div>
             </div>
         </section>
 

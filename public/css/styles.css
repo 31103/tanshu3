@@ -42,134 +42,209 @@ h2 {
 
 /* ファイル入力セクション */
 .input-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .file-input-container {
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .drop-area,
+    .file-info-container {
+        flex: 1;
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 /* ドラッグ&ドロップエリア */
 .drop-area {
     border: 2px dashed #3498db;
     border-radius: 8px;
-    padding: 20px;
-    text-align: center;
     background-color: #f0f7ff;
     transition: all 0.3s ease;
-    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
     cursor: pointer;
 }
 
 .drop-area.drag-over {
-    background-color: #d6eaff;
-    border-color: #2980b9;
-    transform: scale(1.01);
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
 }
 
 .drop-area-content {
+    text-align: center;
+    padding: 1.5rem;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.drop-instruction {
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 0.5rem;
 }
 
-.drop-area p {
-    margin: 5px 0;
-    color: #666;
+.icon {
+    font-size: 1.5rem;
 }
 
-/* ファイル入力 */
-.file-input-wrapper {
+.or-divider {
+    margin: 1rem 0;
+    color: #7f8c8d;
     position: relative;
-    margin: 10px 0;
-    display: inline-block;
-}
-
-#fileInput {
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    z-index: 1;
-}
-
-.custom-file-input {
-    position: relative;
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-size: 14px;
+    width: 80%;
     text-align: center;
-    min-width: 120px;
-    z-index: 0;
 }
 
-.custom-file-input:hover {
-    background-color: #2980b9;
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background-color: #e0e0e0;
 }
 
-/* ファイル情報エリア */
+.or-divider::before {
+    left: 0;
+}
+
+.or-divider::after {
+    right: 0;
+}
+
+.file-input-wrapper {
+    margin: 0.5rem 0;
+}
+
+#fileSelectButton {
+    margin-bottom: 0.5rem;
+}
+
+/* ファイル情報コンテナ */
+.file-info-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-header {
+    background-color: #e3f2fd;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #bbdefb;
+}
+
+.info-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #1976d2;
+    font-weight: 500;
+}
+
 .file-info-area {
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 1rem;
+    margin-top: 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: 200px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.file-input-label {
-    color: #666;
+.no-file-message {
+    color: #7f8c8d;
+    font-style: italic;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+/* 操作ボタンエリア */
+.action-container {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+    width: 100%;
 }
 
 /* ボタングループ */
 .button-group {
     display: flex;
-    gap: 10px;
-    margin: 15px 0;
+    gap: 1rem;
+    justify-content: flex-end;
 }
 
-/* ボタン */
+/* ボタン共通スタイル */
 button {
-    padding: 10px 20px;
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
 }
 
+/* プライマリーボタン */
 .primary-button {
-    background-color: #4CAF50;
+    background-color: #3498db;
     color: white;
 }
 
 .primary-button:hover:not(:disabled) {
-    background-color: #45a049;
+    background-color: #2980b9;
 }
 
+/* セカンダリーボタン */
 .secondary-button {
-    background-color: #f1f1f1;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: #ecf0f1;
+    color: #7f8c8d;
+    border: 1px solid #bdc3c7;
 }
 
 .secondary-button:hover:not(:disabled) {
-    background-color: #e7e7e7;
+    background-color: #bdc3c7;
+    color: #2c3e50;
 }
 
+/* 無効化されたボタン */
 button:disabled {
-    background-color: #cccccc;
-    color: #888;
+    opacity: 0.6;
     cursor: not-allowed;
-    opacity: 0.7;
 }
 
 /* 結果セクション */
@@ -376,4 +451,110 @@ footer {
 .loading-indicator p {
     color: #666;
     margin: 0;
+}
+
+/* ファイル項目のスタイル */
+.file-item {
+    padding: 0.7rem;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item:hover {
+    background-color: #f5f9ff;
+    border-color: #bbdefb;
+}
+
+.file-item-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.file-name {
+    margin: 0 0 0.3rem 0;
+    font-weight: 500;
+    color: #2c3e50;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.file-size {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+.file-remove {
+    margin-left: 0.5rem;
+    color: #e74c3c;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    border-radius: 50%;
+    width: 1.8rem;
+    height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.file-remove:hover {
+    background-color: #ffebee;
+}
+
+.file-more {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+/* ファイル数のスタイル */
+.file-count {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 0.5rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ドラッグ&ドロップフィードバック */
+.drop-feedback {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drop-feedback.success {
+    background-color: #2ecc71;
+}
+
+.drop-feedback.warning {
+    background-color: #f39c12;
+}
+
+.drop-feedback.error {
+    background-color: #e74c3c;
 }

@@ -4,8 +4,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     // DOM要素の取得
     const fileInput = document.getElementById('fileInput');
+    const fileSelectButton = document.getElementById('fileSelectButton');
     const fileInfoArea = document.getElementById('fileInfoArea');
-    const fileLabel = document.querySelector('.file-input-label');
     const executeButton = document.getElementById('executeButton');
     const clearButton = document.getElementById('clearButton');
     const resultTextarea = document.getElementById('resultTextarea');
@@ -14,15 +14,162 @@ document.addEventListener('DOMContentLoaded', function () {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const dropArea = document.getElementById('dropArea');
     const downloadLink = document.getElementById('downloadLink');
-    const customFileInput = document.querySelector('.custom-file-input');
+
+    // ファイル選択ボタンのクリックイベント
+    fileSelectButton.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // ドラッグ&ドロップ処理
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('drag-over');
+    });
+
+    dropArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('drag-over');
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('drag-over');
+
+        if (e.dataTransfer.files.length > 0) {
+            // ドロップされたファイルを処理
+            processNewFiles(Array.from(e.dataTransfer.files));
+        }
+    });
+
+    // ドロップエリア全体をクリック可能に
+    dropArea.addEventListener('click', (e) => {
+        // buttonの場合は、buttonのイベントに任せる
+        if (e.target.tagName !== 'BUTTON') {
+            fileInput.click();
+        }
+    });
+
+    // ファイル選択時の処理
+    fileInput.addEventListener('change', () => {
+        // 選択されたファイルを処理
+        processNewFiles(Array.from(fileInput.files));
+    });
 
     /**
-     * ファイル選択時の処理
+     * 新しく選択されたファイルを処理する関数
+     * @param {Array<File>} files - 処理対象のファイル配列
      */
-    fileInput.addEventListener('change', function (e) {
-        e.stopPropagation(); // イベントの伝播を停止
+    function processNewFiles(files) {
+        // テキストファイルのみをフィルタリング
+        const textFiles = files.filter(file => file.name.endsWith('.txt'));
+
+        if (textFiles.length === 0) {
+            showDropFeedback('error', 'テキストファイル(.txt)のみ追加できます');
+            return;
+        }
+
+        // DataTransferオブジェクトを使用して新しいFileListを作成
+        const dt = new DataTransfer();
+
+        // 重複するファイルを除外するために名前を追跡
+        const fileNames = new Set();
+        let duplicateCount = 0;
+
+        // 既存のファイルがあれば追加
+        if (window.selectedFiles) {
+            Array.from(window.selectedFiles).forEach(file => {
+                fileNames.add(file.name);
+                dt.items.add(file);
+            });
+        }
+
+        // 新しいファイルを追加（重複を除外）
+        textFiles.forEach(file => {
+            if (!fileNames.has(file.name)) {
+                fileNames.add(file.name);
+                dt.items.add(file);
+            } else {
+                duplicateCount++;
+            }
+        });
+
+        // フィードバックメッセージを表示
+        if (duplicateCount > 0) {
+            if (duplicateCount === textFiles.length) {
+                showDropFeedback('warning', 'すべてのファイルが既に追加されています');
+            } else {
+                showDropFeedback('success', `${textFiles.length - duplicateCount}ファイルを追加しました (${duplicateCount}ファイルは重複)`);
+            }
+        } else {
+            showDropFeedback('success', `${textFiles.length}ファイルを追加しました`);
+        }
+
+        // グローバル変数に保存
+        window.selectedFiles = dt.files;
+
+        // input要素のfilesプロパティを更新
+        fileInput.files = dt.files;
+
+        // ファイル情報表示を更新
         updateFileInfo();
-    });
+
+        // 追加したファイルのバリデーションを実行
+        validateFiles(textFiles.filter(file => !fileNames.has(file.name) || duplicateCount === 0));
+    }
+
+    /**
+     * 追加されたファイルのバリデーションを実行する関数
+     * @param {Array<File>} files - バリデーション対象のファイル配列
+     */
+    async function validateFiles(files) {
+        if (files.length === 0 || typeof validateEFFile !== 'function') return;
+
+        // バリデーション中フィードバックを表示
+        showDropFeedback('info', 'ファイルのフォーマットを検証中...');
+
+        let hasErrors = false;
+        let warnings = [];
+
+        // 各ファイルを検証
+        for (const file of files) {
+            try {
+                const content = await readFileAsText(file);
+                const validationResult = validateEFFile(content);
+
+                // エラーがある場合は処理を中断
+                if (!validationResult.isValid) {
+                    const errorMessages = validationResult.errors.join('<br>');
+                    showDropFeedback('error', `ファイル「${file.name}」は入院統合EFファイルのフォーマットに準拠していません。<br>${errorMessages}`);
+                    hasErrors = true;
+                    break;
+                }
+
+                // 警告がある場合は収集
+                if (validationResult.warnings.length > 0) {
+                    warnings.push(`ファイル「${file.name}」: ${validationResult.warnings.join(' ')}`);
+                }
+            } catch (error) {
+                console.error(`ファイル ${file.name} の検証中にエラーが発生しました:`, error);
+                showDropFeedback('error', `ファイル「${file.name}」の検証中にエラーが発生しました: ${error.message || 'Unknown error'}`);
+                hasErrors = true;
+                break;
+            }
+        }
+
+        // エラーがなく警告がある場合
+        if (!hasErrors && warnings.length > 0) {
+            // 警告メッセージを表示
+            if (warnings.length > 3) {
+                // 警告が多すぎる場合は省略
+                showDropFeedback('warning', `一部のファイルに注意が必要です: <br>${warnings.slice(0, 3).join('<br>')}<br>...(他 ${warnings.length - 3} 件の警告)`);
+            } else {
+                showDropFeedback('warning', `一部のファイルに注意が必要です: <br>${warnings.join('<br>')}`);
+            }
+        } else if (!hasErrors) {
+            // すべて正常の場合
+            showDropFeedback('success', 'すべてのファイルは入院統合EFファイルのフォーマットに準拠しています。');
+        }
+    }
 
     /**
      * クリアボタン押下時の処理
@@ -34,6 +181,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // FileListを空にするためのダミーのDataTransferを作成
         const dt = new DataTransfer();
         fileInput.files = dt.files;
+
+        // グローバル変数もクリア
+        window.selectedFiles = null;
 
         // ファイル情報表示をリセット
         updateFileInfo();
@@ -113,6 +263,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 const file = files[i];
                 // ファイル内容を読み込み
                 const content = await readFileAsText(file);
+
+                // ファイルフォーマットのバリデーション
+                if (typeof validateEFFile === 'function') {
+                    const validationResult = validateEFFile(content);
+
+                    // エラーがある場合は処理を中断
+                    if (!validationResult.isValid) {
+                        const errorMessages = validationResult.errors.join('\n');
+                        throw new Error(`ファイル「${file.name}」は入院統合EFファイルのフォーマットに準拠していません。\n${errorMessages}`);
+                    }
+
+                    // 警告がある場合はコンソールに出力
+                    if (validationResult.warnings.length > 0) {
+                        console.warn(`ファイル「${file.name}」の警告: ${validationResult.warnings.join(', ')}`);
+                    }
+                }
+
                 // EFファイルを解析
                 const parsedCases = parseEFFile(content);
                 console.log(`ファイル ${file.name} から ${parsedCases.length} 件の症例データを抽出しました。`);
@@ -155,10 +322,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.readAsText(file, 'Shift_JIS');
             } catch (error) {
                 try {
-                    // 失敗した場合はUTF-8で試行
+                    // Shift_JISで失敗した場合はUTF-8で試す
                     reader.readAsText(file, 'UTF-8');
-                } catch (e) {
-                    reject(new Error(`ファイル "${file.name}" のエンコーディングを検出できませんでした。`));
+                } catch (finalError) {
+                    reject(new Error(`ファイル "${file.name}" の読み込みに失敗しました: ${finalError.message}`));
                 }
             }
         });
@@ -193,95 +360,105 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /**
-     * ドラッグ&ドロップ関連のイベント設定
-     */
-    // ドラッグオーバー時
-    dropArea.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropArea.classList.add('drag-over');
-    });
-
-    // ドラッグリーブ時
-    dropArea.addEventListener('dragleave', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropArea.classList.remove('drag-over');
-    });
-
-    // ドロップ時
-    dropArea.addEventListener('drop', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropArea.classList.remove('drag-over');
-
-        // ドロップされたファイルを取得
-        if (e.dataTransfer.files.length > 0) {
-            // FileListをDataTransferを使って新しく作成
-            const dt = new DataTransfer();
-            Array.from(e.dataTransfer.files).forEach(file => {
-                dt.items.add(file);
-            });
-            fileInput.files = dt.files;
-            updateFileInfo();
-        }
-    });
-
-    // ドロップエリアクリック時
-    dropArea.addEventListener('click', function (e) {
-        e.preventDefault(); // デフォルトの動作を防止
-        e.stopPropagation(); // イベントの伝播を停止
-        fileInput.click();
-    });
-
-    // ファイル選択ボタンのクリックイベント
-    customFileInput.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        fileInput.click();
-    });
-
-    // ファイル選択ボタンのキーボードイベント（アクセシビリティ対応）
-    customFileInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInput.click();
-        }
-    });
-
-    /**
      * ファイル情報を更新する関数
      */
     function updateFileInfo() {
         if (fileInput.files && fileInput.files.length > 0) {
-            // ファイル情報を表示
-            if (fileInput.files.length === 1) {
-                fileLabel.textContent = `1 ファイルが選択されました: ${fileInput.files[0].name}`;
-                fileInfoArea.innerHTML = `<span class="file-input-label">${fileLabel.textContent}</span>`;
-            } else {
-                fileLabel.textContent = `${fileInput.files.length} ファイルが選択されました`;
+            // ファイル情報のコンテナを作成
+            let fileInfoHTML = '';
 
-                // 選択されたファイル一覧を表示
-                const fileList = Array.from(fileInput.files).slice(0, 5).map(f => f.name).join('<br>');
-                if (fileInput.files.length > 5) {
-                    fileInfoArea.innerHTML = `<span class="file-input-label">${fileLabel.textContent}</span><p>${fileList}<br>...(他 ${fileInput.files.length - 5} ファイル)</p>`;
-                } else {
-                    fileInfoArea.innerHTML = `<span class="file-input-label">${fileLabel.textContent}</span><p>${fileList}</p>`;
-                }
+            // ファイル数を表示するヘッダーを追加
+            fileInfoHTML += `<div class="file-count">${fileInput.files.length}ファイルが選択されています</div>`;
+
+            // 最大5つまで表示
+            const displayCount = Math.min(fileInput.files.length, 5);
+
+            for (let i = 0; i < displayCount; i++) {
+                const file = fileInput.files[i];
+                fileInfoHTML += `
+                    <div class="file-item" data-filename="${file.name}">
+                        <div class="file-item-info">
+                            <p class="file-name">${file.name}</p>
+                            <p class="file-size">${formatFileSize(file.size)}</p>
+                        </div>
+                        <button type="button" class="file-remove" title="削除" aria-label="${file.name}を削除">×</button>
+                    </div>
+                `;
             }
+
+            // 5つ以上ある場合は残りの数を表示
+            if (fileInput.files.length > 5) {
+                fileInfoHTML += `<p class="file-more">...他 ${fileInput.files.length - 5} ファイル</p>`;
+            }
+
+            fileInfoArea.innerHTML = fileInfoHTML;
+
+            // 削除ボタンのイベントリスナーを追加
+            document.querySelectorAll('.file-remove').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const filename = e.currentTarget.closest('.file-item').dataset.filename;
+                    removeFile(filename);
+                });
+            });
 
             // ボタンを有効化
             executeButton.disabled = false;
             clearButton.disabled = false;
         } else {
-            fileLabel.textContent = 'ファイルが選択されていません';
-            fileInfoArea.innerHTML = `<span class="file-input-label">ファイルが選択されていません</span>`;
+            // ファイルが選択されていない場合
+            fileInfoArea.innerHTML = '<p class="no-file-message">ファイルが選択されていません</p>';
 
             // ボタンを無効化
             executeButton.disabled = true;
             clearButton.disabled = true;
         }
+    }
+
+    /**
+     * 特定のファイルを削除する関数
+     * @param {string} filename - 削除するファイルの名前
+     */
+    function removeFile(filename) {
+        if (!window.selectedFiles || window.selectedFiles.length === 0) return;
+
+        // DataTransferオブジェクトを使用して新しいFileListを作成
+        const dt = new DataTransfer();
+
+        // 削除対象以外のファイルを追加
+        Array.from(window.selectedFiles).forEach(file => {
+            if (file.name !== filename) {
+                dt.items.add(file);
+            }
+        });
+
+        // 更新したFileListを設定
+        window.selectedFiles = dt.files;
+        fileInput.files = dt.files;
+
+        // ファイル情報表示を更新
+        updateFileInfo();
+
+        // ファイルがすべて削除された場合は結果もクリア
+        if (fileInput.files.length === 0) {
+            resultTextarea.value = '';
+            copyButton.disabled = true;
+            downloadLink.style.display = 'none';
+        }
+    }
+
+    /**
+     * ファイルサイズを読みやすい形式にフォーマットする関数
+     * @param {number} bytes - バイト単位のファイルサイズ
+     * @returns {string} フォーマットされたファイルサイズ
+     */
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     /**
@@ -309,5 +486,38 @@ document.addEventListener('DOMContentLoaded', function () {
         downloadLink.addEventListener('click', () => {
             setTimeout(() => URL.revokeObjectURL(url), 100);
         }, { once: true });
+    }
+
+    /**
+     * ドラッグ&ドロップのフィードバックを表示する関数
+     * @param {string} type - フィードバックのタイプ (success/warning/error)
+     * @param {string} message - 表示するメッセージ
+     */
+    function showDropFeedback(type, message) {
+        // フィードバックエレメントがなければ作成
+        let feedbackEl = document.getElementById('dropFeedback');
+        if (!feedbackEl) {
+            feedbackEl = document.createElement('div');
+            feedbackEl.id = 'dropFeedback';
+            feedbackEl.className = 'drop-feedback';
+            document.querySelector('.input-section').appendChild(feedbackEl);
+        }
+
+        // タイプに応じたクラスを設定
+        feedbackEl.className = `drop-feedback ${type}`;
+        feedbackEl.textContent = message;
+
+        // アニメーション効果
+        feedbackEl.style.opacity = '1';
+
+        // 3秒後に消す
+        setTimeout(() => {
+            feedbackEl.style.opacity = '0';
+            setTimeout(() => {
+                if (feedbackEl.parentNode) {
+                    feedbackEl.parentNode.removeChild(feedbackEl);
+                }
+            }, 300);
+        }, 3000);
     }
 }); 
