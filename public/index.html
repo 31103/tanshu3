@@ -6,51 +6,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="入院EF統合ファイルから短期滞在手術等基本料３に該当する症例を抽出するプログラム">
     <meta name="author" content="医療情報システム">
-    <meta name="theme-color" content="#3498db">
+    <meta name="theme-color" content="#1976d2">
     <title>短期滞在手術等基本料３判定プログラム</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
+    <!-- トースト通知コンテナ -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
     <div class="container" role="main">
         <header>
             <h1>短期滞在手術等基本料３判定プログラム</h1>
         </header>
 
+        <!-- 情報セクション -->
         <section class="info-section" aria-labelledby="program-info">
             <h2 id="program-info">プログラムについて</h2>
             <p>このプログラムは、入院EF統合ファイルを読み込み、短期滞在手術等基本料３に該当する症例を抽出します。</p>
             <p>複数月のファイルを一度に処理することが可能です。同一患者IDの場合、退院情報が更新された場合は最新の情報が使用されます。</p>
         </section>
 
-        <section class="input-section" aria-labelledby="file-selection">
-            <h2 id="file-selection">ファイル選択</h2>
+        <!-- ステップインジケーター -->
+        <div class="steps" aria-label="処理ステップ">
+            <div class="step active" aria-current="step">
+                <div class="step-number">1</div>
+                <div class="step-title">ファイル選択</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">設定</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">処理実行</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-title">結果確認</div>
+            </div>
+        </div>
 
-            <!-- ドラッグ&ドロップエリア -->
-            <div id="dropArea" class="drop-area" aria-label="ファイルをドラッグ&ドロップするエリア">
-                <div class="drop-area-content">
-                    <p class="drop-instruction"><span class="icon">📄</span>ファイルをここにドラッグ&ドロップ</p>
-                    <p class="or-divider">または</p>
-                    <button id="fileSelectButton" type="button" class="primary-button">ファイルを追加</button>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="fileInput" multiple accept=".txt" style="display: none;"
-                            aria-label="入院EF統合ファイルを選択">
+        <!-- メインコンテンツ -->
+        <main>
+            <!-- ファイル選択セクション -->
+            <section class="section card" aria-labelledby="file-selection">
+                <h2 id="file-selection">ファイル選択</h2>
+
+                <!-- ドラッグ&ドロップエリア -->
+                <div id="dropArea" class="drop-area" aria-label="ファイルをドラッグ&ドロップするエリア" tabindex="0" role="button">
+                    <div class="drop-area-content">
+                        <p class="drop-instruction"><span class="icon">📄</span>ファイルをここにドラッグ&ドロップ</p>
+                        <p class="or-divider">または</p>
+                        <button id="fileSelectButton" type="button" class="primary-button">
+                            <span class="icon">📂</span>ファイルを選択
+                        </button>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fileInput" multiple accept=".txt" class="visually-hidden"
+                                aria-label="入院EF統合ファイルを選択">
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 選択されたファイル情報 -->
-            <div id="fileInfoArea" class="file-info-area" aria-live="polite">
-                <p class="no-file-message">ファイルが選択されていません</p>
-            </div>
+                <!-- 選択されたファイル情報 -->
+                <div id="fileInfoArea" class="file-info-area" aria-live="polite">
+                    <p class="no-file-message">ファイルが選択されていません</p>
+                </div>
+            </section>
 
-            <!-- 出力設定 -->
-            <div class="settings-section">
-                <h3>出力設定</h3>
+            <!-- 設定セクション -->
+            <section class="section card" aria-labelledby="settings-heading">
+                <h2 id="settings-heading">出力設定</h2>
                 <div class="settings-options">
                     <div class="setting-group">
-                        <h4>出力対象</h4>
-                        <div class="radio-group">
+                        <h3>出力対象</h3>
+                        <div class="radio-group" role="radiogroup" aria-labelledby="output-target">
                             <div class="radio-option">
                                 <input type="radio" id="eligibleOnly" name="outputMode" value="eligibleOnly" checked>
                                 <label for="eligibleOnly">短手３対象症例のみ</label>
@@ -63,8 +93,8 @@
                     </div>
 
                     <div class="setting-group">
-                        <h4>日付フォーマット</h4>
-                        <div class="radio-group">
+                        <h3>日付フォーマット</h3>
+                        <div class="radio-group" role="radiogroup" aria-labelledby="date-format">
                             <div class="radio-option">
                                 <input type="radio" id="dateFormatYYYYMMDD" name="dateFormat" value="yyyymmdd" checked>
                                 <label for="dateFormatYYYYMMDD">YYYYMMDD（例: 20241025）</label>
@@ -76,43 +106,51 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 操作ボタンエリア -->
-            <div class="action-container">
-                <div class="button-group">
-                    <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">クリア</button>
-                    <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">実行</button>
+                <!-- 操作ボタンエリア -->
+                <div class="action-container mt-lg">
+                    <div class="button-group">
+                        <button id="clearButton" class="secondary-button" disabled aria-label="選択したファイルをクリア">
+                            <span class="icon">🗑️</span>クリア
+                        </button>
+                        <button id="executeButton" class="primary-button" disabled aria-label="処理を実行">
+                            <span class="icon">▶️</span>実行
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="result-section" aria-labelledby="results">
-            <h2 id="results">処理結果</h2>
-            <div id="loadingIndicator" class="loading-indicator">
-                <div class="spinner"></div>
-                <p>処理中...</p>
-            </div>
+            <!-- 結果セクション -->
+            <section class="section card" aria-labelledby="results">
+                <h2 id="results">処理結果</h2>
 
-            <div class="result-container">
-                <textarea id="resultTextarea" class="result-textarea" readonly aria-label="処理結果"
-                    placeholder="結果はここに表示されます。"></textarea>
-
-                <!-- 結果操作ボタン -->
-                <div class="result-actions">
-                    <button id="copyButton" class="action-button" disabled aria-label="結果をクリップボードにコピー">
-                        <span class="button-icon">📋</span> クリップボードにコピー
-                    </button>
-                    <a id="downloadLink" class="action-button download-link" style="display: none;"
-                        download="result.txt" aria-label="結果をファイルとしてダウンロード">
-                        <span class="button-icon">💾</span> ダウンロード
-                    </a>
+                <!-- ローディングインジケーター -->
+                <div id="loadingIndicator" class="loading-indicator">
+                    <div class="spinner" role="status" aria-label="処理中"></div>
+                    <p>処理中...</p>
                 </div>
 
-                <!-- コピー成功メッセージ -->
-                <div id="copyMessage" class="copy-message" aria-live="polite"></div>
-            </div>
-        </section>
+                <!-- 結果表示エリア -->
+                <div class="result-container">
+                    <textarea id="resultTextarea" class="result-textarea" readonly aria-label="処理結果"
+                        placeholder="結果はここに表示されます。"></textarea>
+
+                    <!-- 結果操作ボタン -->
+                    <div class="result-actions">
+                        <button id="copyButton" class="primary-button" disabled aria-label="結果をクリップボードにコピー">
+                            <span class="icon">📋</span>クリップボードにコピー
+                        </button>
+                        <a id="downloadLink" class="download-link" style="display: none;" download="result.txt"
+                            aria-label="結果をファイルとしてダウンロード">
+                            <span class="icon">💾</span>ダウンロード
+                        </a>
+                    </div>
+
+                    <!-- コピー成功メッセージ -->
+                    <div id="copyMessage" class="copy-message" aria-live="polite"></div>
+                </div>
+            </section>
+        </main>
 
         <footer>
             <p>短期滞在手術等基本料３判定プログラム <time datetime="2025">©2025</time></p>
