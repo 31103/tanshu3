@@ -13,6 +13,8 @@ export interface CaseData {
     discharge: string;          // 退院年月日（yyyymmdd形式）
     procedures: string[];       // 実施された診療行為コードのリスト
     procedureNames?: string[];  // 診療明細名称のリスト（procedures配列と同じ順序）
+    isEligible?: boolean;       // 短手３対象症例かどうか
+    reason?: string;            // 対象/非対象の理由
 }
 
 /**
@@ -36,6 +38,15 @@ export interface AppState {
     totalFiles: number;      // 処理対象の総ファイル数
     processedFiles: number;  // 処理済みファイル数
     cases: CaseData[];       // 抽出された症例データ
+    outputSettings: OutputSettings; // 出力設定
+}
+
+/**
+ * 出力設定の型定義
+ * 結果出力の設定を表します。
+ */
+export interface OutputSettings {
+    showAllCases: boolean;   // 全症例を表示するかどうか（falseの場合は短手３対象症例のみ）
 }
 
 /**

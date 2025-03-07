@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const dropArea = document.getElementById('dropArea');
     const downloadLink = document.getElementById('downloadLink');
+    const eligibleOnlyRadio = document.getElementById('eligibleOnly');
+    const allCasesRadio = document.getElementById('allCases');
 
     // ファイル選択ボタンのクリックイベント
     fileSelectButton.addEventListener('click', () => {
@@ -197,6 +199,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /**
+     * 出力設定を取得する関数
+     * @returns {Object} 出力設定オブジェクト
+     */
+    function getOutputSettings() {
+        return {
+            showAllCases: allCasesRadio.checked
+        };
+    }
+
+    /**
      * 実行ボタン押下時の処理
      */
     executeButton.addEventListener('click', function () {
@@ -217,14 +229,17 @@ document.addEventListener('DOMContentLoaded', function () {
         // 処理結果をクリア
         resultTextarea.value = '処理中...';
 
+        // 出力設定を取得
+        const outputSettings = getOutputSettings();
+
         // ファイル処理を開始
         processFiles(fileInput.files)
             .then(cases => {
                 // 短手３該当症例を評価
-                const resultCases = evaluateCases(cases);
+                const evaluatedCases = evaluateCases(cases);
 
-                // 結果をフォーマット
-                const outputText = formatResults(resultCases);
+                // 結果をフォーマット（出力設定を渡す）
+                const outputText = formatResults(evaluatedCases, outputSettings);
 
                 // 結果をテキストエリアに表示
                 resultTextarea.value = outputText;

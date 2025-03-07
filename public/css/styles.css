@@ -558,3 +558,46 @@ footer {
 .drop-feedback.error {
     background-color: #e74c3c;
 }
+
+/* 出力設定セクションのスタイル */
+.settings-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.settings-options {
+    display: flex;
+    flex-direction: column;
+}
+
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.radio-option label {
+    cursor: pointer;
+    font-size: 0.95rem;
+}
