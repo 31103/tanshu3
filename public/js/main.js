@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentStep = 0;
     let validFiles = 0;
     let currentView = 'text'; // 'text' または 'table'
+    let selectedFiles = []; // ファイル選択の状態管理を追加
 
     // 通知管理のための変数
     let activeToasts = [];
@@ -1111,4 +1112,4 @@ function showRecoveryToast(action) {
     setTimeout(() => {
         removeToastElement(recoveryToastId);
     }, 15000); // 回復アクションは長めに表示
-} 
+}
