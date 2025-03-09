@@ -47,63 +47,76 @@
 ### 3.1 ディレクトリ構造
 
 ```
-src/
-  core/               - コアビジネスロジック
-    common/           - 共通のビジネスロジック
-      types.ts        - 型定義
-      constants.ts    - 定数
-      utils.ts        - ユーティリティ関数
-      parsers.ts      - ファイル解析関連の機能
-      evaluator.ts    - 評価ロジック関連の機能
-    adapters/         - 環境依存のアダプター実装
-      browser.ts      - ブラウザ環境用アダプター
-      node.ts         - Node.js環境用アダプター
-    index.ts          - コアモジュールのエントリーポイント
-    common.ts         - レガシーコード
-    file-processor.ts - ファイル処理ロジック
-    validator.ts      - バリデーション処理
-  browser/            - ブラウザ環境用のコード
-    common.browser.ts - ブラウザ環境用の共通ロジック
-    main.ts           - ブラウザ環境でのUI処理
-  ui/                 - ユーザーインターフェース
-    components/       - UI処理コンポーネント
-      file-manager.ts     - ファイル管理コンポーネント
-      notification.ts     - 通知管理コンポーネント
-      result-viewer.ts    - 結果表示コンポーネント
-      step-manager.ts     - 処理ステップ管理コンポーネント
-    styles/           - スタイル関連のコード
-    asset-optimizer.js    - アセット最適化
-    optimization.js       - パフォーマンス最適化
-    performance-monitor.js - パフォーマンスモニタリング
-  types/              - レガシーの型定義ファイル
-    types.d.ts        - 型定義
-test/
-  fixtures/           - テストデータと期待値
-    sampleEF/         - サンプルEFファイル
-    expect.txt        - 期待される出力結果
-  jest/               - Jestテストフレームワークを使用したテスト
-    unit/             - Jestユニットテスト
-    integration/      - Jest統合テスト
-    e2e/              - JestのE2Eテスト
-  unit/               - 旧式のユニットテスト
-  integration/        - 旧式の統合テスト
-  accessibility/      - アクセシビリティテスト
-  browser-compatibility/ - ブラウザ互換性テスト
-  run-tests.js        - テスト実行スクリプト
-public/               - 静的ファイル
-  index.html          - メインHTMLファイル
-  css/                - スタイルシート
-    styles.css        - メインのスタイルシート
-  js/                 - クライアントサイドJavaScript
-    main.js           - クライアントサイドのUIロジック
-docs/                 - ドキュメント
-  project_overview.md - プロジェクト概要と仕様書（本ドキュメント）
-  入院EF統合ファイルについて.md - 入院EF統合ファイル仕様説明
-  短期滞在手術等基本料３について.md - 短期滞在手術等基本料３の説明
-  ui_ux_enhancement_plan.md - UI/UX機能強化計画書
-  test_enhancement_plan.md - テスト強化計画書
-  test_migration_guide.md - テスト移行ガイド
-  output_format_enhancement_plan.md - 出力フォーマット拡張機能計画書
+.
+├── jest.config.js           - Jestの設定ファイル
+├── package.json            - プロジェクト設定とパッケージ依存関係
+├── tsconfig.json          - TypeScript設定ファイル
+├── src/
+│   ├── browser/           - ブラウザ環境用のコード
+│   │   ├── common.browser.ts
+│   │   └── main.ts
+│   ├── core/             - コアビジネスロジック
+│   │   ├── common/       - 共通のビジネスロジック
+│   │   │   ├── constants.ts
+│   │   │   ├── evaluator.ts
+│   │   │   ├── parsers.ts
+│   │   │   ├── types.ts
+│   │   │   └── utils.ts
+│   │   ├── adapters/     - 環境依存のアダプター実装
+│   │   │   ├── browser.ts
+│   │   │   └── node.ts
+│   │   ├── common.ts
+│   │   ├── file-processor.ts
+│   │   ├── index.ts
+│   │   └── validator.ts
+│   ├── types/            - 型定義ファイル
+│   │   └── types.d.ts
+│   └── ui/              - ユーザーインターフェース
+│       ├── components/   - UI処理コンポーネント
+│       │   ├── file-manager.ts
+│       │   ├── notification.ts
+│       │   ├── result-viewer.ts
+│       │   └── step-manager.ts
+│       ├── styles/
+│       │   └── optimization.css
+│       ├── asset-optimizer.js
+│       ├── optimization.js
+│       └── performance-monitor.js
+├── public/              - 静的ファイル
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   └── main.js
+│   └── index.html
+├── test/               - テストファイル
+│   ├── accessibility/  - アクセシビリティテスト
+│   │   └── accessibility-test.js
+│   ├── browser-compatibility/
+│   │   ├── automated-browser-test.js
+│   │   └── browser-test.js
+│   ├── fixtures/      - テストデータ
+│   │   ├── sampleEF/
+│   │   │   ├── sample_EFn_XXXXXXXXX_2407.txt
+│   │   │   └── sample_EFn_XXXXXXXXX_2408.txt
+│   │   └── expect.txt
+│   ├── jest/         - Jestテストスイート
+│   │   ├── e2e/
+│   │   ├── integration/
+│   │   │   ├── data-flow.test.ts
+│   │   │   └── module-integration.test.ts
+│   │   └── unit/
+│   │       ├── constants.test.ts
+│   │       ├── evaluator.test.ts
+│   │       ├── parsers.test.ts
+│   │       ├── sample.test.ts
+│   │       └── utils.test.ts
+│   ├── unit/
+│   │   └── test.ts
+│   └── run-tests.js
+└── docs/              - ドキュメント
+    ├── project_overview.md
+    ├── 入院EF統合ファイルについて.md
+    └── 短期滞在手術等基本料３について.md
 ```
 
 ### 3.2 主要ファイルの役割
