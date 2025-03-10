@@ -1,7 +1,7 @@
 /**
- * 短期滞在手術等基本料３判定プログラム - 定数定義
- * このファイルには、アプリケーション全体で使用される定数を含みます。
+ * デフォルトの結果ヘッダー行
  */
+export const DEFAULT_RESULT_HEADER = "データ識別番号\t入院年月日\t退院年月日";
 
 /**
  * 内視鏡的大腸ポリープ・粘膜切除術の診療行為コード
@@ -104,11 +104,6 @@ export const PROCEDURE_NAME_MAP: Record<string, string> = {
 export const COLONOSCOPY_SPECIAL_ADDITIONS: string[] = ["150429570", "150437170"];
 
 /**
- * デフォルトの結果ヘッダー行
- */
-export const DEFAULT_RESULT_HEADER = "データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由";
-
-/**
  * 入院期間の最大日数（短期滞在手術等基本料３の条件）
  */
 export const MAX_HOSPITAL_DAYS = 5;
@@ -123,4 +118,4 @@ export const INELIGIBILITY_REASONS = {
     MULTIPLE_TARGET_PROCEDURES: "対象手術等を２以上実施",
     OTHER_SURGERY: "対象手術等以外の手術あり",
     SPECIAL_ADDITION: "内視鏡的大腸ポリープ術に特定加算あり"
-}; 
+};

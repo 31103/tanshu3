@@ -6,6 +6,14 @@ export default {
     // テスト環境
     testEnvironment: 'node',
 
+    // TypeScript設定ファイルの指定
+    globals: {
+        'ts-jest': {
+            tsconfig: 'tsconfig.test.json',
+            useESM: true
+        }
+    },
+
     // ソースディレクトリとテストディレクトリの設定
     roots: ['<rootDir>/src', '<rootDir>/test'],
 
@@ -41,5 +49,8 @@ export default {
     ],
 
     // 詳細な出力設定
-    verbose: true
-}; 
+    verbose: true,
+
+    // @jest/globalsを明示的に設定
+    injectGlobals: true
+};

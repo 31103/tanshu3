@@ -5,8 +5,7 @@
     "main": "dist/browser/main.js",
     "type": "module",
     "scripts": {
-        "build": "tsc && npm run copy-dist",
-        "copy-dist": "powershell -Command \"if (!(Test-Path 'public/js')) { New-Item -ItemType Directory -Path 'public/js' -Force }; Get-ChildItem 'dist/browser' -Filter '*.js' | Copy-Item -Destination 'public/js' -Force\"",
+        "build": "tsc",
         "watch": "tsc -w",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",

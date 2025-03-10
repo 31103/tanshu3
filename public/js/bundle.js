@@ -448,4 +448,4 @@ function validateEFFile(content) {
     }
     return result;
 }
-//# sourceMappingURL=common.browser.js.map
+//# sourceMappingURL=bundle.js.map

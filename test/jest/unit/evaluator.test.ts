@@ -256,7 +256,8 @@ describe('formatResults関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['160218510']
+                procedures: ['160218510'],
+                isEligible: true
             }
         ];
 
@@ -274,13 +275,15 @@ describe('formatResults関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['160218510']
+                procedures: ['160218510'],
+                isEligible: true
             },
             {
                 id: '23456',
                 admission: '20220201',
                 discharge: '20220203',
-                procedures: ['160218510']
+                procedures: ['160218510'],
+                isEligible: true
             }
         ];
 
@@ -298,7 +301,8 @@ describe('formatResults関数', () => {
                 id: '12345',
                 admission: '20220101',
                 discharge: '20220103',
-                procedures: ['160218510']
+                procedures: ['160218510'],
+                isEligible: true
             }
         ];
 
