@@ -5,8 +5,8 @@
     "main": "dist/browser/main.js",
     "type": "module",
     "scripts": {
-        "build": "tsc",
-        "watch": "tsc -w",
+        "build": "parcel build src/browser/main.ts --dist-dir public/js --public-url ./",
+        "watch": "parcel watch src/browser/main.ts --dist-dir public/js --public-url ./",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
         "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -28,6 +28,7 @@
         "husky": "^8.0.0",
         "jest": "^29.7.0",
         "lint-staged": "^15.0.0",
+        "parcel": "^2.13.3",
         "prettier": "^3.0.0",
         "ts-jest": "^29.2.6",
         "typescript": "^5.8.2"
