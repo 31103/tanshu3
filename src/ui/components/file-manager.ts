@@ -40,7 +40,9 @@ export class FileManager {
         // ファイル選択ボタン
         const fileSelectButton = document.getElementById('fileSelectButton');
         if (fileSelectButton) {
-            fileSelectButton.addEventListener('click', () => {
+            fileSelectButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 this.fileInput.click();
             });
         }
@@ -379,4 +381,23 @@ export class FileManager {
 }
 
 // グローバルでアクセス可能なインスタンスを作成
-export const fileManager = new FileManager();
+let fileManagerInstance: FileManager | null = null;
+
+// インスタンスを取得または作成する関数
+export function getFileManager(): FileManager {
+    if (!fileManagerInstance) {
+        // DOMが準備できているか確認
+        if (document.readyState === 'loading') {
+            throw new Error('DOM is not ready. Call this function after DOMContentLoaded');
+        }
+        fileManagerInstance = new FileManager();
+    }
+    return fileManagerInstance;
+}
+
+// 既存のexport文を削除し、新しい初期化方法を使用
+export const fileManager = {
+    get instance() {
+        return getFileManager();
+    }
+};

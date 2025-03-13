@@ -17,6 +17,7 @@ import { ErrorHandlerOptions } from '../types/types';
 class Application {
     private loadingIndicator: HTMLElement | null = null;
     private executeButton: HTMLButtonElement | null = null;
+    private fileManagerInstance = fileManager.instance;
 
     /**
      * アプリケーションの初期化
@@ -31,9 +32,6 @@ class Application {
 
         // 初期ステップの設定
         stepManager.updateStep(0);
-
-        // 初期化完了のログ
-        console.log('短期滞在手術等基本料３判定プログラムが初期化されました');
     }
 
     /**
@@ -62,7 +60,7 @@ class Application {
             stepManager.updateStep(2);
 
             // ファイルが選択されているか確認
-            const selectedFiles = fileManager.getSelectedFiles();
+            const selectedFiles = this.fileManagerInstance.getSelectedFiles();
             if (selectedFiles.length === 0) {
                 this.handleError(new Error('ファイルが選択されていません'), 'no-files', {
                     recoveryAction: {
@@ -83,7 +81,7 @@ class Application {
             }
 
             // ファイルの検証
-            const isValid = await fileManager.validateSelectedFiles();
+            const isValid = await this.fileManagerInstance.validateSelectedFiles();
             if (!isValid) {
                 if (this.loadingIndicator) {
                     this.loadingIndicator.classList.remove('active');
@@ -189,6 +187,15 @@ class Application {
 
 // DOMContentLoaded イベントで初期化
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new Application();
-    app.init();
+    try {
+        const app = new Application();
+        app.init();
+    } catch (error) {
+        console.error('初期化エラー:', error);
+        // エラーメッセージを画面に表示
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'initialization-error';
+        errorDiv.textContent = '初期化中にエラーが発生しました。ページを再読み込みしてください。';
+        document.body.prepend(errorDiv);
+    }
 });
