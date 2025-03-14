@@ -4,6 +4,13 @@ npm-debug.log
 yarn-error.log
 yarn.lock
 package-lock.json
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # コンパイル出力
 dist/
@@ -11,6 +18,7 @@ build/
 *.js
 *.js.map
 *.d.ts
+*.tsbuildinfo
 
 # 除外しないJavaScriptファイル
 !public/**/*.js
@@ -19,6 +27,9 @@ build/
 !.eslintrc.js
 !.prettierrc.js
 !commitlint.config.js
+!babel.config.js
+!webpack.config.js
+!vite.config.js
 
 # TypeScriptの設定ファイルなど、手動で作成したJavaScriptファイルは除外
 !tsconfig.json
@@ -70,8 +81,17 @@ reports/
 tmp/
 temp/
 
-# その他
+# その他のキャッシュとビルドファイル
 .cache/
 .parcel-cache/
 .rts2_cache_*/
 .husky/_
+.eslintcache
+.stylelintcache
+.next/
+out/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
