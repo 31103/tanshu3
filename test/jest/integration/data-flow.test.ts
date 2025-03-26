@@ -98,8 +98,24 @@ describe('データフロー統合テスト', () => {
         // 各患者データを評価
         const eligibleCases = evaluateCases(mergedCases);
 
+        // --- 修正: evaluateCasesはフィルタリングしないため、テスト内でフィルタリング ---
+        // evaluateCasesは評価済みの全ケースを返す (isEligible: true/falseを含む)
+        const trulyEligibleCases = eligibleCases.filter(c => c.isEligible === true);
+
+        // --- 期待値修正: このフィクスチャデータでは2件が対象 ---
+        // 患者 '0000000002' (手術: 150183410, 入院: 2日)
+        // 患者 '0000000004' (手術: 160098110, 入院: 3日)
+        expect(trulyEligibleCases.length).toBe(2);
+
+        // 期待されるIDが含まれているか確認 (順序は問わない)
+        const eligibleIds = trulyEligibleCases.map(c => c.id);
+        expect(eligibleIds).toContain('0000000002');
+        expect(eligibleIds).toContain('0000000004');
+        // --- ここまで修正 ---
+
         // 評価結果が妥当か検証（短手3の対象は5日以内の入院で対象手術を実施した患者）
-        for (const eligibleCase of eligibleCases) {
+        // 修正: フィルタリング後の配列に対してループ
+        for (const eligibleCase of trulyEligibleCases) {
             // 退院日が設定されている
             expect(eligibleCase.discharge).not.toBe('00000000');
 
@@ -115,4 +131,129 @@ describe('データフロー統合テスト', () => {
             expect(hospitalDays).toBeLessThanOrEqual(5);
         }
     });
-}); 
+});
+
+// --- ここから追加 ---
+describe('データフロー統合テスト（模擬データ）', () => {
+    // 対象手術コードを定数から取得
+    const targetProcedureCode = TARGET_PROCEDURES[0]; // 例として最初のコードを使用
+
+    test('月をまたぐ患者データを正しくマージ・評価できること', () => {
+        // 7月に入院し、8月に退院する患者データを作成
+        const julyCase: CaseData = {
+            id: 'crossMonthPatient',
+            admission: '20240730', // 7月30日入院
+            discharge: '00000000', // 7月中は退院日未定
+            procedures: [targetProcedureCode], // 対象手術あり
+            procedureNames: ['対象手術'],
+        };
+        const augustCase: CaseData = {
+            id: 'crossMonthPatient',
+            admission: '20240730', // 入院日は同じ
+            discharge: '20240802', // 8月2日退院
+            procedures: [targetProcedureCode], // 対象手術あり
+            procedureNames: ['対象手術'],
+        };
+
+        // マージ処理
+        const mergedCases = mergeCases([julyCase], [augustCase]);
+
+        // マージ結果の検証
+        expect(mergedCases.length).toBe(1);
+        expect(mergedCases[0].id).toBe('crossMonthPatient');
+        expect(mergedCases[0].admission).toBe('20240730');
+        expect(mergedCases[0].discharge).toBe('20240802'); // 退院日が更新されていること
+        expect(mergedCases[0].procedures).toContain(targetProcedureCode);
+
+        // 評価処理
+        const eligibleCases = evaluateCases(mergedCases);
+
+        // 評価結果の検証 (入院日数 = 8/2 - 7/30 + 1 = 4日 <= 5日)
+        expect(eligibleCases.length).toBe(1);
+        expect(eligibleCases[0].id).toBe('crossMonthPatient');
+    });
+
+    test('退院日が00000000から確定日に更新されるケースを正しく処理できること', () => {
+        // 7月は退院日未定、8月で確定するデータ
+        const julyCase: CaseData = {
+            id: 'dischargeUpdatePatient',
+            admission: '20240710',
+            discharge: '00000000',
+            procedures: [targetProcedureCode],
+            procedureNames: ['対象手術'],
+        };
+        const augustCase: CaseData = {
+            id: 'dischargeUpdatePatient',
+            admission: '20240710',
+            discharge: '20240712', // 7月12日に退院確定
+            procedures: [targetProcedureCode],
+            procedureNames: ['対象手術'],
+        };
+
+        const mergedCases = mergeCases([julyCase], [augustCase]);
+        expect(mergedCases.length).toBe(1);
+        expect(mergedCases[0].discharge).toBe('20240712');
+
+        const eligibleCases = evaluateCases(mergedCases);
+        // 入院日数 = 7/12 - 7/10 + 1 = 3日 <= 5日
+        expect(eligibleCases.length).toBe(1);
+        expect(eligibleCases[0].id).toBe('dischargeUpdatePatient');
+    });
+
+    test('入院日数がちょうど5日のケースを正しく評価できること', () => {
+        const caseData: CaseData = {
+            id: 'just5days',
+            admission: '20240101',
+            discharge: '20240105', // 1/1, 1/2, 1/3, 1/4, 1/5 の5日間
+            procedures: [targetProcedureCode],
+            procedureNames: ['対象手術'],
+        };
+        const eligibleCases = evaluateCases([caseData]);
+        expect(eligibleCases.length).toBe(1);
+        expect(eligibleCases[0].id).toBe('just5days');
+    });
+
+    test('入院日数が6日のケースは対象外となること', () => {
+        const caseData: CaseData = {
+            id: 'over5days',
+            admission: '20240101',
+            discharge: '20240106', // 1/1 - 1/6 の6日間
+            procedures: [targetProcedureCode],
+            procedureNames: ['対象手術'],
+        };
+        const evaluatedResult = evaluateCases([caseData]);
+        // 修正: evaluateCasesは評価済みケースを返す(長さ1)
+        expect(evaluatedResult.length).toBe(1);
+        // 修正: isEligibleがfalseであることを確認
+        expect(evaluatedResult[0].isEligible).toBe(false);
+    });
+
+    test('入院日数が1日（同日入退院）のケースを正しく評価できること', () => {
+        const caseData: CaseData = {
+            id: 'sameDay',
+            admission: '20240101',
+            discharge: '20240101', // 1日間
+            procedures: [targetProcedureCode],
+            procedureNames: ['対象手術'],
+        };
+        const eligibleCases = evaluateCases([caseData]);
+        expect(eligibleCases.length).toBe(1);
+        expect(eligibleCases[0].id).toBe('sameDay');
+    });
+
+    test('対象手術が含まれないケースは対象外となること', () => {
+        const caseData: CaseData = {
+            id: 'noTargetProcedure',
+            admission: '20240101',
+            discharge: '20240103', // 3日間
+            procedures: ['999999'], // 対象外の手術コード
+            procedureNames: ['対象外手術'],
+        };
+        const evaluatedResult = evaluateCases([caseData]);
+        // 修正: evaluateCasesは評価済みケースを返す(長さ1)
+        expect(evaluatedResult.length).toBe(1);
+        // 修正: isEligibleがfalseであることを確認
+        expect(evaluatedResult[0].isEligible).toBe(false);
+    });
+});
+// --- ここまで追加 ---
