@@ -4,39 +4,64 @@
  */
 
 import { CaseData, RawCaseData, ValidationResult } from './types';
+import { TARGET_PROCEDURES } from './constants';
 
 /**
  * EFファイルの行からデータを抽出する共通関数
  * @param columns - データ列の配列
- * @returns 患者データまたはnull（データが不十分な場合）
+ * @returns 患者データ（対象手術の場合は完全、それ以外は基本情報のみ）またはnull（データが不十分な場合）
  */
-function extractCaseData(columns: string[]): RawCaseData | null {
-    // 少なくとも9列（レセプト電算コードまで）必要
-    if (columns.length < 9) return null;
+function extractCaseData(columns: string[]): (RawCaseData & { procedure: string; procedureName: string | null }) | ({ dataId: string; admission: string; discharge: string; procedure: null; procedureName: null }) | null {
+    // 少なくとも基本情報（ID, 入院日, 退院日）を含む列が必要
+    if (columns.length < 4) {
+        return null;
+    }
 
-    const dataId = columns[1].trim(); // データ識別番号
-    if (!dataId) return null; // 識別番号がない場合は無効
+    const dataId = columns[1].trim();
+    if (!dataId) {
+        return null;
+    }
+    const admission = columns[3].trim();
+    const discharge = columns[2].trim();
 
-    const discharge = columns[2].trim(); // 退院年月日
-    const admission = columns[3].trim(); // 入院年月日
+    // 行為明細番号を取得 (列が存在する場合のみ)
+    const actionDetailNo = columns.length > 6 ? columns[6].trim() : null;
 
-    // 手術コードは9列目のレセプト電算コードから取得
-    const procedure = columns[8].trim(); // レセプト電算コード
+    // 行為明細番号が"000"の行（Eファイル）は日付更新にも不要なためスキップ
+    if (actionDetailNo === '000') {
+        return null;
+    }
 
+    // 基本情報
+    const basicInfo = { dataId, admission, discharge };
+
+    // レセプト電算コードと診療明細名称を取得 (列が存在する場合のみ)
+    const procedure = columns.length > 8 ? columns[8].trim() : null;
+    const procedureName = columns.length > 10 ? columns[10].trim() : null;
+
+    // 短手3の対象手術かどうかを判定
+    if (!procedure || !TARGET_PROCEDURES.includes(procedure)) {
+        // 対象手術でなくても基本情報は返す（日付更新のため）
+        return { ...basicInfo, procedure: null, procedureName: null };
+    }
+
+    // 対象手術の場合、完全な情報を返す
+    // RawCaseData型にキャストして返す (procedureはstringであることが保証されている)
+    // procedureNameがnullの場合もデフォルト値を設定し、string型を保証
     return {
-        dataId,
-        discharge,
-        admission,
-        procedure,
-        procedureName: '' // テスト要件に合わせて空文字列を設定
+        ...basicInfo,
+        procedure: procedure, // procedure is guaranteed to be string here
+        procedureName: procedureName ?? '(名称なし)' // Ensure string type for RawCaseData compatibility
     };
 }
+
+
 
 /**
  * 入院EF統合ファイルの内容をパースする関数
  * ファイルの内容を解析し、患者ごとのデータを抽出します
  * @param content - ファイルの内容
- * @returns 患者データの配列
+ * @returns 統合前の症例データ配列
  */
 export function parseEFFile(content: string): CaseData[] {
     const lines = content.split(/\r?\n/);
@@ -45,53 +70,56 @@ export function parseEFFile(content: string): CaseData[] {
     // ヘッダー行を除いたデータ行を処理
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (!line) continue; // 空行をスキップ
+        if (!line) {
+            continue;
+        }
 
         try {
-            let caseData: RawCaseData | null = null;
+            const columns = line.split('\t');
+            const extractedData = extractCaseData(columns);
 
-            // パイプ区切りの場合
-            if (line.includes('|')) {
-                const parts = line.split('|');
-                if (parts.length >= 2) {
-                    // パイプの右側のデータを取得してタブ区切りで分割
-                    const dataStr = parts[1].trim();
-                    const columns = dataStr.split('\t');
-                    caseData = extractCaseData(columns);
-                }
-            } else {
-                // タブ区切りの場合（元のファイル形式）
-                const columns = line.split('\t');
-                caseData = extractCaseData(columns);
-            }
+            if (extractedData) {
+                const { dataId, discharge, admission, procedure, procedureName } = extractedData;
 
-            if (caseData) {
-                const { dataId, discharge, admission, procedure } = caseData;
-
-                // 同一患者のデータを統合
-                if (!caseMap[dataId]) {
-                    caseMap[dataId] = {
+                // 既存の症例データを取得または新規作成
+                let currentCase = caseMap[dataId];
+                if (!currentCase) {
+                    currentCase = {
                         id: dataId,
                         admission: admission,
-                        discharge: discharge,
+                        discharge: discharge, // 初期値として設定
                         procedures: [],
-                        procedureNames: [] // テスト要件に合わせて空の配列を初期化
+                        procedureNames: []
                     };
+                    caseMap[dataId] = currentCase;
                 }
 
-                // 手術コードを追加（重複を避ける）
-                if (procedure && !caseMap[dataId].procedures.includes(procedure)) {
-                    caseMap[dataId].procedures.push(procedure);
+                // 退院日の更新 (00000000 でなく、既存より新しい日付の場合)
+                // 注意: 日付文字列の単純比較で良いか要確認。YYYYMMDD形式ならOK。
+                if (discharge && discharge !== '00000000' && (!currentCase.discharge || currentCase.discharge === '00000000' || discharge > currentCase.discharge)) {
+                    currentCase.discharge = discharge;
+                }
+                // 入院日も同様に更新が必要な場合があるかもしれないが、今回は退院日のみ考慮
+
+                // 対象手術コードと名称を追加（procedureがnullでない場合のみ）
+                if (procedure && !currentCase.procedures.includes(procedure)) {
+                    currentCase.procedures.push(procedure);
+                    // procedureName が null の場合も考慮して追加 (明示的なチェックを追加)
+                    if (currentCase.procedureNames) {
+                        currentCase.procedureNames.push(procedureName ?? '(名称なし)');
+                    }
                 }
             }
         } catch (error) {
-            console.error(`Line ${i + 1}の解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
+            // エラーが発生しても処理を継続するが、ログは残さない
             continue;
         }
     }
 
     return Object.values(caseMap);
 }
+
+
 
 /**
  * 複数ファイルからの症例データを統合する関数

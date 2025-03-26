@@ -37,6 +37,7 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
 
             // 2. 対象手術等の実施（少なくとも1つの対象手術等が実施されている）
             const targetProceduresFound = c.procedures.filter(p => TARGET_PROCEDURES.includes(p));
+
             if (targetProceduresFound.length === 0) {
                 evaluatedCase.isEligible = false;
                 evaluatedCase.reason = INELIGIBILITY_REASONS.NO_TARGET_PROCEDURE;
@@ -45,6 +46,7 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
 
             // 3. 入院期間が5日以内
             const hospitalDays = calculateHospitalDays(c.admission, c.discharge);
+
             if (hospitalDays === null || hospitalDays > MAX_HOSPITAL_DAYS) {
                 evaluatedCase.isEligible = false;
                 evaluatedCase.reason = INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED;
@@ -123,11 +125,10 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
         }
     });
 
-    // 対象症例のみに絞り込み（テストではフィルタリングが期待されている）
-    const eligibleCases = evaluatedCases.filter(c => c.isEligible === true);
-
+    // 修正: フィルタリングせず、全ての評価済み症例を返す
+    // フィルタリングは formatResults で行う
     // ID順にソート
-    return eligibleCases.sort((a, b) => a.id.localeCompare(b.id));
+    return evaluatedCases.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /**
@@ -158,7 +159,8 @@ export function formatResults(
 
     // 各症例のデータ行を追加
     filteredCases.forEach(c => {
-        lines.push(`${c.id}\t${c.admission}\t${c.discharge}`);
+        const line = `${c.id}\t${c.admission}\t${c.discharge}\t${c.isEligible ? 'Yes' : 'No'}\t${c.reason || ''}`;
+        lines.push(line);
     });
 
     // 行を改行文字で結合して返す

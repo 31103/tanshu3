@@ -1,7 +1,7 @@
 /**
  * デフォルトの結果ヘッダー行
  */
-export const DEFAULT_RESULT_HEADER = "データ識別番号\t入院年月日\t退院年月日";
+export const DEFAULT_RESULT_HEADER = "データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由";
 
 /**
  * 内視鏡的大腸ポリープ・粘膜切除術の診療行為コード

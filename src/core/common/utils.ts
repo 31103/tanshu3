@@ -41,7 +41,9 @@ export function calculateHospitalDays(admissionStr: string, dischargeStr: string
     if (!admissionDate || !dischargeDate) return null;
 
     // ミリ秒数を日数に変換（1日 = 24 * 60 * 60 * 1000 ミリ秒）
-    return Math.round((dischargeDate.getTime() - admissionDate.getTime()) / (1000 * 60 * 60 * 24));
+    // 入院日と退院日も期間に含めるため、計算結果に1を加える
+    const diffDays = Math.round((dischargeDate.getTime() - admissionDate.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays + 1;
 }
 
 /**
@@ -79,4 +81,4 @@ export function formatDate(dateStr: string, format: 'yyyymmdd' | 'yyyy/mm/dd' = 
 export function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
     return String(error);
-} 
+}

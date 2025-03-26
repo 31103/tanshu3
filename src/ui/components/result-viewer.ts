@@ -110,13 +110,18 @@ export class ResultViewer {
      * 結果を表示する
      * @param resultText 結果のテキストデータ
      */
-    public displayResult(resultText: string): void {
+    public displayResult(resultText: string, debugInfo?: string): void {
         if (!resultText) return;
 
-        // テキストエリアに表示
-        this.resultTextarea.value = resultText;
+        // デバッグ情報がある場合は、結果の前に追加
+        const displayText = debugInfo
+            ? `=== デバッグ情報 ===\n${debugInfo}\n\n=== 処理結果 ===\n${resultText}`
+            : resultText;
 
-        // テーブルに表示
+        // テキストエリアに表示
+        this.resultTextarea.value = displayText;
+
+        // テーブルに表示（デバッグ情報は除外）
         this.updateResultTable(resultText);
 
         // 結果表示エリアを表示
