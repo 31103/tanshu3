@@ -6,6 +6,7 @@
 
 import { parseEFFile, mergeCases } from '../../../src/core/common/parsers.js';
 import { CaseData } from '../../../src/core/common/types.js';
+import { TARGET_PROCEDURES } from '../../../src/core/common/constants.js';
 
 describe('parseEFFile関数', () => {
     it('空のコンテンツの場合は空の配列を返す', () => {
@@ -20,8 +21,10 @@ describe('parseEFFile関数', () => {
     });
 
     it('有効なEFデータを正しくパースする', () => {
+        // TARGET_PROCEDURESに含まれる手術コードを使用する
+        const targetCode = TARGET_PROCEDURES[0]; // 対象手術コードを使用
         const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
-データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t123456`;
+データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`;
 
         const result = parseEFFile(content);
 
@@ -30,27 +33,38 @@ describe('parseEFFile関数', () => {
             id: '12345',
             admission: '20220101',
             discharge: '20220101',
-            procedures: ['123456'],
-            procedureNames: []
+            procedures: [targetCode],
+            procedureNames: ['(名称なし)']
         });
     });
 
     it('同一患者の複数の手術コードを適切に統合する', () => {
+        // TARGET_PROCEDURESに含まれる手術コードを使用する
+        const targetCode1 = TARGET_PROCEDURES[0]; // 対象手術コード1
+        const targetCode2 = TARGET_PROCEDURES[1] || TARGET_PROCEDURES[0]; // 対象手術コード2（または同じコード）
+
         const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
-データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t123456
-データ2\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t789012`;
+データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode1}
+データ2\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode2}`;
 
         const result = parseEFFile(content);
 
         expect(result.length).toBe(1);
-        expect(result[0].procedures).toContain('123456');
-        expect(result[0].procedures).toContain('789012');
-        expect(result[0].procedures.length).toBe(2);
+        expect(result[0].procedures).toContain(targetCode1);
+        if (targetCode1 !== targetCode2) {
+            expect(result[0].procedures).toContain(targetCode2);
+            expect(result[0].procedures.length).toBe(2);
+        } else {
+            expect(result[0].procedures.length).toBe(1);
+        }
     });
 
     it('パイプ区切りのデータを正しく処理する', () => {
+        // TARGET_PROCEDURESに含まれる手術コードを使用する
+        const targetCode = TARGET_PROCEDURES[0]; // 対象手術コード
+
         const content = `ヘッダー行
-データ部|データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t123456`;
+データ部|データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`;
 
         const result = parseEFFile(content);
 
@@ -59,15 +73,18 @@ describe('parseEFFile関数', () => {
             id: '12345',
             admission: '20220101',
             discharge: '20220101',
-            procedures: ['123456'],
-            procedureNames: []
+            procedures: [targetCode],
+            procedureNames: ['(名称なし)']
         });
     });
 
     it('無効な行は無視される', () => {
+        // TARGET_PROCEDURESに含まれる手術コードを使用する
+        const targetCode = TARGET_PROCEDURES[0]; // 対象手術コード
+
         const content = `ヘッダー1\tヘッダー2\tヘッダー3
 無効なデータ行
-データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t123456`;
+データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`;
 
         const result = parseEFFile(content);
 
@@ -165,4 +182,4 @@ describe('mergeCases関数', () => {
         expect(result[0].procedures).toContain('345678');
         expect(result[0].procedures.length).toBe(3); // 重複は1つだけ排除
     });
-}); 
+});

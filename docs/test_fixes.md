@@ -145,27 +145,36 @@ Received: []
 #### 修正案
 `parseEFFile` 関数の実装を確認し、手術コードが正しく解析されるように修正します。テストデータの形式と実装の期待する形式に不一致がある可能性があります。
 
+実装を確認したところ、`parseEFFile` 関数では、手術コード（`procedure`）が`TARGET_PROCEDURES`配列に含まれる場合のみ、症例データの`procedures`配列に追加するようになっていました。一方、テストでは任意の手術コード（例: '123456'）を使用していたため、テストが失敗していました。
+
 ```typescript
-// parsers.ts の parseEFFile 関数を確認・修正
-function extractProcedureCode(line: string, codeIndex: number, nameIndex: number): { code: string, name: string } | null {
-    const columns = line.split(/\t|\|/);
-    if (columns.length <= Math.max(codeIndex, nameIndex)) {
-        return null;
-    }
-    
-    const code = columns[codeIndex]?.trim();
-    const name = columns[nameIndex]?.trim();
-    
-    if (!code) {
-        return null;
-    }
-    
-    return { code, name };
-}
+// テストを修正して TARGET_PROCEDURES に含まれるコードを使用するように変更
+import { TARGET_PROCEDURES } from '../../../src/core/common/constants.js';
+
+it('有効なEFデータを正しくパースする', () => {
+    // TARGET_PROCEDURESに含まれる手術コードを使用する
+    const targetCode = TARGET_PROCEDURES[0]; // 対象手術コードを使用
+    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`;
+
+    const result = parseEFFile(content);
+
+    expect(result.length).toBe(1);
+    expect(result[0]).toEqual({
+        id: '12345',
+        admission: '20220101',
+        discharge: '20220101',
+        procedures: [targetCode],
+        procedureNames: ['(名称なし)']
+    });
+});
 ```
 
 #### 修正状況
-⬜ 未修正
+✅ 修正完了（2025-03-26）
+- テストケースを修正して、`TARGET_PROCEDURES`配列から対象手術コードを使用するように変更
+- テスト期待値に`procedureNames`配列の検証を追加
+- 全ての`parsers.test.ts`テストケースが成功することを確認
 
 ### 5. data-flow.test.ts
 
@@ -215,3 +224,4 @@ it('複数月のデータを組み合わせて正しく評価できること', (
 | 2025-03-26 | constants.test.tsのDEFAULT_RESULT_HEADERテスト修正 | 開発チーム |
 | 2025-03-26 | utils.test.tsの入院日数計算ロジックの修正方法検討 | 開発チーム |
 | 2025-03-26 | utils.test.tsの入院日数計算テスト修正完了 | 開発チーム |
+| 2025-03-26 | parsers.test.tsのテストケース修正 | 開発チーム |
