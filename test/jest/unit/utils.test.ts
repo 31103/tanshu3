@@ -62,26 +62,26 @@ describe('parseDate関数', () => {
 
 describe('calculateHospitalDays関数', () => {
     it('入院日から退院日までの日数を正しく計算する', () => {
-        // 3日間の入院
+        // 3日間の入院（1/1, 1/2, 1/3を含む）
         const result = calculateHospitalDays('20220101', '20220103');
-        expect(result).toBe(2);
+        expect(result).toBe(3); // 医療現場の標準：入院日と退院日を両方含める
     });
 
-    it('入院日と退院日が同じ場合は0を返す', () => {
+    it('入院日と退院日が同じ場合は1を返す', () => {
         const result = calculateHospitalDays('20220101', '20220101');
-        expect(result).toBe(0);
+        expect(result).toBe(1); // 同日入退院でも1日としてカウント
     });
 
     it('月をまたいだ入院期間を正しく計算する', () => {
-        // 1月31日から2月2日までの入院
+        // 1月31日から2月2日までの入院（1/31, 2/1, 2/2の3日間）
         const result = calculateHospitalDays('20220131', '20220202');
-        expect(result).toBe(2);
+        expect(result).toBe(3);
     });
 
     it('年をまたいだ入院期間を正しく計算する', () => {
-        // 2021年12月30日から2022年1月2日までの入院
+        // 2021年12月30日から2022年1月2日までの入院（12/30, 12/31, 1/1, 1/2の4日間）
         const result = calculateHospitalDays('20211230', '20220102');
-        expect(result).toBe(3);
+        expect(result).toBe(4);
     });
 
     it('入院日が無効な場合はnullを返す', () => {
@@ -169,4 +169,4 @@ describe('getErrorMessage関数', () => {
         const message = getErrorMessage(obj);
         expect(message).toBe('[object Object]');
     });
-}); 
+});

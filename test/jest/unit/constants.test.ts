@@ -65,7 +65,8 @@ describe('定数定義', () => {
         });
 
         it('正しいヘッダー文字列である', () => {
-            expect(DEFAULT_RESULT_HEADER).toBe('データ識別番号\t入院年月日\t退院年月日');
+            // 更新された出力フォーマットに合わせて期待値を修正
+            expect(DEFAULT_RESULT_HEADER).toBe('データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由');
         });
     });
 
@@ -83,4 +84,4 @@ describe('定数定義', () => {
             expect(MAX_HOSPITAL_DAYS).toBe(5);
         });
     });
-}); 
+});
