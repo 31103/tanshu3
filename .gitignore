@@ -1,9 +1,14 @@
-# 依存関係
+# ----------------------------------------
+# 依存関係 (Dependencies)
+# ----------------------------------------
+# パッケージマネージャーによってインストールされるファイル
 node_modules/
-npm-debug.log
-yarn-error.log
-yarn.lock
-package-lock.json
+
+# ロックファイル (プロジェクトや環境によってはバージョン固定のため含める場合もある)
+# package-lock.json
+# yarn.lock
+
+# Yarn PnP 用ファイル (使用している場合)
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -12,86 +17,124 @@ package-lock.json
 !.yarn/sdks
 !.yarn/versions
 
-# コンパイル出力
+# ----------------------------------------
+# ビルド・コンパイル出力 (Build & Compile Output)
+# ----------------------------------------
+# ビルドツールが生成するディレクトリ
 dist/
 build/
-*.js
-*.js.map
-*.d.ts
-*.tsbuildinfo
+out/
+.next/ # Next.js (使用している場合)
+.nuxt/ # Nuxt.js (使用している場合)
+.serverless/ # Serverless Framework (使用している場合)
+.fusebox/ # FuseBox (使用している場合)
+.vuepress/dist # VuePress (使用している場合)
 
-# 除外しないJavaScriptファイル
-!public/**/*.js
+# TypeScript コンパイル出力
+# *.js
+# *.js.map
+# *.d.ts
+# *.tsbuildinfo
+# → TypeScript プロジェクトでは、コンパイル後の JS は通常無視するが、
+#   このプロジェクトは public/js/bundle.js を直接参照するため、
+#   より限定的なルールにする。
+
+# Parcel のバンドル出力 (public/js/bundle.js) を無視
+public/js/bundle.js
+public/js/bundle.js.map
+
+# レガシーな main.js も無視 (もし不要なら削除)
+public/js/main.js
+
+# ただし、テストコード内の JS ファイルは無視しない
 !test/**/*.js
+
+# ルートディレクトリにある設定系の JS ファイルは無視しない
 !jest.config.js
-!.eslintrc.js
-!.prettierrc.js
-!commitlint.config.js
-!babel.config.js
-!webpack.config.js
-!vite.config.js
+# !.eslintrc.js # .eslintrc.json を使用しているため不要の可能性あり
+# !.prettierrc.js # .prettierrc.json を使用しているため不要の可能性あり
+# !commitlint.config.js # commitlint を使用していない場合は不要
+# !babel.config.js # Babel を使用していない場合は不要
+# !webpack.config.js # Parcel を使用しているため不要
+# !vite.config.js # Parcel を使用しているため不要
 
-# TypeScriptの設定ファイルなど、手動で作成したJavaScriptファイルは除外
-!tsconfig.json
-
-# 環境設定
+# ----------------------------------------
+# 環境設定 (Environment Configuration)
+# ----------------------------------------
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example # 環境変数テンプレートは含める
 
-# ログ
-logs
+# ----------------------------------------
+# ログ (Logs)
+# ----------------------------------------
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+# lerna-debug.log* # lerna を使用していない場合は不要
 
-# エディタ設定
-.idea/
+# ----------------------------------------
+# エディタ・IDE設定 (Editor & IDE Settings)
+# ----------------------------------------
+.idea/ # JetBrains IDEs
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
-.history/
+*.code-workspace # VSCode Workspace
+.history/ # VSCode Local History
+
+# Vim
 *.swp
 *.swo
 
-# OS固有のファイル
+# ----------------------------------------
+# OS固有ファイル (OS Specific Files)
+# ----------------------------------------
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
 Thumbs.db
 ehthumbs.db
 desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
-# テストカバレッジレポート
+# ----------------------------------------
+# テスト・カバレッジ (Test & Coverage)
+# ----------------------------------------
 coverage/
 .nyc_output/
-reports/
+reports/ # Jest のレポート出力先など
 *.lcov
 
-# テンポラリファイル
+# ----------------------------------------
+# キャッシュ・一時ファイル (Cache & Temporary Files)
+# ----------------------------------------
+# npm, yarn キャッシュ
+# .npm/ # npm v5+ では通常 node_modules/.cache にキャッシュされる
+# .yarn/cache # Yarn Berry (v2+) のキャッシュ
+
+# ESLint, Stylelint キャッシュ
+.eslintcache
+# .stylelintcache # stylelint を使用していない場合は不要
+
+# Parcel キャッシュ
+.parcel-cache/
+
+# その他ツールキャッシュ
+# .rts2_cache_*/ # 不明なキャッシュ、必要なら残す
+.husky/_ # husky v5+ の場合
+
+# 一時ファイル
 *.tmp
 *~
 tmp/
 temp/
-
-# その他のキャッシュとビルドファイル
-.cache/
-.parcel-cache/
-.rts2_cache_*/
-.husky/_
-.eslintcache
-.stylelintcache
-.next/
-out/
-.nuxt/
-.vuepress/dist
-.serverless/
-.fusebox/
-.dynamodb/
+# .dynamodb/ # ローカル DynamoDB (使用している場合)
