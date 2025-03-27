@@ -3,11 +3,11 @@
  * このファイルは、アプリケーションの主要なモジュール間の連携をテストします。
  */
 
-import { parseEFFile } from '../../../src/core/common/parsers';
-import { evaluateCases, formatResults } from '../../../src/core/common/evaluator';
-import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils';
-import { TARGET_PROCEDURES, COLONOSCOPY_SPECIAL_ADDITIONS } from '../../../src/core/common/constants';
-import type { CaseData } from '../../../src/core/common/types';
+import { parseEFFile } from '../../../src/core/common/parsers.js';
+import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js';
+import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils.js';
+import { TARGET_PROCEDURES, COLONOSCOPY_SPECIAL_ADDITIONS, DEFAULT_RESULT_HEADER } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
+import type { CaseData, OutputSettings } from '../../../src/core/common/types.js'; // OutputSettings をインポート
 
 describe('モジュール統合テスト', () => {
     // テスト用のモックデータを改良
@@ -136,8 +136,11 @@ EF,TEST004,20240708,20240701,00,00,00,00,999999999`;
         // すべてのケースが対象になるはず
         expect(eligibleCases.length).toBe(2);
 
-        // 結果をフォーマット
-        const formattedResult = formatResults(eligibleCases);
+        // デフォルト設定を定義
+        const defaultSettings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };
+
+        // 結果をフォーマット (デフォルトヘッダーと設定を渡す)
+        const formattedResult = formatResults(eligibleCases, DEFAULT_RESULT_HEADER, defaultSettings);
 
         // フォーマット結果を検証
         expect(typeof formattedResult).toBe('string');
@@ -148,9 +151,9 @@ EF,TEST004,20240708,20240701,00,00,00,00,999999999`;
             expect(formattedResult).toContain(caseData.id);
         });
 
-        // カスタムヘッダーを使用してフォーマット
+        // カスタムヘッダーを使用してフォーマット (設定も渡す)
         const customHeader = '患者ID,入院日,退院日,入院期間,実施手術';
-        const customFormatted = formatResults(eligibleCases, customHeader);
+        const customFormatted = formatResults(eligibleCases, customHeader, defaultSettings);
 
         // カスタムヘッダーがフォーマット結果に含まれていることを確認
         expect(customFormatted).toContain(customHeader);
@@ -196,4 +199,4 @@ EF,VALID001,20240705,20240701,00,00,00,00,150078810
             console.warn('警告: 有効なケースデータが解析されませんでした。テストケースを拡充してください。');
         }
     });
-}); 
+});

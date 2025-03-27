@@ -46,7 +46,8 @@ export interface AppState {
  * 結果出力の設定を表します。
  */
 export interface OutputSettings {
-    showAllCases: boolean;   // 全症例を表示するかどうか（falseの場合は短手３対象症例のみ）
+    outputMode: 'eligibleOnly' | 'allCases'; // 出力モード（対象症例のみ or 全症例）
+    dateFormat: 'yyyymmdd' | 'yyyy/mm/dd'; // 日付フォーマット (小文字に修正)
 }
 
 /**
@@ -75,4 +76,4 @@ export interface ValidationResult {
     isValid: boolean;   // ファイルが有効かどうかのフラグ
     errors: string[];   // 重大なエラーメッセージの配列
     warnings: string[]; // 警告メッセージの配列
-} 
+}

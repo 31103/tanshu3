@@ -6,11 +6,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { parseEFFile, mergeCases } from '../../../src/core/common/parsers';
-import { evaluateCases } from '../../../src/core/common/evaluator';
-import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils';
-import { TARGET_PROCEDURES } from '../../../src/core/common/constants';
-import type { CaseData } from '../../../src/core/common/types';
+import { parseEFFile, mergeCases } from '../../../src/core/common/parsers.js';
+import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js'; // formatResults をインポート
+import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils.js';
+import { TARGET_PROCEDURES, DEFAULT_RESULT_HEADER } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
+import type { CaseData, OutputSettings } from '../../../src/core/common/types.js'; // OutputSettings をインポート
 
 // ESモジュールで__dirnameの代替を設定
 const __filename = fileURLToPath(import.meta.url);
@@ -135,6 +135,69 @@ describe('データフロー統合テスト', () => {
             expect(hospitalDays).not.toBeNull();
             expect(hospitalDays).toBeLessThanOrEqual(5);
         }
+
+        // --- formatResults のテストを追加 ---
+        const settingsAllYMD: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };
+        const settingsAllSlash: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyy/mm/dd' };
+        const settingsEligibleYMD: OutputSettings = { outputMode: 'eligibleOnly', dateFormat: 'yyyymmdd' };
+        const settingsEligibleSlash: OutputSettings = { outputMode: 'eligibleOnly', dateFormat: 'yyyy/mm/dd' };
+
+        // 1. 全症例, YYYYMMDD
+        const resultAllYMD = formatResults(evaluatedCases, DEFAULT_RESULT_HEADER, settingsAllYMD);
+        const linesAllYMD = resultAllYMD.split('\n');
+        expect(linesAllYMD.length).toBe(evaluatedCases.length + 1); // ヘッダー + 全症例数
+        // 日付フォーマットの確認 (例: 最初のデータ行)
+        if (evaluatedCases.length > 0) {
+            const firstDataLine = linesAllYMD[1].split('\t');
+            expect(firstDataLine[1]).toMatch(/^\d{8}$/); // YYYYMMDD形式
+            expect(firstDataLine[2]).toMatch(/^\d{8}$/); // YYYYMMDD形式 or 00000000
+        }
+        // 対象症例が含まれることを確認
+        expect(resultAllYMD).toContain('0000000002\t');
+        expect(resultAllYMD).toContain('0000000004\t');
+
+        // 2. 全症例, YYYY/MM/DD
+        const resultAllSlash = formatResults(evaluatedCases, DEFAULT_RESULT_HEADER, settingsAllSlash);
+        const linesAllSlash = resultAllSlash.split('\n');
+        expect(linesAllSlash.length).toBe(evaluatedCases.length + 1);
+        // 日付フォーマットの確認
+        if (evaluatedCases.length > 0) {
+            const firstDataLine = linesAllSlash[1].split('\t');
+            expect(firstDataLine[1]).toMatch(/^\d{4}\/\d{2}\/\d{2}$/); // YYYY/MM/DD形式
+            expect(firstDataLine[2]).toMatch(/^(\d{4}\/\d{2}\/\d{2}|00000000)$/); // YYYY/MM/DD形式 or 00000000
+        }
+        expect(resultAllSlash).toContain('0000000002\t');
+        expect(resultAllSlash).toContain('0000000004\t');
+
+        // 3. 対象症例のみ, YYYYMMDD
+        const resultEligibleYMD = formatResults(evaluatedCases, DEFAULT_RESULT_HEADER, settingsEligibleYMD);
+        const linesEligibleYMD = resultEligibleYMD.split('\n');
+        expect(linesEligibleYMD.length).toBe(eligibleCases.length + 1); // ヘッダー + 対象症例数
+        // 日付フォーマットの確認
+        if (eligibleCases.length > 0) {
+            const firstDataLine = linesEligibleYMD[1].split('\t');
+            expect(firstDataLine[1]).toMatch(/^\d{8}$/);
+            expect(firstDataLine[2]).toMatch(/^\d{8}$/); // 対象症例は退院日確定のはず
+        }
+        // 対象症例のみが含まれることを確認 (非対象症例が含まれないこと)
+        expect(resultEligibleYMD).toContain('0000000002\t');
+        expect(resultEligibleYMD).toContain('0000000004\t');
+        // 例: 非対象のID '0000000001' が含まれないことを確認 (フィクスチャに依存するためコメントアウト)
+        // expect(resultEligibleYMD).not.toContain('0000000001\t');
+
+        // 4. 対象症例のみ, YYYY/MM/DD
+        const resultEligibleSlash = formatResults(evaluatedCases, DEFAULT_RESULT_HEADER, settingsEligibleSlash);
+        const linesEligibleSlash = resultEligibleSlash.split('\n');
+        expect(linesEligibleSlash.length).toBe(eligibleCases.length + 1);
+        // 日付フォーマットの確認
+        if (eligibleCases.length > 0) {
+            const firstDataLine = linesEligibleSlash[1].split('\t');
+            expect(firstDataLine[1]).toMatch(/^\d{4}\/\d{2}\/\d{2}$/);
+            expect(firstDataLine[2]).toMatch(/^\d{4}\/\d{2}\/\d{2}$/);
+        }
+        expect(resultEligibleSlash).toContain('0000000002\t');
+        expect(resultEligibleSlash).toContain('0000000004\t');
+        // expect(resultEligibleSlash).not.toContain('0000000001\t');
     });
 });
 

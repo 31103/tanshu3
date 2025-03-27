@@ -83,8 +83,11 @@ class Application {
                 return;
             }
 
-            // 処理の実行
-            const resultText = await fileProcessor.processFiles(selectedFiles);
+            // UIから出力設定を取得
+            const outputSettings = resultViewer.getOutputSettings();
+
+            // 処理の実行 (設定を渡す)
+            const resultText = await fileProcessor.processFiles(selectedFiles, outputSettings);
 
             // 結果の表示
             resultViewer.displayResult(resultText);

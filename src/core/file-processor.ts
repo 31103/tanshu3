@@ -1,7 +1,8 @@
-import { CaseData } from './common/types';
+import { CaseData, OutputSettings } from './common/types'; // OutputSettings をインポート
 import { readFileAsText } from './validator';
 import { parseEFFile, mergeCases } from './common/parsers';
 import { evaluateCases, formatResults } from './common/evaluator';
+import { DEFAULT_RESULT_HEADER } from './common/constants'; // DEFAULT_RESULT_HEADER をインポート
 
 /**
  * ファイル処理クラス
@@ -10,10 +11,11 @@ import { evaluateCases, formatResults } from './common/evaluator';
 class FileProcessor {
     /**
      * 複数のファイルを処理する
-     * @param files 処理対象のファイル配列
-     * @returns 処理結果のプロミス
-     */
-    public async processFiles(files: File[]): Promise<string> {
+ * @param files 処理対象のファイル配列
+ * @param settings 出力設定
+ * @returns 処理結果のプロミス
+ */
+    public async processFiles(files: File[], settings: OutputSettings): Promise<string> { // settings 引数を追加
         try {
             if (!files || files.length === 0) {
                 throw new Error('ファイルが選択されていません');
@@ -37,8 +39,7 @@ class FileProcessor {
             const evaluatedCases = evaluateCases(allCases);
 
             // 結果をフォーマット
-            // TODO: UIからOutputSettingsを受け取るように修正する
-            const result = formatResults(evaluatedCases, undefined, { showAllCases: true });
+            const result = formatResults(evaluatedCases, DEFAULT_RESULT_HEADER, settings); // settings を渡すように修正
 
             return result;
         } catch (error) {

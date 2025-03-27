@@ -1,4 +1,4 @@
-import { OutputSettings } from '../../types/types';
+import { OutputSettings } from '../../core/common/types'; // さらに正しいパスに修正
 
 /**
  * 結果表示クラス
@@ -226,14 +226,16 @@ export class ResultViewer {
      * 表示用設定を取得
      * @returns 出力設定
      */
-    public getOutputSettings(): OutputSettings {
+    public getOutputSettings(): OutputSettings { // 戻り値の型を明示 (インポート元が修正されたため)
         const eligibleOnlyRadio = document.getElementById('eligibleOnly') as HTMLInputElement;
         const dateFormatRadios = document.querySelectorAll('input[name="dateFormat"]') as NodeListOf<HTMLInputElement>;
 
-        let dateFormat = 'YYYYMMDD';
+        // デフォルト値を小文字に修正し、型を明示
+        let dateFormat: 'yyyymmdd' | 'yyyy/mm/dd' = 'yyyymmdd';
         for (const radio of Array.from(dateFormatRadios)) {
             if (radio.checked) {
-                dateFormat = radio.value;
+                // radio.value が正しい型であることを確認 (必要であればアサーション)
+                dateFormat = radio.value as 'yyyymmdd' | 'yyyy/mm/dd';
                 break;
             }
         }

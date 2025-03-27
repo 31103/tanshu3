@@ -4,7 +4,7 @@
  */
 
 import { CaseData, OutputSettings } from './types';
-import { calculateHospitalDays } from './utils';
+import { calculateHospitalDays, formatDate } from './utils'; // formatDate をインポート
 import {
     TARGET_PROCEDURES,
     COLONOSCOPY_SPECIAL_ADDITIONS,
@@ -136,16 +136,16 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
  * 判定結果をタブ区切りテキスト形式でフォーマットします
  * @param cases - フォーマットする症例データ
  * @param headerLine - 出力ヘッダー行（デフォルト: DEFAULT_RESULT_HEADER）
- * @param settings - 出力設定（デフォルト: 短手３対象症例のみ）
+ * @param settings - 出力設定（outputMode と dateFormat を含む）
  * @returns フォーマットされた結果テキスト
  */
 export function formatResults(
     cases: CaseData[],
     headerLine: string = DEFAULT_RESULT_HEADER,
-    settings: OutputSettings = { showAllCases: false }
+    settings: OutputSettings // デフォルト値を削除し、必須引数とする
 ): string {
     // 設定に基づいて出力する症例をフィルタリング
-    const filteredCases = settings.showAllCases
+    const filteredCases = settings.outputMode === 'allCases'
         ? cases
         : cases.filter(c => c.isEligible === true);
 
@@ -159,7 +159,11 @@ export function formatResults(
 
     // 各症例のデータ行を追加
     filteredCases.forEach(c => {
-        const line = `${c.id}\t${c.admission}\t${c.discharge}\t${c.isEligible ? 'Yes' : 'No'}\t${c.reason || ''}`;
+        // 日付を指定されたフォーマットに変換
+        const admissionDate = formatDate(c.admission, settings.dateFormat);
+        const dischargeDate = formatDate(c.discharge, settings.dateFormat);
+
+        const line = `${c.id}\t${admissionDate}\t${dischargeDate}\t${c.isEligible ? 'Yes' : 'No'}\t${c.reason || ''}`;
         lines.push(line);
     });
 

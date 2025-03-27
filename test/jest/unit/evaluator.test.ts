@@ -6,8 +6,8 @@
 
 import { jest } from '@jest/globals';
 import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js';
-import { CaseData } from '../../../src/core/common/types.js';
-import { MAX_HOSPITAL_DAYS, TARGET_PROCEDURES, COLONOSCOPY_PROCEDURE_CODES, COLONOSCOPY_SPECIAL_ADDITIONS, INELIGIBILITY_REASONS } from '../../../src/core/common/constants.js';
+import { CaseData, OutputSettings } from '../../../src/core/common/types.js'; // OutputSettings をインポート
+import { MAX_HOSPITAL_DAYS, TARGET_PROCEDURES, COLONOSCOPY_PROCEDURE_CODES, COLONOSCOPY_SPECIAL_ADDITIONS, INELIGIBILITY_REASONS, DEFAULT_RESULT_HEADER } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
 
 describe('evaluateCases関数', () => {
     it('空の配列の場合は空の配列を返す', () => {
@@ -278,12 +278,15 @@ describe('evaluateCases関数', () => {
 });
 
 describe('formatResults関数', () => {
+    // テスト用のデフォルト設定
+    const defaultSettings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };
+
     it('空の配列の場合は該当する症例がない旨のメッセージを返す', () => {
-        const result = formatResults([]);
+        const result = formatResults([], DEFAULT_RESULT_HEADER, defaultSettings); // settings を渡す
         expect(result).toBe('該当する症例はありません。');
     });
 
-    it('症例データを正しくフォーマットする', () => {
+    it('症例データを正しくフォーマットする (デフォルト設定: 全症例, yyyymmdd)', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -294,16 +297,15 @@ describe('formatResults関数', () => {
             }
         ];
 
-        const result = formatResults(cases);
+        const result = formatResults(cases, DEFAULT_RESULT_HEADER, defaultSettings); // settings を渡す
         const lines = result.split('\n');
 
         expect(lines.length).toBe(2);
-        // 修正: 最新の出力形式に合わせて期待値を更新
-        expect(lines[0]).toBe('データ識別番号\t入院年月日\t退院年月日\t短手３対象症例\t理由');
+        expect(lines[0]).toBe(DEFAULT_RESULT_HEADER); // 定数を使用
         expect(lines[1]).toBe('12345\t20220101\t20220103\tYes\t');
     });
 
-    it('複数の症例をフォーマットする', () => {
+    it('複数の症例をフォーマットする (デフォルト設定)', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -321,16 +323,15 @@ describe('formatResults関数', () => {
             }
         ];
 
-        const result = formatResults(cases);
+        const result = formatResults(cases, DEFAULT_RESULT_HEADER, defaultSettings); // settings を渡す
         const lines = result.split('\n');
 
         expect(lines.length).toBe(3);
-        // 修正: 最新の出力形式に合わせて期待値を更新
         expect(lines[1]).toBe('12345\t20220101\t20220103\tYes\t');
         expect(lines[2]).toBe('23456\t20220201\t20220203\tYes\t');
     });
 
-    it('カスタムヘッダーを使用する', () => {
+    it('カスタムヘッダーを使用する (デフォルト設定)', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -342,14 +343,14 @@ describe('formatResults関数', () => {
         ];
 
         const customHeader = 'ID\t入院日\t退院日';
-        const result = formatResults(cases, customHeader);
+        const result = formatResults(cases, customHeader, defaultSettings); // settings を渡す
         const lines = result.split('\n');
 
         expect(lines.length).toBe(2);
         expect(lines[0]).toBe(customHeader);
     });
 
-    it('isEligibleフラグに基づいて対象/非対象を表示する', () => {
+    it('isEligibleフラグに基づいて対象/非対象を表示する (全症例表示)', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -369,7 +370,8 @@ describe('formatResults関数', () => {
             }
         ];
 
-        const result = formatResults(cases, undefined, { showAllCases: true });
+        const settings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };
+        const result = formatResults(cases, DEFAULT_RESULT_HEADER, settings); // settings を渡す
         const lines = result.split('\n');
 
         expect(lines.length).toBe(3);
@@ -377,7 +379,7 @@ describe('formatResults関数', () => {
         expect(lines[2]).toBe('23456\t20220201\t20220207\tNo\t' + INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED);
     });
 
-    it('showAllCases=falseの場合は対象症例のみを出力する', () => {
+    it('outputMode="eligibleOnly"の場合は対象症例のみを出力する', () => {
         const cases: CaseData[] = [
             {
                 id: '12345',
@@ -396,12 +398,42 @@ describe('formatResults関数', () => {
             }
         ];
 
-        // showAllCases=false（デフォルト）
-        const result = formatResults(cases);
+        const settings: OutputSettings = { outputMode: 'eligibleOnly', dateFormat: 'yyyymmdd' };
+        const result = formatResults(cases, DEFAULT_RESULT_HEADER, settings); // settings を渡す
         const lines = result.split('\n');
 
         // ヘッダー + 対象症例1件のみが出力される
         expect(lines.length).toBe(2);
         expect(lines[1].startsWith('12345')).toBe(true);
+        expect(lines[1]).toBe('12345\t20220101\t20220103\tYes\t'); // 理由が空の場合も考慮
+    });
+
+    it('dateFormat="yyyy/mm/dd"の場合は日付をスラッシュ区切りでフォーマットする', () => {
+        const cases: CaseData[] = [
+            {
+                id: '12345',
+                admission: '20220101',
+                discharge: '20220103',
+                procedures: ['160218510'],
+                isEligible: true
+            },
+            {
+                id: '23456',
+                admission: '20220201',
+                discharge: '00000000', // 退院日未定
+                procedures: ['160218510'],
+                isEligible: false,
+                reason: INELIGIBILITY_REASONS.UNDISCHARGED
+            }
+        ];
+
+        const settings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyy/mm/dd' };
+        const result = formatResults(cases, DEFAULT_RESULT_HEADER, settings);
+        const lines = result.split('\n');
+
+        expect(lines.length).toBe(3);
+        expect(lines[1]).toBe('12345\t2022/01/01\t2022/01/03\tYes\t');
+        // 退院日未定の場合はそのまま出力されることを確認
+        expect(lines[2]).toBe('23456\t2022/02/01\t00000000\tNo\t' + INELIGIBILITY_REASONS.UNDISCHARGED);
     });
 });
