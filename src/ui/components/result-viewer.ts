@@ -84,26 +84,35 @@ export class ResultViewer {
     }
 
     /**
-     * 結果をクリップボードにコピーする
+     * 結果をクリップボードにコピーする (navigator.clipboard APIを使用)
      */
-    private copyResultToClipboard(): void {
-        if (!this.resultTextarea.value) return;
+    private async copyResultToClipboard(): Promise<void> {
+        const textToCopy = this.resultTextarea.value;
+        if (!textToCopy) return;
 
-        // テキストをクリップボードにコピー
-        this.resultTextarea.select();
-        document.execCommand('copy');
+        try {
+            // navigator.clipboard APIを使用してテキストをコピー
+            await navigator.clipboard.writeText(textToCopy);
 
-        // 選択を解除
-        window.getSelection()?.removeAllRanges();
+            // コピー成功メッセージを表示
+            this.copyMessage.textContent = 'コピーしました！';
+            this.copyMessage.classList.add('visible');
 
-        // コピー成功メッセージを表示
-        this.copyMessage.textContent = 'コピーしました！';
-        this.copyMessage.classList.add('visible');
+            // メッセージを一定時間後に消す
+            setTimeout(() => {
+                this.copyMessage.classList.remove('visible');
+            }, 2000);
+        } catch (err) {
+            console.error('クリップボードへのコピーに失敗しました:', err);
+            // エラーメッセージを表示 (より具体的に)
+            this.copyMessage.textContent = 'コピーに失敗しました';
+            this.copyMessage.classList.add('visible', 'error'); // エラー用スタイルを追加 (CSSで定義が必要)
 
-        // メッセージを一定時間後に消す
-        setTimeout(() => {
-            this.copyMessage.classList.remove('visible');
-        }, 2000);
+            // メッセージを一定時間後に消す
+            setTimeout(() => {
+                this.copyMessage.classList.remove('visible', 'error');
+            }, 3000);
+        }
     }
 
     /**
@@ -132,6 +141,9 @@ export class ResultViewer {
 
         // 保存用リンクを更新
         this.updateDownloadLink(resultText);
+
+        // 結果があればコピーボタンを有効化
+        this.copyButton.disabled = !resultText;
     }
 
     /**
