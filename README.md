@@ -45,42 +45,75 @@ npm run build
 
 ```
 tanshu3/
-├── public/                  # 公開ファイル
+├── .clinerules             # Cline用設定ファイル
+├── .eslintrc.json          # ESLint設定
+├── .gitignore              # Git無視リスト
+├── .prettierrc.json        # Prettier設定
+├── jest.config.js          # Jest設定
+├── package-lock.json       # 依存関係ロックファイル
+├── package.json            # プロジェクト設定
+├── README.md               # このファイル
+├── tanshu3.code-workspace  # VSCodeワークスペース設定
+├── tsconfig.json           # TypeScript設定
+├── tsconfig.test.json      # TypeScriptテスト用設定
+├── coverage/               # テストカバレッジレポート
+├── dist/                   # ビルド出力ディレクトリ
+├── docs/                   # ドキュメント
+│   ├── project_overview.md # プロジェクト概要
+│   ├── 短期滞在手術等基本料３について.md # 短手３判定ロジック詳細
+│   └── 入院EF統合ファイルについて.md   # EFファイル仕様
+├── public/                 # 公開ファイル (ブラウザで直接アクセス)
 │   ├── index.html          # メインUI
 │   ├── css/                # スタイルシート
-│   └── js/                 # コンパイル後のJSファイル
-├── src/                    # ソースコード
-│   ├── browser/            # ブラウザ環境用コード
-│   │   ├── common.browser.ts # ブラウザ用共通ロジック
-│   │   └── main.ts         # UI処理
-│   ├── core/               # コアロジック
-│   │   ├── common/         # 共通関数
-│   │   ├── adapters/       # アダプターモジュール
-│   │   ├── common.ts       # 共通ビジネスロジック
-│   │   └── index.ts        # エントリーポイント
-│   ├── ui/                 # UIコンポーネント
-│   │   └── components/     # 再利用可能なコンポーネント
-│   └── types/              # 型定義
-│       └── types.d.ts      # プロジェクト全体の型定義
-├── dist/                   # ビルド出力ディレクトリ
+│   │   └── styles.css
+│   └── js/                 # コンパイル後のJavaScript (Parcelが出力)
+├── src/                    # ソースコード (TypeScript)
+│   ├── browser/            # ブラウザ環境依存コード
+│   │   ├── common.browser.ts # ブラウザ用共通関数
+│   │   └── main.ts         # UIイベント処理、エントリーポイント
+│   ├── core/               # コアロジック (ブラウザ/Node.js共通)
+│   │   ├── common.ts       # 共通関数 (コアロジック内)
+│   │   ├── file-processor.ts # ファイル処理ロジック
+│   │   ├── index.ts        # コアモジュールエントリーポイント
+│   │   ├── validator.ts    # データ検証ロジック
+│   │   ├── adapters/       # 環境依存処理の抽象化
+│   │   │   ├── browser.ts  # ブラウザ用アダプター
+│   │   │   └── node.ts     # Node.js用アダプター (テスト等で使用)
+│   │   └── common/         # 共通定数、型、パーサー、評価ロジック等
+│   │       ├── constants.ts
+│   │       ├── evaluator.ts
+│   │       ├── parsers.ts
+│   │       ├── types.ts
+│   │       └── utils.ts
+│   ├── types/              # グローバルな型定義
+│   │   └── types.d.ts
+│   └── ui/                 # UI関連コード
+│       └── components/     # UIコンポーネント
+│           ├── file-manager.ts # ファイル選択・管理UI
+│           ├── notification.ts # 通知表示UI
+│           └── result-viewer.ts # 結果表示UI
 ├── test/                   # テストコード
+│   ├── run-tests.js        # テストランナー (Jest以外)
+│   ├── accessibility/      # アクセシビリティテスト
+│   │   └── accessibility-test.js
+│   ├── browser-compatibility/ # ブラウザ互換性テスト
+│   │   └── automated-browser-test.js
 │   ├── fixtures/           # テスト用データ
-│   ├── unit/               # ユニットテスト
-│   ├── integration/        # 統合テスト
-│   └── jest/               # Jestの設定
-├── docs/                   # プロジェクト仕様書
-│   ├── project_overview.md
-│   ├── 入院EF統合ファイルについて.md
-│   └── 短期滞在手術等基本料３について.md
-├── .github/                # GitHub関連の設定
-├── .husky/                 # Git Hooks設定
-├── coverage/               # テストカバレッジレポート
-├── node_modules/           # 依存パッケージ
-├── package.json            # プロジェクト設定
-├── tsconfig.json           # TypeScript設定
-├── jest.config.js          # Jest設定
-├── .eslintrc.json          # ESLint設定
-└── .prettierrc.json        # Prettier設定
+│   │   ├── expect.txt      # 期待される出力結果
+│   │   └── sampleEF/       # サンプルEFファイル
+│   └── jest/               # Jestテスト
+│       ├── integration/    # 統合テスト
+│       │   ├── data-flow.test.ts
+│       │   └── module-integration.test.ts
+│       └── unit/           # ユニットテスト
+│           ├── constants.test.ts
+│           ├── evaluator.test.ts
+│           ├── parsers.test.ts
+│           ├── sample.test.ts
+│           ├── utils.test.ts
+│           └── validator.test.ts
+├── .github/                # GitHub Actionsなどの設定
+└── .husky/                 # Gitフック設定
 ```
 
 ### テスト実行

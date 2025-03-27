@@ -47,73 +47,76 @@
 ### 3.1 ディレクトリ構造
 
 ```
-.
-├── .clinerules              - Cline向けルール定義ファイル
-├── .eslintrc.json           - ESLint設定ファイル
-├── .gitignore               - Git無視リスト
-├── .prettierrc.json         - Prettier設定ファイル
-├── jest.config.js           - Jest設定ファイル
-├── package.json             - プロジェクト設定とパッケージ依存関係
-├── README.md                - プロジェクトのREADME
-├── tsconfig.json            - TypeScript設定ファイル
-├── tsconfig.test.json       - TypeScriptテスト用設定ファイル
-├── coverage/                - テストカバレッジレポート
-├── docs/                    - ドキュメント
-│   ├── project_overview.md    - このファイル
-│   ├── 短期滞在手術等基本料３について.md - 短手３の定義
-│   └── 入院EF統合ファイルについて.md   - EF統合ファイルの仕様
-├── public/                  - 静的ファイル（ブラウザで直接開く）
-│   ├── index.html           - メインのHTMLファイル
-│   ├── css/
-│   │   └── styles.css       - スタイルシート
-│   └── js/
-│       ├── bundle.js        - ParcelでバンドルされたJSコード
-│       └── main.js          - レガシーコード（非推奨）
-├── src/                     - ソースコード
-│   ├── browser/             - ブラウザ環境固有のコード
-│   │   ├── common.browser.ts
-│   │   └── main.ts          - ブラウザ環境のエントリーポイント
-│   ├── core/                - コアビジネスロジック（環境非依存）
-│   │   ├── common.ts        - コア共通処理
-│   │   ├── file-processor.ts - ファイル処理
-│   │   ├── index.ts         - コアモジュールエントリーポイント
-│   │   ├── validator.ts     - データ検証
-│   │   ├── adapters/        - 環境依存アダプター
-│   │   │   ├── browser.ts   - ブラウザ用アダプター
-│   │   │   └── node.ts      - Node.js用アダプター
-│   │   └── common/          - 環境非依存の共通ロジック
-│   │       ├── constants.ts - 定数
-│   │       ├── evaluator.ts - 短手３判定ロジック
-│   │       ├── parsers.ts   - ファイル解析
-│   │       ├── types.ts     - 型定義
-│   │       └── utils.ts     - ユーティリティ関数
-│   ├── types/               - グローバル型定義（現在は未使用の可能性あり）
-│   └── ui/                  - UI関連コード
-│       └── components/      - UIコンポーネント
-│           ├── file-manager.ts
-│           ├── notification.ts
-│           └── result-viewer.ts
-└── test/                    - テスト関連ファイル
-    ├── run-tests.js         - テスト実行スクリプト（旧式）
-    ├── accessibility/       - アクセシビリティテスト
-    │   └── accessibility-test.js
-    ├── browser-compatibility/ - ブラウザ互換性テスト
-    │   └── automated-browser-test.js
-    ├── fixtures/            - テスト用データ
-    │   ├── expect.txt
-    │   └── sampleEF/
-    │       ├── sample_EFn_XXXXXXXXX_2407.txt
-    │       └── sample_EFn_XXXXXXXXX_2408.txt
-    └── jest/                - Jestテストスイート
-        ├── integration/     - 統合テスト
-        │   ├── data-flow.test.ts
-        │   └── module-integration.test.ts
-        └── unit/            - 単体テスト
-            ├── constants.test.ts
-            ├── evaluator.test.ts
-            ├── parsers.test.ts
-            ├── utils.test.ts
-            └── validator.test.ts
+tanshu3/
+├── .clinerules             # Cline用設定ファイル
+├── .eslintrc.json          # ESLint設定
+├── .gitignore              # Git無視リスト
+├── .prettierrc.json        # Prettier設定
+├── jest.config.js          # Jest設定
+├── package-lock.json       # 依存関係ロックファイル
+├── package.json            # プロジェクト設定
+├── README.md               # プロジェクト概要 (簡易版)
+├── tanshu3.code-workspace  # VSCodeワークスペース設定
+├── tsconfig.json           # TypeScript設定
+├── tsconfig.test.json      # TypeScriptテスト用設定
+├── coverage/               # テストカバレッジレポート
+├── dist/                   # ビルド出力ディレクトリ (現在は未使用)
+├── docs/                   # ドキュメント
+│   ├── project_overview.md # このファイル (プロジェクト詳細)
+│   ├── 短期滞在手術等基本料３について.md # 短手３判定ロジック詳細
+│   └── 入院EF統合ファイルについて.md   # EFファイル仕様
+├── public/                 # 公開ファイル (ブラウザで直接アクセス)
+│   ├── index.html          # メインUI
+│   ├── css/                # スタイルシート
+│   │   └── styles.css
+│   └── js/                 # コンパイル後のJavaScript (Parcelが出力)
+├── src/                    # ソースコード (TypeScript)
+│   ├── browser/            # ブラウザ環境依存コード
+│   │   ├── common.browser.ts # ブラウザ用共通関数
+│   │   └── main.ts         # UIイベント処理、エントリーポイント
+│   ├── core/               # コアロジック (ブラウザ/Node.js共通)
+│   │   ├── common.ts       # 共通関数 (コアロジック内)
+│   │   ├── file-processor.ts # ファイル処理ロジック
+│   │   ├── index.ts        # コアモジュールエントリーポイント
+│   │   ├── validator.ts    # データ検証ロジック
+│   │   ├── adapters/       # 環境依存処理の抽象化
+│   │   │   ├── browser.ts  # ブラウザ用アダプター
+│   │   │   └── node.ts     # Node.js用アダプター (テスト等で使用)
+│   │   └── common/         # 共通定数、型、パーサー、評価ロジック等
+│   │       ├── constants.ts
+│   │       ├── evaluator.ts
+│   │       ├── parsers.ts
+│   │       ├── types.ts
+│   │       └── utils.ts
+│   ├── types/              # グローバルな型定義
+│   │   └── types.d.ts
+│   └── ui/                 # UI関連コード
+│       └── components/     # UIコンポーネント
+│           ├── file-manager.ts # ファイル選択・管理UI
+│           ├── notification.ts # 通知表示UI
+│           └── result-viewer.ts # 結果表示UI
+├── test/                   # テストコード
+│   ├── run-tests.js        # テストランナー (Jest以外)
+│   ├── accessibility/      # アクセシビリティテスト
+│   │   └── accessibility-test.js
+│   ├── browser-compatibility/ # ブラウザ互換性テスト
+│   │   └── automated-browser-test.js
+│   ├── fixtures/           # テスト用データ
+│   │   ├── expect.txt      # 期待される出力結果
+│   │   └── sampleEF/       # サンプルEFファイル
+│   └── jest/               # Jestテスト
+│       ├── integration/    # 統合テスト
+│       │   ├── data-flow.test.ts
+│       │   └── module-integration.test.ts
+│       └── unit/           # ユニットテスト
+│           ├── constants.test.ts
+│           ├── evaluator.test.ts
+│           ├── parsers.test.ts
+│           ├── sample.test.ts # サンプルテスト (削除検討)
+│           ├── utils.test.ts
+│           └── validator.test.ts
+├── .github/                # GitHub Actionsなどの設定 (存在する場合)
+└── .husky/                 # Gitフック設定 (存在する場合)
 ```
 
 ### 3.2 主要ファイルの役割
@@ -141,7 +144,7 @@
 
 * `public/index.html` - メインユーザーインターフェース
 * `public/css/styles.css` - スタイル定義
-* `public/js/main.js` - バンドルされたアプリケーションコード（Parcelによる生成）
+* `public/js/` - バンドルされたアプリケーションコード（Parcelによる生成、ファイル名は動的）
 
 ## 4. 実装詳細
 
