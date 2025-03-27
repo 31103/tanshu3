@@ -6,7 +6,6 @@
  */
 import { fileManager } from '../ui/components/file-manager';
 import { resultViewer } from '../ui/components/result-viewer';
-import { stepManager } from '../ui/components/step-manager';
 import { notificationSystem } from '../ui/components/notification';
 import { fileProcessor } from '../core/file-processor';
 import { ErrorHandlerOptions } from '../types/types';
@@ -29,9 +28,6 @@ class Application {
 
         // イベントリスナーの設定
         this.setupEventListeners();
-
-        // 初期ステップの設定
-        stepManager.updateStep(0);
     }
 
     /**
@@ -47,7 +43,7 @@ class Application {
 
         // 他のイベントリスナーを設定...
         document.addEventListener('filesClear', () => {
-            stepManager.updateStep(0);
+            // ファイルクリア時の処理（ステップ更新は削除）
         });
     }
 
@@ -56,9 +52,6 @@ class Application {
      */
     private async processFiles(): Promise<void> {
         try {
-            // ステップを更新
-            stepManager.updateStep(2);
-
             // ファイルが選択されているか確認
             const selectedFiles = this.fileManagerInstance.getSelectedFiles();
             if (selectedFiles.length === 0) {
@@ -86,7 +79,7 @@ class Application {
                 if (this.loadingIndicator) {
                     this.loadingIndicator.classList.remove('active');
                 }
-                stepManager.updateStep(1);
+                // ステップ更新は削除
                 return;
             }
 
@@ -95,9 +88,6 @@ class Application {
 
             // 結果の表示
             resultViewer.displayResult(resultText);
-
-            // ステップを更新
-            stepManager.updateStep(3);
 
             // 成功通知
             notificationSystem.showToast('success', '処理完了', '処理が正常に完了しました', 5000, 2);
@@ -111,8 +101,7 @@ class Application {
                     }
                 },
                 updateUI: () => {
-                    // エラー時のUI更新
-                    stepManager.updateStep(1);
+                    // エラー時のUI更新（ステップ更新は削除）
                 }
             });
         } finally {

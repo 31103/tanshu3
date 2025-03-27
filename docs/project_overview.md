@@ -92,8 +92,7 @@
 │       └── components/      - UIコンポーネント
 │           ├── file-manager.ts
 │           ├── notification.ts
-│           ├── result-viewer.ts
-│           └── step-manager.ts
+│           └── result-viewer.ts
 └── test/                    - テスト関連ファイル
     ├── run-tests.js         - テスト実行スクリプト（旧式）
     ├── accessibility/       - アクセシビリティテスト
@@ -137,7 +136,6 @@
 * `src/ui/components/file-manager.ts` - ファイル選択・管理機能
 * `src/ui/components/notification.ts` - ユーザー通知機能
 * `src/ui/components/result-viewer.ts` - 結果表示機能
-* `src/ui/components/step-manager.ts` - 処理ステップ管理
 
 #### 3.2.3 静的ファイル
 
