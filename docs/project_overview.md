@@ -48,76 +48,73 @@
 
 ```
 .
-├── jest.config.js           - Jestの設定ファイル
-├── package.json            - プロジェクト設定とパッケージ依存関係
-├── tsconfig.json          - TypeScript設定ファイル
-├── src/
-│   ├── browser/           - ブラウザ環境用のコード
-│   │   ├── common.browser.ts
-│   │   └── main.ts
-│   ├── core/             - コアビジネスロジック
-│   │   ├── common/       - 共通のビジネスロジック
-│   │   │   ├── constants.ts
-│   │   │   ├── evaluator.ts
-│   │   │   ├── parsers.ts
-│   │   │   ├── types.ts
-│   │   │   └── utils.ts
-│   │   ├── adapters/     - 環境依存のアダプター実装
-│   │   │   ├── browser.ts
-│   │   │   └── node.ts
-│   │   ├── common.ts
-│   │   ├── file-processor.ts
-│   │   ├── index.ts
-│   │   └── validator.ts
-│   ├── types/            - 型定義ファイル
-│   │   └── types.d.ts
-│   └── ui/              - ユーザーインターフェース
-│       ├── components/   - UI処理コンポーネント
-│       │   ├── file-manager.ts
-│       │   ├── notification.ts
-│       │   ├── result-viewer.ts
-│       │   └── step-manager.ts
-│       ├── styles/
-│       │   └── optimization.css
-│       ├── asset-optimizer.js
-│       ├── optimization.js
-│       └── performance-monitor.js
-├── public/              - 静的ファイル
+├── .clinerules              - Cline向けルール定義ファイル
+├── .eslintrc.json           - ESLint設定ファイル
+├── .gitignore               - Git無視リスト
+├── .prettierrc.json         - Prettier設定ファイル
+├── jest.config.js           - Jest設定ファイル
+├── package.json             - プロジェクト設定とパッケージ依存関係
+├── README.md                - プロジェクトのREADME
+├── tsconfig.json            - TypeScript設定ファイル
+├── tsconfig.test.json       - TypeScriptテスト用設定ファイル
+├── coverage/                - テストカバレッジレポート
+├── docs/                    - ドキュメント
+│   ├── project_overview.md    - このファイル
+│   ├── 短期滞在手術等基本料３について.md - 短手３の定義
+│   └── 入院EF統合ファイルについて.md   - EF統合ファイルの仕様
+├── public/                  - 静的ファイル（ブラウザで直接開く）
+│   ├── index.html           - メインのHTMLファイル
 │   ├── css/
-│   │   └── styles.css
-│   ├── js/
-│   │   ├── bundle.js     - バンドルされたアプリケーションコード
-│   │   └── main.js       - レガシーコード（非推奨）
-│   └── index.html
-├── test/               - テストファイル
-│   ├── accessibility/  - アクセシビリティテスト
-│   │   └── accessibility-test.js
-│   ├── browser-compatibility/
-│   │   ├── automated-browser-test.js
-│   │   └── browser-test.js
-│   ├── fixtures/      - テストデータ
-│   │   ├── sampleEF/
-│   │   │   ├── sample_EFn_XXXXXXXXX_2407.txt
-│   │   │   └── sample_EFn_XXXXXXXXX_2408.txt
-│   │   └── expect.txt
-│   ├── jest/         - Jestテストスイート
-│   │   ├── e2e/
-│   │   ├── integration/
-│   │   │   ├── data-flow.test.ts
-│   │   │   └── module-integration.test.ts
-│   │   └── unit/
-│   │       ├── constants.test.ts
-│   │       ├── evaluator.test.ts
-│   │       ├── parsers.test.ts
-│   │       ├── sample.test.ts
-│   │       └── utils.test.ts
-│   ├── unit/
-│   │   └── test.ts
-│   └── run-tests.js
-└── docs/              - ドキュメント
-    ├── project_overview.md
-    ├── 入院EF統合ファイルについて.md
-    └── 短期滞在手術等基本料３について.md
+│   │   └── styles.css       - スタイルシート
+│   └── js/
+│       ├── bundle.js        - ParcelでバンドルされたJSコード
+│       └── main.js          - レガシーコード（非推奨）
+├── src/                     - ソースコード
+│   ├── browser/             - ブラウザ環境固有のコード
+│   │   ├── common.browser.ts
+│   │   └── main.ts          - ブラウザ環境のエントリーポイント
+│   ├── core/                - コアビジネスロジック（環境非依存）
+│   │   ├── common.ts        - コア共通処理
+│   │   ├── file-processor.ts - ファイル処理
+│   │   ├── index.ts         - コアモジュールエントリーポイント
+│   │   ├── validator.ts     - データ検証
+│   │   ├── adapters/        - 環境依存アダプター
+│   │   │   ├── browser.ts   - ブラウザ用アダプター
+│   │   │   └── node.ts      - Node.js用アダプター
+│   │   └── common/          - 環境非依存の共通ロジック
+│   │       ├── constants.ts - 定数
+│   │       ├── evaluator.ts - 短手３判定ロジック
+│   │       ├── parsers.ts   - ファイル解析
+│   │       ├── types.ts     - 型定義
+│   │       └── utils.ts     - ユーティリティ関数
+│   ├── types/               - グローバル型定義（現在は未使用の可能性あり）
+│   └── ui/                  - UI関連コード
+│       └── components/      - UIコンポーネント
+│           ├── file-manager.ts
+│           ├── notification.ts
+│           ├── result-viewer.ts
+│           └── step-manager.ts
+└── test/                    - テスト関連ファイル
+    ├── run-tests.js         - テスト実行スクリプト（旧式）
+    ├── accessibility/       - アクセシビリティテスト
+    │   └── accessibility-test.js
+    ├── browser-compatibility/ - ブラウザ互換性テスト
+    │   └── automated-browser-test.js
+    ├── fixtures/            - テスト用データ
+    │   ├── expect.txt
+    │   └── sampleEF/
+    │       ├── sample_EFn_XXXXXXXXX_2407.txt
+    │       └── sample_EFn_XXXXXXXXX_2408.txt
+    └── jest/                - Jestテストスイート
+        ├── integration/     - 統合テスト
+        │   ├── data-flow.test.ts
+        │   └── module-integration.test.ts
+        └── unit/            - 単体テスト
+            ├── constants.test.ts
+            ├── evaluator.test.ts
+            ├── parsers.test.ts
+            ├── utils.test.ts
+            └── validator.test.ts
 ```
 
 ### 3.2 主要ファイルの役割
