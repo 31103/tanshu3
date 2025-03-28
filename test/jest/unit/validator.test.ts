@@ -8,310 +8,352 @@ const __dirname = path.dirname(__filename);
 
 // Node.js環境用のブラウザAPIのポリフィル
 class MockProgressEvent {
-    readonly type: string;
-    readonly target: any;
+  readonly type: string;
+  readonly target: any;
 
-    constructor(type: string, init?: { target?: any }) {
-        this.type = type;
-        this.target = init?.target || null;
-    }
+  constructor(type: string, init?: { target?: any }) {
+    this.type = type;
+    this.target = init?.target || null;
+  }
 }
 
 global.ProgressEvent = MockProgressEvent as any;
 
 describe('validator.ts', () => {
-    // モック化のためのヘルパー関数
-    const createMockFile = (name: string, content?: string): File => {
-        const blob = new Blob([content || ''], { type: 'text/plain' });
-        return new File([blob], name, { type: 'text/plain' });
+  // モック化のためのヘルパー関数
+  const createMockFile = (name: string, content?: string): File => {
+    const blob = new Blob([content || ''], { type: 'text/plain' });
+    return new File([blob], name, { type: 'text/plain' });
+  };
+
+  // FileReaderのモック化
+  let originalFileReader: typeof FileReader;
+  beforeAll(() => {
+    originalFileReader = (global as any).FileReader;
+
+    // モックFileReaderインスタンス
+    const mockFileReader = function (this: any) {
+      this.error = null;
+      this.readyState = 0;
+      this.result = null;
+      this.EMPTY = 0;
+      this.LOADING = 1;
+      this.DONE = 2;
+
+      this.onabort = null;
+      this.onerror = null;
+      this.onload = null;
+      this.onloadend = null;
+      this.onloadstart = null;
+      this.onprogress = null;
+
+      this.abort = function () {};
+      this.readAsArrayBuffer = function () {};
+      this.readAsBinaryString = function () {};
+      this.readAsDataURL = function () {};
+
+      this.readAsText = function (blob: Blob) {
+        this.readyState = this.LOADING;
+
+        if (blob instanceof File && blob.name === 'error.txt') {
+          setTimeout(() => {
+            this.readyState = this.DONE;
+            this.error = new DOMException('Read error', 'NotReadableError');
+            const errorEvent = new MockProgressEvent('error', { target: this });
+            if (this.onerror) this.onerror(errorEvent);
+            if (this.onloadend) this.onloadend(new MockProgressEvent('loadend', { target: this }));
+          }, 10);
+        } else {
+          setTimeout(() => {
+            this.readyState = this.DONE;
+            this.result = 'テスト用データ';
+            const loadEvent = new MockProgressEvent('load', { target: this });
+            if (this.onload) this.onload(loadEvent);
+            if (this.onloadend) this.onloadend(new MockProgressEvent('loadend', { target: this }));
+          }, 10);
+        }
+      };
+
+      this.addEventListener = function () {};
+      this.removeEventListener = function () {};
+      this.dispatchEvent = function () {
+        return false;
+      };
     };
 
-    // FileReaderのモック化
-    let originalFileReader: typeof FileReader;
-    beforeAll(() => {
-        originalFileReader = (global as any).FileReader;
+    (mockFileReader as any).EMPTY = 0;
+    (mockFileReader as any).LOADING = 1;
+    (mockFileReader as any).DONE = 2;
 
-        // モックFileReaderインスタンス
-        const mockFileReader = function (this: any) {
-            this.error = null;
-            this.readyState = 0;
-            this.result = null;
-            this.EMPTY = 0;
-            this.LOADING = 1;
-            this.DONE = 2;
+    (global as any).FileReader = mockFileReader;
+  });
 
-            this.onabort = null;
-            this.onerror = null;
-            this.onload = null;
-            this.onloadend = null;
-            this.onloadstart = null;
-            this.onprogress = null;
+  afterAll(() => {
+    (global as any).FileReader = originalFileReader;
+  });
 
-            this.abort = function () { };
-            this.readAsArrayBuffer = function () { };
-            this.readAsBinaryString = function () { };
-            this.readAsDataURL = function () { };
+  describe('validateFiles関数', () => {
+    const TIMEOUT = 10000;
 
-            this.readAsText = function (blob: Blob) {
-                this.readyState = this.LOADING;
+    it('空の配列の場合はエラーをスロー', async () => {
+      await expect(validateFiles([])).rejects.toThrow('ファイルが選択されていません');
+    });
 
-                if (blob instanceof File && blob.name === 'error.txt') {
-                    setTimeout(() => {
-                        this.readyState = this.DONE;
-                        this.error = new DOMException('Read error', 'NotReadableError');
-                        const errorEvent = new MockProgressEvent('error', { target: this });
-                        if (this.onerror) this.onerror(errorEvent);
-                        if (this.onloadend) this.onloadend(new MockProgressEvent('loadend', { target: this }));
-                    }, 10);
-                } else {
-                    setTimeout(() => {
-                        this.readyState = this.DONE;
-                        this.result = 'テスト用データ';
-                        const loadEvent = new MockProgressEvent('load', { target: this });
-                        if (this.onload) this.onload(loadEvent);
-                        if (this.onloadend) this.onloadend(new MockProgressEvent('loadend', { target: this }));
-                    }, 10);
-                }
-            };
+    it('未定義の場合はエラーをスロー', async () => {
+      await expect(validateFiles(undefined as any)).rejects.toThrow('ファイルが選択されていません');
+    });
 
-            this.addEventListener = function () { };
-            this.removeEventListener = function () { };
-            this.dispatchEvent = function () { return false; };
+    it(
+      '複数のファイルを正常に検証',
+      async () => {
+        const files = [
+          createMockFile('test1.txt', 'header1\theader2\ndata1\tdata2'),
+          createMockFile('test2.txt', 'header1\theader2\ndata1\tdata2'),
+        ];
+
+        const results = await validateFiles(files);
+        expect(results).toHaveLength(2);
+        expect(results.every((r) => r.file)).toBe(true);
+      },
+      TIMEOUT,
+    );
+
+    it(
+      'ファイル読み込みエラーを適切に処理',
+      async () => {
+        const files = [createMockFile('error.txt')];
+        const results = await validateFiles(files);
+
+        expect(results).toHaveLength(1);
+        expect(results[0].isValid).toBe(false);
+        expect(results[0].errors.length).toBeGreaterThan(0);
+        expect(results[0].errors[0]).toContain('Read error');
+      },
+      TIMEOUT,
+    );
+
+    it(
+      '非テキストファイルを適切に処理',
+      async () => {
+        const mockBinaryFile = new File([new ArrayBuffer(10)], 'test.bin', {
+          type: 'application/octet-stream',
+        });
+        const results = await validateFiles([mockBinaryFile]);
+        expect(results[0].isValid).toBe(false);
+        expect(results[0].errors[0]).toContain('Invalid file format');
+      },
+      TIMEOUT,
+    );
+  });
+
+  describe('readFileAsText関数', () => {
+    const TIMEOUT = 10000;
+
+    it(
+      '正常なファイルを読み込む',
+      async () => {
+        const file = createMockFile('test.txt', 'テストデータ');
+        const content = await readFileAsText(file);
+        expect(content).toBe('テスト用データ');
+      },
+      TIMEOUT,
+    );
+
+    it(
+      '読み込みエラーを適切に処理',
+      async () => {
+        const file = createMockFile('error.txt');
+        await expect(readFileAsText(file)).rejects.toThrow('Read error');
+      },
+      TIMEOUT,
+    );
+
+    it(
+      'readAsTextの呼び出しに失敗した場合',
+      async () => {
+        const mockFailedFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
+        // FileReaderの代わりにエラーをスローするモックを設定
+        const originalFileReader = (global as any).FileReader;
+        (global as any).FileReader = class {
+          readAsText() {
+            throw new Error('Cannot start reading file');
+          }
         };
 
-        (mockFileReader as any).EMPTY = 0;
-        (mockFileReader as any).LOADING = 1;
-        (mockFileReader as any).DONE = 2;
+        try {
+          await expect(readFileAsText(mockFailedFile)).rejects.toThrow(
+            'Read error: Cannot start reading file',
+          );
+        } finally {
+          // テスト後に元のFileReaderを復元
+          (global as any).FileReader = originalFileReader;
+        }
+      },
+      TIMEOUT,
+    );
+  });
 
-        (global as any).FileReader = mockFileReader;
+  describe('validateFileContent関数', () => {
+    // ヘルパー関数：Fileオブジェクトを模倣
+    const createMockFile = (name: string): File => {
+      return { name } as File;
+    };
+
+    it('空のコンテンツを検証', () => {
+      const result = validateFileContent(createMockFile('test.txt'), '');
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('ファイルが空です');
     });
 
-    afterAll(() => {
-        (global as any).FileReader = originalFileReader;
+    it('最低2行（ヘッダー + データ）の要件を検証', () => {
+      const content = '施設コード\tデータ識別番号\n';
+      const result = validateFileContent(createMockFile('test.txt'), content);
+      expect(result.isValid).toBe(false);
+      // 期待メッセージを実際のメッセージに合わせる
+      expect(result.errors).toContain('ファイルが空か、ヘッダー行またはデータ行が不足しています');
     });
 
-    describe('validateFiles関数', () => {
-        const TIMEOUT = 10000;
-
-        it('空の配列の場合はエラーをスロー', async () => {
-            await expect(validateFiles([])).rejects.toThrow('ファイルが選択されていません');
-        });
-
-        it('未定義の場合はエラーをスロー', async () => {
-            await expect(validateFiles(undefined as any)).rejects.toThrow('ファイルが選択されていません');
-        });
-
-        it('複数のファイルを正常に検証', async () => {
-            const files = [
-                createMockFile('test1.txt', 'header1\theader2\ndata1\tdata2'),
-                createMockFile('test2.txt', 'header1\theader2\ndata1\tdata2')
-            ];
-
-            const results = await validateFiles(files);
-            expect(results).toHaveLength(2);
-            expect(results.every(r => r.file)).toBe(true);
-        }, TIMEOUT);
-
-        it('ファイル読み込みエラーを適切に処理', async () => {
-            const files = [createMockFile('error.txt')];
-            const results = await validateFiles(files);
-
-            expect(results).toHaveLength(1);
-            expect(results[0].isValid).toBe(false);
-            expect(results[0].errors.length).toBeGreaterThan(0);
-            expect(results[0].errors[0]).toContain('Read error');
-        }, TIMEOUT);
-
-        it('非テキストファイルを適切に処理', async () => {
-            const mockBinaryFile = new File(
-                [new ArrayBuffer(10)],
-                'test.bin',
-                { type: 'application/octet-stream' }
-            );
-            const results = await validateFiles([mockBinaryFile]);
-            expect(results[0].isValid).toBe(false);
-            expect(results[0].errors[0]).toContain('Invalid file format');
-        }, TIMEOUT);
-    });
-
-    describe('readFileAsText関数', () => {
-        const TIMEOUT = 10000;
-
-        it('正常なファイルを読み込む', async () => {
-            const file = createMockFile('test.txt', 'テストデータ');
-            const content = await readFileAsText(file);
-            expect(content).toBe('テスト用データ');
-        }, TIMEOUT);
-
-        it('読み込みエラーを適切に処理', async () => {
-            const file = createMockFile('error.txt');
-            await expect(readFileAsText(file)).rejects.toThrow('Read error');
-        }, TIMEOUT);
-
-        it('readAsTextの呼び出しに失敗した場合', async () => {
-            const mockFailedFile = new File(
-                ['test content'],
-                'test.txt',
-                { type: 'text/plain' }
-            );
-            // FileReaderの代わりにエラーをスローするモックを設定
-            const originalFileReader = (global as any).FileReader;
-            (global as any).FileReader = class {
-                readAsText() {
-                    throw new Error('Cannot start reading file');
-                }
-            };
-
-            try {
-                await expect(readFileAsText(mockFailedFile))
-                    .rejects.toThrow('Read error: Cannot start reading file');
-            } finally {
-                // テスト後に元のFileReaderを復元
-                (global as any).FileReader = originalFileReader;
-            }
-        }, TIMEOUT);
-    });
-
-    describe('validateFileContent関数', () => {
-        // ヘルパー関数：Fileオブジェクトを模倣
-        const createMockFile = (name: string): File => {
-            return { name } as File;
-        };
-
-        it('空のコンテンツを検証', () => {
-            const result = validateFileContent(createMockFile('test.txt'), '');
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain('ファイルが空です');
-        });
-
-        it('最低2行（ヘッダー + データ）の要件を検証', () => {
-            const content = '施設コード\tデータ識別番号\n';
-            const result = validateFileContent(createMockFile('test.txt'), content);
-            expect(result.isValid).toBe(false);
-            // 期待メッセージを実際のメッセージに合わせる
-            expect(result.errors).toContain('ファイルが空か、ヘッダー行またはデータ行が不足しています');
-        });
-
-        it('退院未定（00000000）の症例を許容', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('退院未定（00000000）の症例を許容', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t00000000\t20240701\t60\t0001\t000\t641300\t160098110\tD4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            expect(result.isValid).toBe(true);
-            expect(result.warnings).not.toContainEqual(expect.stringContaining('退院年月日'));
-        });
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).not.toContainEqual(expect.stringContaining('退院年月日'));
+    });
 
-        it('不正な入院日付をエラーとして検出', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('不正な入院日付をエラーとして検出', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\tINVALID\t60\t0001\t000\t641300\t160098110\tD4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            expect(result.isValid).toBe(false);
-            // 期待メッセージを実際のメッセージに合わせる (部分一致)
-            expect(result.errors).toContainEqual(expect.stringContaining('入院年月日(4列目)の形式が不正です'));
-        });
+      expect(result.isValid).toBe(false);
+      // 期待メッセージを実際のメッセージに合わせる (部分一致)
+      expect(result.errors).toContainEqual(
+        expect.stringContaining('入院年月日(4列目)の形式が不正です'),
+      );
+    });
 
-        it('列数不足を警告として検出', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日
+    it('列数不足を警告として検出', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日
 111111111\t0000000001\t20240706`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            // 期待メッセージを実際のメッセージに合わせる (部分一致)
-            expect(result.warnings).toContainEqual(expect.stringContaining('一部のデータ行の列数が少ないようです'));
-        });
+      // 期待メッセージを実際のメッセージに合わせる (部分一致)
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('一部のデータ行の列数が少ないようです'),
+      );
+    });
 
-        it('不正なデータ区分を警告として検出', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('不正なデータ区分を警告として検出', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\tXX\t0001\t000\t641300\t160098110\tD4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            // 現在のロジックではデータ区分は検証しないため、警告が出ないことを期待する
-            expect(result.warnings).toHaveLength(0);
-            // expect(result.warnings).toContainEqual(expect.stringContaining('データ区分が適切なフォーマット')); // 元の期待値
-        });
+      // 現在のロジックではデータ区分は検証しないため、警告が出ないことを期待する
+      expect(result.warnings).toHaveLength(0);
+      // expect(result.warnings).toContainEqual(expect.stringContaining('データ区分が適切なフォーマット')); // 元の期待値
+    });
 
-        it('実際のEFファイルデータを検証', () => {
-            const samplePath = path.join(__dirname, '../../fixtures/sampleEF/sample_EFn_XXXXXXXXX_2407.txt');
-            const content = readFileSync(samplePath, 'utf-8');
-            const result = validateFileContent(createMockFile('sample_EFn_XXXXXXXXX_2407.txt'), content);
+    it('実際のEFファイルデータを検証', () => {
+      const samplePath = path.join(
+        __dirname,
+        '../../fixtures/sampleEF/sample_EFn_XXXXXXXXX_2407.txt',
+      );
+      const content = readFileSync(samplePath, 'utf-8');
+      const result = validateFileContent(createMockFile('sample_EFn_XXXXXXXXX_2407.txt'), content);
 
-            expect(result.isValid).toBe(true);
-            expect(result.errors).toHaveLength(0);
-            expect(result.warnings).toHaveLength(0); // 実サンプルは完全に正常なので警告もない
-        });
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.warnings).toHaveLength(0); // 実サンプルは完全に正常なので警告もない
+    });
 
-        it('特殊なケース：30列以上のデータを検証', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t${Array(25).fill('その他').join('\t')}
+    it('特殊なケース：30列以上のデータを検証', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t${Array(25).fill('その他').join('\t')}
 111111111\t0000000001\t20240706\t20240704\t60\t${Array(25).fill('データ').join('\t')}`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            expect(result.isValid).toBe(true);
-            expect(result.errors).toHaveLength(0);
-        });
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
 
-        it('複数の警告を持つケースを検証', () => {
-            // 複数の警告が発生するようなデータに変更
-            // 1行目: 入院日不正(エラー), 行為明細番号不正(警告)
-            // 2行目: 列数不足(警告)
-            // 3行目: タブ区切りなし(警告)
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('複数の警告を持つケースを検証', () => {
+      // 複数の警告が発生するようなデータに変更
+      // 1行目: 入院日不正(エラー), 行為明細番号不正(警告)
+      // 2行目: 列数不足(警告)
+      // 3行目: タブ区切りなし(警告)
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\tINVALID\t60\t0001\tABC\t641300\t160098110\tD4132
 111111111\t0000000002\t20240707
 111111111,0000000003,20240708,20240705,60,0001,000,641300,160098110,D4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            // 不正な入院日があるのでisValidはfalseになる
-            expect(result.isValid).toBe(false);
-            // エラーが1件 (入院日)
-            expect(result.errors.length).toBe(1);
-            expect(result.errors).toContainEqual(expect.stringContaining('入院年月日(4列目)の形式が不正です'));
-            // 警告が3件以上発生することを期待 (行為明細番号, 列数不足, タブ区切り)
-            expect(result.warnings.length).toBeGreaterThanOrEqual(3);
-            expect(result.warnings).toContainEqual(expect.stringContaining('行為明細番号(7列目)の形式が不正のようです'));
-            expect(result.warnings).toContainEqual(expect.stringContaining('一部のデータ行の列数が少ないようです'));
-            expect(result.warnings).toContainEqual(expect.stringContaining('一部のデータ行にタブ区切りが見られません'));
-        });
+      // 不正な入院日があるのでisValidはfalseになる
+      expect(result.isValid).toBe(false);
+      // エラーが1件 (入院日)
+      expect(result.errors.length).toBe(1);
+      expect(result.errors).toContainEqual(
+        expect.stringContaining('入院年月日(4列目)の形式が不正です'),
+      );
+      // 警告が3件以上発生することを期待 (行為明細番号, 列数不足, タブ区切り)
+      expect(result.warnings.length).toBeGreaterThanOrEqual(3);
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('行為明細番号(7列目)の形式が不正のようです'),
+      );
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('一部のデータ行の列数が少ないようです'),
+      );
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('一部のデータ行にタブ区切りが見られません'),
+      );
+    });
 
-        it('コードをチェック（番号形式）', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('コードをチェック（番号形式）', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            expect(result.isValid).toBe(true);
-            expect(result.warnings).toHaveLength(0); // すべての番号形式が正しい
-        });
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toHaveLength(0); // すべての番号形式が正しい
+    });
 
-        it('異なる区切り文字が混在している場合を検証', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+    it('異なる区切り文字が混在している場合を検証', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132
 111111111,0000000002,20240706,20240704,60,0001,000,641300,160098110,D4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
+      const result = validateFileContent(createMockFile('test.txt'), content);
 
-            // 期待メッセージを実際のメッセージに合わせる (部分一致)
-            expect(result.warnings).toContainEqual(expect.stringContaining('一部のデータ行にタブ区切りが見られません'));
-        });
-
-        it('退院日未定を示すゼロ埋めの日付を許容', () => {
-            const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
-111111111\t0000000001\t00000000\t20240704\t60\t0001\t000\t641300\t160098110\tD4132`;
-            const result = validateFileContent(createMockFile('test.txt'), content);
-
-            expect(result.isValid).toBe(true);
-            expect(result.warnings).not.toContainEqual(expect.stringContaining('退院年月日'));
-        });
-
-        it('大量の空行を含むファイルを検証', () => {
-            const lines = ['施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号'];
-            for (let i = 0; i < 5; i++) {
-                lines.push('');
-                lines.push('111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132');
-                lines.push('');
-            }
-            const content = lines.join('\n');
-            const result = validateFileContent(createMockFile('test.txt'), content);
-
-            expect(result.isValid).toBe(true);
-            expect(result.warnings).toHaveLength(0); // 空行は自動的にスキップされる
-        });
+      // 期待メッセージを実際のメッセージに合わせる (部分一致)
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('一部のデータ行にタブ区切りが見られません'),
+      );
     });
+
+    it('退院日未定を示すゼロ埋めの日付を許容', () => {
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+111111111\t0000000001\t00000000\t20240704\t60\t0001\t000\t641300\t160098110\tD4132`;
+      const result = validateFileContent(createMockFile('test.txt'), content);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).not.toContainEqual(expect.stringContaining('退院年月日'));
+    });
+
+    it('大量の空行を含むファイルを検証', () => {
+      const lines = [
+        '施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号',
+      ];
+      for (let i = 0; i < 5; i++) {
+        lines.push('');
+        lines.push(
+          '111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132',
+        );
+        lines.push('');
+      }
+      const content = lines.join('\n');
+      const result = validateFileContent(createMockFile('test.txt'), content);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toHaveLength(0); // 空行は自動的にスキップされる
+    });
+  });
 });

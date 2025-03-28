@@ -17,4 +17,4 @@ export * from './common/evaluator';
 // 開発時には両方のアダプターをエクスポートしておく
 // ビルド時に適切なものが選択される
 export * as browserAdapter from './adapters/browser';
-export * as nodeAdapter from './adapters/node'; 
+export * as nodeAdapter from './adapters/node';
