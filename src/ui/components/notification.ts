@@ -1,4 +1,23 @@
-import { ToastData, TypePriorityMap } from '../../types/types';
+// トースト通知型
+export interface ToastData {
+  id: string;
+  type: 'success' | 'warning' | 'error' | 'info';
+  title: string;
+  message: string;
+  timestamp: number;
+  priority: number;
+  duration: number;
+  element?: HTMLElement;
+}
+
+// タイプ優先度マップ
+export interface TypePriorityMap {
+  [key: string]: number;
+  error: number;
+  warning: number;
+  info: number;
+  success: number;
+}
 
 /**
  * 通知システム

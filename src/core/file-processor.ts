@@ -1,8 +1,19 @@
 import { CaseData, OutputSettings } from './common/types'; // OutputSettings をインポート
-import { readFileAsText } from './validator';
+import { readFileAsText } from './validator'; // readFileAsText は validator からインポートされる想定
 import { parseEFFile, mergeCases } from './common/parsers';
 import { evaluateCases, formatResults } from './common/evaluator';
 import { DEFAULT_RESULT_HEADER } from './common/constants'; // DEFAULT_RESULT_HEADER をインポート
+
+/**
+ * ファイル検証結果型
+ * ファイルごとの検証結果を表します。
+ */
+export interface FileValidationResult {
+  file: File; // 対象ファイルオブジェクト
+  isValid: boolean; // 検証が成功したか
+  warnings: string[]; // 警告メッセージの配列
+  errors: string[]; // エラーメッセージの配列
+}
 
 /**
  * ファイル処理クラス

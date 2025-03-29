@@ -77,3 +77,16 @@ export interface ValidationResult {
   errors: string[]; // 重大なエラーメッセージの配列
   warnings: string[]; // 警告メッセージの配列
 }
+
+/**
+ * エラーハンドラオプション型
+ * エラー発生時の追加アクションやUI更新を指定します。
+ */
+export interface ErrorHandlerOptions {
+  recoveryAction?: {
+    message: string; // 回復アクションの説明メッセージ
+    label: string; // 回復アクションボタンのラベル
+    handler: () => void; // 回復アクションを実行する関数
+  };
+  updateUI?: () => void; // エラー発生後にUIを更新する関数
+}
