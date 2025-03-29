@@ -99,7 +99,7 @@ describe('データフロー統合テスト', () => {
   test('複数月のデータを組み合わせて正しく評価できること', () => {
     // 両月のデータを解析
     const julyCases = parseEFFile(julyData);
-    const augustCases = parseEFFile(julyData);
+    const augustCases = parseEFFile(augustData); // 8月のデータを正しくパースする
 
     // 両月のデータをマージ
     const mergedCases = mergeCases(julyCases, augustCases);
