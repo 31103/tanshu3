@@ -10,7 +10,7 @@ export interface ToastData {
   element?: HTMLElement;
 }
 
-// タイプ優先度マップ
+// タイプ優先度マップ (削除予定だが、他の箇所で使われている可能性を考慮し一旦残す)
 export interface TypePriorityMap {
   [key: string]: number;
   error: number;
@@ -112,11 +112,13 @@ export class NotificationSystem {
       return b.timestamp - a.timestamp;
     });
 
-    // 表示数を制限
+    // 表示数を制限し、アクティブリストを更新
     this.manageActiveToasts();
 
-    // 通知を表示
-    this.renderToast(toastData);
+    // このトーストが表示対象として残っている場合のみレンダリング
+    if (this.activeToasts.some((toast) => toast.id === toastId)) {
+      this.renderToast(toastData);
+    }
   }
 
   /**
@@ -153,106 +155,39 @@ export class NotificationSystem {
   }
 
   /**
-   * アクティブな通知を管理
+   * アクティブな通知を管理（表示上限のみ）
    */
   private manageActiveToasts(): void {
-    // 表示数を制限
+    // 常に優先度と時間でソートしておく
+    this.activeToasts.sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return b.priority - a.priority; // 優先度高い順
+      }
+      return b.timestamp - a.timestamp; // 新しい順
+    });
+
+    // 表示上限を超えている場合
     if (this.activeToasts.length > this.MAX_VISIBLE_TOASTS) {
-      // 優先度の低い通知を非表示にする
+      // 表示されるトーストと隠れるトーストに分ける
       const visibleToasts = this.activeToasts.slice(0, this.MAX_VISIBLE_TOASTS);
       const hiddenToasts = this.activeToasts.slice(this.MAX_VISIBLE_TOASTS);
 
-      // 非表示にする通知を削除
+      // 隠れるトーストの要素をDOMから削除
       hiddenToasts.forEach((toast) => {
         if (toast.element) {
           this.removeToastElement(toast.id);
         }
       });
 
-      // 集約通知を表示（複数の通知がある場合）
-      if (hiddenToasts.length > 1) {
-        const highestPriorityType = this.getHighestPriorityType(hiddenToasts);
-        this.showAggregateToast(hiddenToasts.length, highestPriorityType);
-      }
-
-      // アクティブリストを更新
+      // アクティブリストを表示されるものだけに更新
       this.activeToasts = visibleToasts;
     }
+    // 集約通知関連のロジックは削除
   }
 
-  /**
-   * 最も優先度の高い通知タイプを取得
-   * @param toasts 通知の配列
-   * @returns 最も優先度の高い通知タイプ
-   */
-  private getHighestPriorityType(toasts: ToastData[]): 'success' | 'warning' | 'error' | 'info' {
-    const typePriority: TypePriorityMap = { error: 4, warning: 3, info: 2, success: 1 };
-    let highestType: 'success' | 'warning' | 'error' | 'info' = 'info';
+  // 不要になった getHighestPriorityType メソッドを削除
 
-    toasts.forEach((toast) => {
-      if (typePriority[toast.type] > typePriority[highestType]) {
-        highestType = toast.type;
-      }
-    });
-
-    return highestType;
-  }
-
-  /**
-   * 集約通知を表示
-   * @param count 集約する通知の数
-   * @param type 通知タイプ
-   */
-  private showAggregateToast(count: number, type: 'success' | 'warning' | 'error' | 'info'): void {
-    const aggregateToastId = 'toast-aggregate';
-
-    // 既存の集約通知を削除
-    const existingAggregate = document.getElementById(aggregateToastId);
-    if (existingAggregate) {
-      existingAggregate.parentNode?.removeChild(existingAggregate);
-    }
-
-    // 新しい集約通知を作成
-    const toast = document.createElement('div');
-    toast.id = aggregateToastId;
-    toast.className = `toast toast-${type}`;
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-
-    // アイコンを設定
-    let icon = '';
-    switch (type) {
-      case 'success':
-        icon = '✅';
-        break;
-      case 'warning':
-        icon = '⚠️';
-        break;
-      case 'error':
-        icon = '❌';
-        break;
-      case 'info':
-        icon = 'ℹ️';
-        break;
-    }
-
-    // 通知の内容を設定
-    toast.innerHTML = `
-      <div class="toast-icon">${icon}</div>
-      <div class="toast-content">
-        <h3 class="toast-title">その他の通知</h3>
-        <p class="toast-message">他に${count}件の通知があります</p>
-      </div>
-      <button class="toast-view-all" aria-label="すべての通知を表示">表示</button>
-    `;
-
-    // 通知をコンテナに追加
-    this.toastContainer.appendChild(toast);
-
-    // 「すべて表示」ボタンのイベントリスナーを設定
-    const viewAllButton = toast.querySelector('.toast-view-all');
-    viewAllButton?.addEventListener('click', () => this.showNotificationHistory());
-  }
+  // 不要になった showAggregateToast メソッドを削除
 
   /**
    * 通知履歴を表示

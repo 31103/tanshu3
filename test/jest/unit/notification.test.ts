@@ -56,27 +56,8 @@ describe('NotificationSystem', () => {
         expect(historyButton?.getAttribute('data-count')).toBe('1');
     });
 
-    it('複数の通知を表示し、表示上限を超えると集約通知が表示される', () => {
-        notificationSystem.showToast('info', '情報1', 'メッセージ1');
-        notificationSystem.showToast('warning', '警告', 'メッセージ2');
-        notificationSystem.showToast('error', 'エラー', 'メッセージ3');
-        notificationSystem.showToast('success', '成功', 'メッセージ4'); // 4つ目
-
-        // 表示されているトーストは上限の3つのはず
-        expect(container.querySelectorAll('.toast:not(#toast-aggregate)').length).toBe(3);
-
-        // 集約通知が表示されているはず
-        const aggregateToast = container.querySelector('#toast-aggregate');
-        expect(aggregateToast).not.toBeNull();
-        expect(aggregateToast?.textContent).toContain('他に1件の通知があります');
-        // 集約通知のタイプは最も優先度の高いエラーになるはず
-        expect(aggregateToast?.classList.contains('toast-error')).toBe(true);
-
-        // 5つ目を追加
-        notificationSystem.showToast('info', '情報5', 'メッセージ5');
-        expect(container.querySelectorAll('.toast:not(#toast-aggregate)').length).toBe(3);
-        expect(aggregateToast?.textContent).toContain('他に2件の通知があります');
-    });
+    // 集約通知機能が削除されたため、関連するテストケースを削除
+    // it('複数の通知を表示し、表示上限を超えると集約通知が表示される', () => { ... });
 
     it('通知は指定時間後に自動的に消える', () => {
         notificationSystem.showToast('info', '自動削除', 'この通知は消えます', 1000);
@@ -114,6 +95,9 @@ describe('NotificationSystem', () => {
         notificationSystem.showToast('error', '履歴2', 'メッセージ2');
 
         notificationSystem.showNotificationHistory();
+
+        // setTimeout(() => { modal.classList.add('active'); }, 10); を実行させる
+        jest.advanceTimersByTime(10);
 
         const modal = document.getElementById('notificationHistoryModal');
         expect(modal).not.toBeNull();

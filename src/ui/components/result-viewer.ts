@@ -102,6 +102,8 @@ export class ResultViewer {
       // navigator.clipboard APIを使用してテキストをコピー
       await navigator.clipboard.writeText(textToCopy);
 
+      // 既存のクラスをクリア
+      this.copyMessage.classList.remove('visible', 'error');
       // コピー成功メッセージを表示
       this.copyMessage.textContent = 'コピーしました！';
       this.copyMessage.classList.add('visible');
@@ -112,13 +114,17 @@ export class ResultViewer {
       }, 2000);
     } catch (err) {
       console.error('クリップボードへのコピーに失敗しました:', err);
+      // 既存のクラスをクリア
+      this.copyMessage.classList.remove('visible', 'error');
       // エラーメッセージを表示 (より具体的に)
       this.copyMessage.textContent = 'コピーに失敗しました';
-      this.copyMessage.classList.add('visible', 'error'); // エラー用スタイルを追加 (CSSで定義が必要)
+      this.copyMessage.classList.add('visible');
+      this.copyMessage.classList.add('error'); // エラー用スタイルを追加 (CSSで定義が必要)
 
       // メッセージを一定時間後に消す
       setTimeout(() => {
-        this.copyMessage.classList.remove('visible', 'error');
+        this.copyMessage.classList.remove('visible');
+        this.copyMessage.classList.remove('error');
       }, 3000);
     }
   }
@@ -128,7 +134,7 @@ export class ResultViewer {
    * @param resultText 結果のテキストデータ
    */
   public displayResult(resultText: string, debugInfo?: string): void {
-    if (!resultText) return;
+    // 空文字列の場合も処理を続行し、表示をクリアする
 
     // デバッグ情報がある場合は、結果の前に追加
     const displayText = debugInfo
@@ -150,8 +156,15 @@ export class ResultViewer {
     // 保存用リンクを更新
     this.updateDownloadLink(resultText);
 
-    // 結果があればコピーボタンを有効化
-    this.copyButton.disabled = !resultText;
+    // 結果があればコピー/ダウンロードボタンを有効化、なければ無効化
+    const hasResult = !!resultText;
+    this.copyButton.disabled = !hasResult;
+    this.downloadLink.classList.toggle('hidden', !hasResult);
+
+    // 結果が空ならテーブルもクリア
+    if (!hasResult) {
+      this.clearResultTable();
+    }
   }
 
   /**

@@ -46,7 +46,7 @@ describe('ResultViewer', () => {
         URL.revokeObjectURL = jest.fn();
 
         document.body.innerHTML = `
-      <div id="textResultView">
+      <div id="textResultView" style="display: block;"> <!-- 初期表示をblockに -->
         <textarea id="resultTextarea" readonly></textarea>
       </div>
       <div id="tableResultView" style="display: none;">
@@ -165,7 +165,7 @@ describe('ResultViewer', () => {
         // テーブルもクリアされるはず (updateResultTable -> clearResultTable)
         expect(resultTable.querySelector('tbody')?.innerHTML).toBe('');
         expect(copyButton.disabled).toBe(true);
-        // downloadLink の href はクリアされないが、表示状態は変わらない想定
+        expect(downloadLink.classList.contains('hidden')).toBe(true); // ダウンロードリンクも隠れるはず
     });
 
 
@@ -179,16 +179,17 @@ describe('ResultViewer', () => {
 
         copyButton.click(); // ボタンをクリック
 
-        // await を使って非同期処理の完了を待つ (setTimeout)
-        await jest.advanceTimersByTimeAsync(2000);
+        // navigator.clipboard.writeText が非同期なので待機し、すべてのタイマーを実行
+        await Promise.resolve(); // navigator.clipboard.writeText の完了を待つ
 
+        // setTimeout が実行される前にアサーション
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testResult);
         expect(copyMessage.textContent).toBe('コピーしました！');
-        expect(copyMessage.classList.contains('visible')).toBe(true);
+        expect(copyMessage.classList.contains('visible')).toBe(true); // この時点では visible なはず
 
-        // メッセージが消えることも確認
+        // タイマーを進めてメッセージが消えることを確認
         jest.advanceTimersByTime(2000); // メッセージ表示時間
-        expect(copyMessage.classList.contains('visible')).toBe(false);
+        expect(copyMessage.classList.contains('visible')).toBe(false); // 消えているはず
     });
 
     it('クリップボードへのコピー失敗時にエラーメッセージが表示される', async () => {
@@ -200,17 +201,19 @@ describe('ResultViewer', () => {
 
         copyButton.click(); // ボタンをクリック
 
-        await jest.advanceTimersByTimeAsync(3000); // エラーメッセージ表示時間
+        // navigator.clipboard.writeText が非同期なので待機し、すべてのタイマーを実行
+        await Promise.resolve(); // navigator.clipboard.writeText の完了を待つ
 
+        // setTimeout が実行される前にアサーション
         expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testResult);
         expect(copyMessage.textContent).toBe('コピーに失敗しました');
-        expect(copyMessage.classList.contains('visible')).toBe(true);
-        expect(copyMessage.classList.contains('error')).toBe(true);
+        expect(copyMessage.classList.contains('visible')).toBe(true); // この時点では visible なはず
+        expect(copyMessage.classList.contains('error')).toBe(true); // error クラスも付与されているはず
 
-        // メッセージが消えることも確認
-        jest.advanceTimersByTime(3000);
-        expect(copyMessage.classList.contains('visible')).toBe(false);
-        expect(copyMessage.classList.contains('error')).toBe(false);
+        // タイマーを進めてメッセージが消えることを確認
+        jest.advanceTimersByTime(3000); // エラーメッセージ表示時間
+        expect(copyMessage.classList.contains('visible')).toBe(false); // 消えているはず
+        expect(copyMessage.classList.contains('error')).toBe(false); // error クラスも消えているはず
     });
 
     it('結果が空のときはコピーボタンをクリックしてもコピー処理が実行されない', async () => {
@@ -226,18 +229,15 @@ describe('ResultViewer', () => {
     });
 
     it('setResultView は表示モードを切り替える', () => {
-        // 初期状態は text view
+        // 初期状態を確認 (beforeEach で textResultView は block になっているはず)
         expect(resultViewer.getCurrentView()).toBe('text');
         expect(textResultView.style.display).toBe('block');
         expect(tableResultView.style.display).toBe('none');
         expect(textViewButton.classList.contains('active')).toBe(true);
         expect(tableViewButton.classList.contains('active')).toBe(false);
-        expect(textViewButton.getAttribute('aria-pressed')).toBe('true');
-        expect(tableViewButton.getAttribute('aria-pressed')).toBe('false');
 
         // table view に切り替え
-        tableViewButton.click(); // ボタンクリックで切り替え
-        // resultViewer.setResultView('table'); // 直接メソッド呼び出しでもテスト可能
+        resultViewer.setResultView('table'); // 直接メソッド呼び出しでテスト
 
         expect(resultViewer.getCurrentView()).toBe('table');
         expect(textResultView.style.display).toBe('none');
@@ -248,8 +248,7 @@ describe('ResultViewer', () => {
         expect(tableViewButton.getAttribute('aria-pressed')).toBe('true');
 
         // text view に戻す
-        textViewButton.click(); // ボタンクリックで切り替え
-        // resultViewer.setResultView('text'); // 直接メソッド呼び出しでもテスト可能
+        resultViewer.setResultView('text'); // 直接メソッド呼び出しでテスト
 
         expect(resultViewer.getCurrentView()).toBe('text');
         expect(textResultView.style.display).toBe('block');

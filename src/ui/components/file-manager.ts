@@ -60,25 +60,9 @@ export class FileManager {
     });
 
     // ドラッグ&ドロップ処理
-    this.dropArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      this.dropArea.classList.add('drag-over');
-    });
-
-    this.dropArea.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      this.dropArea.classList.remove('drag-over');
-    });
-
-    this.dropArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      this.dropArea.classList.remove('drag-over');
-
-      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-        // ドロップされたファイルを処理
-        this.processNewFiles(Array.from(e.dataTransfer.files));
-      }
-    });
+    this.dropArea.addEventListener('dragover', (e) => this.handleDragOver(e)); // Use public method
+    this.dropArea.addEventListener('dragleave', (e) => this.handleDragLeave(e)); // Use public method
+    this.dropArea.addEventListener('drop', (e) => this.handleDrop(e)); // Use public method
 
     // キーボード操作のサポート
     this.dropArea.addEventListener('keydown', (e) => {
@@ -104,10 +88,43 @@ export class FileManager {
   }
 
   /**
+   * ドラッグオーバーイベントのハンドラ
+   * @param event ドラッグイベント
+   */
+  public handleDragOver(event: DragEvent): void { // Changed to public
+    event.preventDefault(); // デフォルトの処理をキャンセル
+    this.dropArea.classList.add('drag-over');
+  }
+
+  /**
+   * ドラッグリーブイベントのハンドラ
+   * @param event ドラッグイベント
+   */
+  public handleDragLeave(event: DragEvent): void { // Changed to public
+    event.preventDefault();
+    this.dropArea.classList.remove('drag-over');
+  }
+
+  /**
+   * ドロップイベントのハンドラ
+   * @param event ドラッグイベント
+   */
+  public handleDrop(event: DragEvent): void { // Changed to public
+    event.preventDefault();
+    this.dropArea.classList.remove('drag-over');
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      // ドロップされたファイルを処理
+      this.processNewFiles(Array.from(event.dataTransfer.files));
+    }
+  }
+
+
+  /**
    * 新しく選択されたファイルを処理する
    * @param files 処理対象のファイル配列
    */
-  public processNewFiles(files: File[]): void {
+  public async processNewFiles(files: File[]): Promise<void> { // async と Promise<void> を追加
     // テキストファイルのみをフィルタリング
     const textFiles = Array.from(files).filter(
       (file) => file.type === 'text/plain' || file.name.endsWith('.txt'),
@@ -131,19 +148,20 @@ export class FileManager {
     this.updateFileInfo();
 
     // 結果をユーザーに通知
-    if (newFiles.length === 0) {
+    if (newFiles.length === 0 && textFiles.length > 0) { // Check if only duplicates were added
       this.handleError(new Error('すべてのファイルが既に追加されています'), 'file-duplicate', {
         recoveryAction: {
           message: '既存のファイルをクリアして新しいファイルを追加しますか？',
           label: 'クリアして追加',
           handler: () => {
-            this.selectedFiles = [...textFiles];
+            this.selectedFiles = [...textFiles]; // Keep only the newly added (duplicate) files after clearing
             this.updateFileInfo();
             notificationSystem.showToast(
               'success',
               'ファイル更新完了',
               `${textFiles.length}ファイルを追加しました`,
             );
+            this.validateSelectedFiles(); // Re-validate after clearing and adding
           },
         },
       });
@@ -151,22 +169,24 @@ export class FileManager {
       notificationSystem.showToast(
         'warning',
         'ファイル重複',
-        `${textFiles.length - duplicateCount}ファイルを追加しました (${duplicateCount}ファイルは重複)`,
+        `${newFiles.length}ファイルを追加しました (${duplicateCount}ファイルは重複)`, // Show count of actually added files
         5000,
         3,
       );
-    } else {
+    } else if (newFiles.length > 0) { // Only show success if new files were actually added
       notificationSystem.showToast(
         'success',
         'ファイル追加完了',
-        `${textFiles.length}ファイルを追加しました`,
+        `${newFiles.length}ファイルを追加しました`,
         5000,
         2,
       );
     }
 
-    // ファイルを検証
-    this.validateSelectedFiles();
+    // 新しいファイルがある場合、または重複のみでもファイルが選択されている場合は検証を実行
+    if (newFiles.length > 0 || this.selectedFiles.length > 0) {
+      await this.validateSelectedFiles(); // await を追加
+    }
   }
 
   /**
@@ -193,6 +213,7 @@ export class FileManager {
    */
   public async validateSelectedFiles(): Promise<boolean> {
     if (this.selectedFiles.length === 0) {
+      this.updateFileInfo(); // Ensure UI reflects no files selected
       return false;
     }
 
@@ -213,6 +234,7 @@ export class FileManager {
         error instanceof Error ? error : new Error('不明なエラー'),
         'file-validation',
       );
+      this.executeButton.disabled = true; // Disable execute button on validation error
       return false;
     }
   }
@@ -332,6 +354,7 @@ export class FileManager {
     // HTMLを適用
     this.fileInfoArea.innerHTML = html;
     this.clearButton.disabled = false;
+    // Execute button state is handled by validateSelectedFiles
   }
 
   /**
