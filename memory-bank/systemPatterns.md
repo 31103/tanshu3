@@ -56,14 +56,16 @@ graph LR
 - **Facade パターン (部分的):** `src/core/file-processor.ts` が、ファイル検証、解析、評価といった複数のコア機能を統合し、UI レイヤーに対してシンプルなインターフェースを提供している側面がある。
 - **Observer パターン (概念的):** UI コンポーネントは DOM イベント（クリック、ファイル選択など）を監視 (Observe) し、イベント発生時に対応する処理を実行する。`main.ts` がイベントリスナーを設定し、処理をディスパッチする役割を担う。
 - **Strategy パターン (潜在的):** `src/core/common/evaluator.ts` が短手３判定ロジック（戦略）をカプセル化している。将来的に異なる判定基準が追加された場合、戦略を切り替える形で拡張可能。
+- **Singleton パターン (部分的):** `FileManager` (`fileManager.instance`) や `NotificationSystem` (`notificationSystem`) は、モジュールレベルでインスタンスが作成され、アプリケーション全体で共有される。`ResultViewer` は `main.ts` でインスタンス化される。
 
 ## 4. コンポーネント間の関係
 
 - `main.ts` (Browser Entry Point):
+  - `Application` クラスがエントリーポイント。
+  - `FileManager` (シングルトン経由) と `ResultViewer` のインスタンスを作成・保持。
   - `index.html` の DOM 要素を取得し、イベントリスナーを設定。
-  - `FileManager`, `Notification`, `ResultViewer` (UI Components) をインスタンス化し、DOM に接続。
   - ユーザー操作（ファイル選択、ボタンクリック）に応じて `FileProcessor` を呼び出す。
-  - `FileProcessor` からの結果や `Notification` からの通知を UI に反映させる。
+  - `FileProcessor` からの結果を `ResultViewer` に渡し、`NotificationSystem` からの通知を UI に反映させる。
 - `FileManager` (UI Component):
   - ファイル選択 `<input>` やドラッグ＆ドロップエリアを管理。
   - 選択された `File` オブジェクトを `main.ts` に通知する。

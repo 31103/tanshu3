@@ -1,4 +1,5 @@
-import { FileValidationResult, ErrorHandlerOptions } from '../../types/types';
+import { FileValidationResult } from '../../core/file-processor'; // Import from file-processor
+import { ErrorHandlerOptions } from '../../core/common/types'; // Import from common/types
 import { notificationSystem } from './notification';
 import { validateFiles } from '../../core/validator';
 
@@ -255,8 +256,8 @@ export class FileManager {
           fileStatus = {
             status: result.isValid ? (result.warnings.length > 0 ? 'warning' : 'valid') : 'error',
             messages: [
-              ...result.errors.map((msg) => ({ type: 'error', text: msg })),
-              ...result.warnings.map((msg) => ({ type: 'warning', text: msg })),
+              ...result.errors.map((msg: string) => ({ type: 'error', text: msg })), // Add string type to msg
+              ...result.warnings.map((msg: string) => ({ type: 'warning', text: msg })), // Add string type to msg
             ],
           };
         }

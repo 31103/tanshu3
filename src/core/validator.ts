@@ -1,4 +1,4 @@
-import { FileValidationResult } from '../types/types';
+import { FileValidationResult } from './file-processor'; // Import from file-processor where it was moved
 
 /**
  * ファイルのバリデーションを実行する関数
@@ -158,7 +158,7 @@ export function validateFileContent(file: File, content: string): FileValidation
       if (!dateRegex.test(admission)) {
         result.isValid = false; // 不正な形式ならファイルを無効とする
         // エラーメッセージは最初の一つだけ記録する
-        if (result.errors.length === 0 || !result.errors.some((e) => e.startsWith('入院年月日'))) {
+        if (result.errors.length === 0 || !result.errors.some((e: string) => e.startsWith('入院年月日'))) { // e に string 型を追加
           result.errors.push(
             `入院年月日(4列目)の形式が不正です (yyyymmdd or 00000000) (最初の例: 行 ${i + 1}, 値: ${admission})`,
           );

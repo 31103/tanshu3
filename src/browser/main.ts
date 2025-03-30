@@ -4,11 +4,11 @@
  * このファイルは、アプリケーションのエントリーポイントです。
  * 各コンポーネントの初期化と連携を行います。
  */
-import { fileManager } from '../ui/components/file-manager';
-import { resultViewer } from '../ui/components/result-viewer';
+import { FileManager, fileManager } from '../ui/components/file-manager'; // FileManager クラスもインポート
+import { ResultViewer } from '../ui/components/result-viewer'; // ResultViewer クラスをインポート (グローバルインスタンスは削除)
 import { notificationSystem } from '../ui/components/notification';
 import { fileProcessor } from '../core/file-processor';
-import { ErrorHandlerOptions } from '../types/types';
+import { ErrorHandlerOptions } from '../core/common/types'; // types.d.ts 削除に伴いパス変更
 
 /**
  * アプリケーションクラス
@@ -16,7 +16,17 @@ import { ErrorHandlerOptions } from '../types/types';
 class Application {
   private loadingIndicator: HTMLElement | null = null;
   private executeButton: HTMLButtonElement | null = null;
-  private fileManagerInstance = fileManager.instance;
+  private fileManagerInstance: FileManager; // 型を明示
+  private resultViewerInstance: ResultViewer; // ResultViewer インスタンスを保持
+
+  /**
+   * アプリケーションクラスのコンストラクタ
+   */
+  constructor() {
+    // インスタンスの作成
+    this.fileManagerInstance = fileManager.instance; // 既存のシングルトンパターンを利用
+    this.resultViewerInstance = new ResultViewer(); // ResultViewer をインスタンス化
+  }
 
   /**
    * アプリケーションの初期化
@@ -28,6 +38,12 @@ class Application {
 
     // イベントリスナーの設定
     this.setupEventListeners();
+
+    // ファイルクリア時のイベントリスナーを追加
+    document.addEventListener('filesClear', () => {
+      // ResultViewer の結果もクリアする (必要に応じて)
+      // this.resultViewerInstance.clearResult(); // clearResult メソッドがあれば呼び出す
+    });
   }
 
   /**
@@ -42,9 +58,9 @@ class Application {
     }
 
     // 他のイベントリスナーを設定...
-    document.addEventListener('filesClear', () => {
-      // ファイルクリア時の処理（ステップ更新は削除）
-    });
+    // document.addEventListener('filesClear', () => { // init 内に移動
+    //   // ファイルクリア時の処理（ステップ更新は削除）
+    // });
   }
 
   /**
@@ -84,13 +100,13 @@ class Application {
       }
 
       // UIから出力設定を取得
-      const outputSettings = resultViewer.getOutputSettings();
+      const outputSettings = this.resultViewerInstance.getOutputSettings();
 
       // 処理の実行 (設定を渡す)
       const resultText = await fileProcessor.processFiles(selectedFiles, outputSettings);
 
       // 結果の表示
-      resultViewer.displayResult(resultText);
+      this.resultViewerInstance.displayResult(resultText);
 
       // 成功通知
       notificationSystem.showToast('success', '処理完了', '処理が正常に完了しました', 5000, 2);

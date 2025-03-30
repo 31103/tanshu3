@@ -270,5 +270,4 @@ export class ResultViewer {
   }
 }
 
-// グローバルでアクセス可能なインスタンスを作成
-export const resultViewer = new ResultViewer();
+// グローバルインスタンス作成を削除。インスタンスは main.ts などで必要に応じて作成する。

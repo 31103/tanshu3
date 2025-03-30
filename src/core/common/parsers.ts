@@ -174,10 +174,8 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
         if (!currentCase.procedures.includes(proc)) {
           currentCase.procedures.push(proc);
 
-          // 対応する手術名も追加（存在する場合）
-          if (procedureNames[i]) {
-            currentCase.procedureNames.push(procedureNames[i]);
-          }
+          // 対応する手術名も追加（存在しない場合はデフォルト値）
+          currentCase.procedureNames.push(procedureNames[i] ?? '(名称なし)');
         }
       }
     } else {
@@ -191,31 +189,4 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
   }
 
   return Object.values(caseMap);
-}
-
-/**
- * 入院統合EFファイルのフォーマットを検証する関数
- * @param content - ファイルの内容
- * @returns 検証結果オブジェクト
- */
-export function validateEFFile(content: string): ValidationResult {
-  const result: ValidationResult = {
-    isValid: true,
-    errors: [],
-    warnings: [],
-  };
-
-  if (!content || content.trim() === '') {
-    result.isValid = false;
-    result.errors.push('ファイルが空です。');
-    return result;
-  }
-
-  const lines = content.split(/\r?\n/);
-  if (lines.length < 2) {
-    result.isValid = false;
-    result.errors.push('ファイルに少なくともヘッダー行とデータ行が含まれていません。');
-  }
-
-  return result;
 }

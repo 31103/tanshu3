@@ -3,8 +3,8 @@ export default {
   // TypeScriptのサポート設定
   preset: 'ts-jest',
 
-  // テスト環境
-  testEnvironment: 'node',
+  // テスト環境 (UIコンポーネントのテストには 'jsdom' が必要)
+  testEnvironment: 'jsdom',
 
   // TypeScript設定ファイルの指定
   globals: {
