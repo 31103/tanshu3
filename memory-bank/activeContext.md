@@ -5,9 +5,14 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 ## 1. 現在の作業焦点 (Current Focus)
 
 - **リファクタリング継続:** `docs/refactoring_plan.md`に基づき、テストの修正と充実に焦点を当てて作業を継続。
+- **開発環境整備:** PrettierとVSCodeの設定を整備し、コード品質とフォーマットの一貫性を確保。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
+- **2025-03-30 (最新):**
+  - Prettierの設定ファイル(`.prettierrc.json`)を確認・整備。
+  - VSCode設定(`.vscode/settings.json`)を新規作成し、Prettier拡張機能と連携するように設定。
+  - ESLintとPrettierの整合性を確認。
 - **2025-03-30:**
   - リファクタリング作業再開。現状調査と計画更新 (`docs/refactoring_plan.md`)。
   - Jest テスト環境を `node` から `jsdom` に変更 (`jest.config.js`, `jest-environment-jsdom` 導入)。
@@ -48,6 +53,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
+- **コード品質の標準化:** `.prettierrc.json`と`.vscode/settings.json`による一貫したコードフォーマットの適用。チーム全体で同じフォーマット設定を共有することが重要。
 - **UI/UX のさらなる改善:** 現在の UI は機能的だが、より洗練されたデザインやインタラクションの導入を検討。具体的な改善点は未定。
 - **テストカバレッジ向上:** `docs/refactoring_plan.md` 3.2 の目標達成。特に `src/core/common/utils.ts` や UI レイヤーのテスト拡充。
 - **テスト範囲の適切な選択:**
@@ -60,6 +66,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 5. 重要なパターンと好み (Key Patterns & Preferences)
 
+- **コードフォーマット:** Prettierによる一貫したコードスタイル（シングルクォート、行幅100文字、2スペースインデント）の適用。VSCodeでの自動フォーマット（保存時）と連携。
 - **関心の分離:** UI (`src/ui`, `src/browser`) とコアロジック (`src/core`) を明確に分離する。コアロジックは環境非依存とする。
 - **型安全性:** TypeScript の静的型付けを最大限に活用し、`any` 型の使用は極力避ける。関数のインターフェース（引数、戻り値）には型を明記する (`@typescript-eslint/explicit-function-return-type`: warn)。
 - **イミュータビリティ:** 可能な限り、データ構造を直接変更せず、新しいオブジェクトや配列を生成して返すように心がける（特にコアロジック内）。
@@ -72,6 +79,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 6. 学びと洞察 (Learnings & Insights)
 
+- **開発環境設定の重要性:** VSCodeとPrettierの設定ファイル(`.vscode/settings.json`, `.prettierrc.json`)を整備することで、チーム全体で一貫したコードスタイルを維持できる。エディタの自動フォーマット機能と連携させることで、開発効率と品質が向上する。
 - **`file://` 環境の制約:** Parcel の `--public-url ./` 設定が `file://` でのリソース解決に重要。Web Workers など一部のブラウザ機能に制約がある可能性も考慮が必要。
 - **開発ツールの重要性:** ESLint, Prettier, Jest, lint-staged の組み合わせは、コードの一貫性と品質を保ち、リファクタリングや機能追加を安全に進める上で不可欠。特に日本語コメントを含むコードベースでは Prettier の `proseWrap: preserve` が有効。
 - **コアロジック分離の利点:** ビジネスロジックを UI から分離することで、Jest によるテストが容易になり、ロジックの正確性を担保しやすくなった。

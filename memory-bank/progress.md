@@ -5,8 +5,8 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 ## 1. 現在のステータス (Current Status)
 
 - **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。リファクタリング作業に着手し、Jest テスト環境の修正とUI関連テストファイルの修正を実施中。
-- **直近のマイルストーン:** リファクタリング計画 (`docs/refactoring_plan.md`) の完了。
-- **現在のタスク:** リファクタリング作業継続中。UI関連テストの修正(`file-manager.test.ts`を簡素化して基本的なDOM操作テストのみに限定)。
+- **直近のマイルストーン:** リファクタリング計画 (`docs/refactoring_plan.md`) の完了とコード品質管理の標準化。
+- **現在のタスク:** リファクタリング作業継続中。UI関連テストの修正(`file-manager.test.ts`を簡素化して基本的なDOM操作テストのみに限定)。PrettierとVSCodeの設定整備による開発環境の標準化。
 
 ## 2. 完了した機能 (What Works)
 
@@ -38,6 +38,7 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - Parcel によるビルドとバンドル (`file://` 対応)。
   - Jest によるユニットテスト・統合テスト (コアロジック中心)。
   - ESLint/Prettier によるコード品質・フォーマット維持。
+  - VSCode設定(`.vscode/settings.json`)とPrettier設定(`.prettierrc.json`)の整備による一貫したコード品質管理。
   - Husky/lint-staged による自動品質チェック。
 - **リファクタリング (一部):**
   - レガシーテストファイル削除 (`test/run-tests.js` など)。
@@ -76,6 +77,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 - **[完了] テスト修正:**
   - `notification.test.ts`, `result-viewer.test.ts`: 修正完了。
   - `file-manager.test.ts`: モック関連の問題を回避するため、テストを簡素化して基本的なDOM操作テストに限定し、修正完了。
+- **[完了] 開発環境の標準化:**
+  - `.prettierrc.json`の設定確認と整備。
+  - `.vscode/settings.json`の作成によるVSCode環境の標準化とPrettier連携。
 
 ## 4. 既知の問題とバグ (Known Issues & Bugs)
 
@@ -88,9 +92,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/project_overview.md` の「最近の機能強化」セクションを参照。
 
-- **[日付不明]:** クリップボードコピー API を `document.execCommand` から `navigator.clipboard.writeText` に変更。 (理由: 前者は廃止予定であり、後者の方がモダンで信頼性が高いため)
-- **[日付不明]:** ビルドツールとして Webpack ではなく Parcel を採用。 (理由: `file://` 環境での設定がよりシンプルだったため)
-- **[2025-03-27]:** ESLint, Prettier, Husky の設定を強化・最適化。 (理由: コード品質と開発効率向上のため)
-- **[2025-03-29]:** リファクタリング開始。レガシーコード削除、型定義整理。
+- **[2025-03-30]:** VSCodeとPrettierの設定の整合性を確保。`.vscode/settings.json`を新規作成し、Prettier拡張機能と連携するよう設定。標準的なTypeScriptプロジェクトのベストプラクティスに沿った開発環境を整備。
 - **[2025-03-30]:** Jest テスト環境を `jsdom` に変更。UI コンポーネントのテスト修正に着手。`notification.ts` から集約通知機能を削除。`notification.test.ts`, `result-viewer.test.ts`, `file-manager.test.ts`のテストを修正完了。
 - **[2025-03-30]:** `file-manager.test.ts`の技術的制約（Jest+TypeScript環境でのESモジュールモック設定問題）のため、テスト範囲を基本的なDOM操作に限定する決定を実施。
+- **[2025-03-29]:** リファクタリング開始。レガシーコード削除、型定義整理。
+- **[2025-03-27]:** ESLint, Prettier, Husky の設定を強化・最適化。 (理由: コード品質と開発効率向上のため)
+- **[日付不明]:** クリップボードコピー API を `document.execCommand` から `navigator.clipboard.writeText` に変更。 (理由: 前者は廃止予定であり、後者の方がモダンで信頼性が高いため)
+- **[日付不明]:** ビルドツールとして Webpack ではなく Parcel を採用。 (理由: `file://` 環境での設定がよりシンプルだったため)
