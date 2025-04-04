@@ -625,7 +625,7 @@ header h1 {
 
 @media (min-width: 768px) {
   .settings-options {
-    flex-direction: row;
+    /* flex-direction: row; を削除 */
   }
 }
 
@@ -696,11 +696,25 @@ header h1 {
   text-underline-offset: 3px;
 }
 
+.radio-label-description {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ラジオボタンのラベルの下マージンも削除 */
+.radio-label-description label {
+  margin-bottom: 0;
+}
+
 .radio-description {
-  margin-left: calc(18px + var(--spacing-sm));
+  /* margin-left: calc(18px + var(--spacing-sm)); を削除 */
   font-size: var(--font-size-sm);
   color: var(--text-tertiary);
-  margin-top: var(--spacing-xs);
+  /* margin-top: var(--spacing-xs); を削除 */
+  margin-top: 0; /* 念のため margin-top を 0 に */
+  margin-left: 0; /* 念のため margin-left を 0 に */
+  margin-bottom: 0; /* 下マージンを削除 */
+  line-height: var(--line-height-tight); /* 行の高さを詰める */
 }
 
 /* 設定パネルのアニメーション */

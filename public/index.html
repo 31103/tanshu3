@@ -103,15 +103,19 @@
                     value="eligibleOnly"
                     checked
                   />
-                  <label for="eligibleOnly">短手３対象症例のみ</label>
-                  <p class="radio-description">
-                    短期滞在手術等基本料３に該当する症例のみを出力します
-                  </p>
+                  <div class="radio-label-description">
+                    <label for="eligibleOnly">短手３対象症例のみ</label>
+                    <p class="radio-description">
+                      短期滞在手術等基本料３に該当する症例のみを出力します
+                    </p>
+                  </div>
                 </div>
                 <div class="radio-option">
                   <input type="radio" id="allCases" name="outputMode" value="allCases" />
-                  <label for="allCases">全症例</label>
-                  <p class="radio-description">すべての症例を出力します（該当/非該当を含む）</p>
+                  <div class="radio-label-description">
+                    <label for="allCases">全症例</label>
+                    <p class="radio-description">すべての症例を出力します（該当/非該当を含む）</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -127,8 +131,10 @@
                     value="yyyymmdd"
                     checked
                   />
-                  <label for="dateFormatYYYYMMDD">YYYYMMDD</label>
-                  <p class="radio-description">例: 20241025（年月日をそのまま連結）</p>
+                  <div class="radio-label-description">
+                    <label for="dateFormatYYYYMMDD">YYYYMMDD</label>
+                    <p class="radio-description">例: 20241025（年月日をそのまま連結）</p>
+                  </div>
                 </div>
                 <div class="radio-option">
                   <input
@@ -137,8 +143,10 @@
                     name="dateFormat"
                     value="yyyy/mm/dd"
                   />
-                  <label for="dateFormatYYYY/MM/DD">YYYY/MM/DD</label>
-                  <p class="radio-description">例: 2024/10/25（スラッシュ区切り）</p>
+                  <div class="radio-label-description">
+                    <label for="dateFormatYYYY/MM/DD">YYYY/MM/DD</label>
+                    <p class="radio-description">例: 2024/10/25（スラッシュ区切り）</p>
+                  </div>
                 </div>
               </div>
             </div>
