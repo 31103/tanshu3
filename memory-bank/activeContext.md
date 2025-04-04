@@ -4,13 +4,17 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 1. 現在の作業焦点 (Current Focus)
 
-- **リファクタリング継続:** `docs/refactoring_plan.md`に基づき、テストの修正と充実に焦点を当てて作業を継続。
-- **開発環境整備:** PrettierとVSCodeの設定を整備し、コード品質とフォーマットの一貫性を確保。
-- **開発ツール最新化:** ESLintとその関連パッケージを最新バージョンに更新し、最新の開発ツールを活用。
+- **Memory Bank 更新:** `validator.ts`のリファクタリング完了とテスト修正を反映。
+- **Lint 警告対応 (一時中断):** 残りの `@typescript-eslint/explicit-function-return-type` 警告への対応はユーザー指示により一時中断。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
-- **2025-03-30 (最新):**
+- **2025-04-04 (最新):**
+  - `src/core/validator.ts` の `prefer-const` ESLint エラーを解消するため、警告フラグ管理ロジックをリファクタリング。コールバック関数によるフラグ伝搬を廃止し、関数が警告状態を戻り値で返すように変更。`eslint-disable` コメントを削除。
+  - 上記リファクタリングに伴い、`test/jest/unit/validator.test.ts` のテストケースを修正し、すべてのテストがパスすることを確認。
+  - `src/ui/components/file-manager.ts` の `@typescript-eslint/explicit-function-return-type` 警告を修正 (`instance` ゲッターに関数型を追加)。
+  - 残りの Lint 警告 (`@typescript-eslint/explicit-function-return-type`) の修正作業はユーザー指示により一時中断。
+- **2025-03-30:**
   - ESLintを8.0.1から最新のv9.23.0にアップデート。
   - @typescript-eslint/eslint-pluginと@typescript-eslint/parserを6.4.0から8.28.0に更新。
   - 新しいESLint v9の設定形式に対応するため、`.eslintrc.json`を削除し、新しい`eslint.config.js`ファイルを作成。
@@ -29,34 +33,36 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
   - `file-manager.ts` のドラッグ＆ドロップ関連メソッド (`handleDragOver`, `handleDragLeave`, `handleDrop`) をテストのために `public` に変更。
   - `file-manager.test.ts` のJestのモック設定問題により、テストコードを大幅に簡素化し、基本的なDOM操作とイベントハンドリングのテストに限定。モック関連のエラーを回避することで、テストがパスするように修正。
   - Memory Bankファイル（`activeContext.md`, `progress.md`）を更新し、リファクタリングの進捗と現状を反映。
-- **2025-03-29 (コミット c586776):**
-  - リファクタリング計画 3.1 に基づき、レガシーテスト (`test/run-tests.js` など) とグローバル型定義 (`src/types/types.d.ts`) を削除・整理。
-- **2025-03-29 (コミット 764e193):**
-  - リファクタリング計画 (`docs/refactoring_plan.md`) を作成。
+- **2025-03-29:**
+  - リファクタリング計画 3.1 に基づき、レガシーテスト (`test/run-tests.js` など) とグローバル型定義 (`src/types/types.d.ts`) を削除・整理 (コミット c586776)。
+- **2025-03-29:**
+  - リファクタリング計画 (`docs/refactoring_plan.md`) を作成 (コミット 764e193)。
 - **2025-03-29 (以前):** メモリバンクの初期化および更新作業。`projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md` を更新。
-- **2025-03-27 (docs/project_overview.md より):** 開発ツール設定の最適化を実施。
+- **2025-03-27:** 開発ツール設定の最適化を実施 (`docs/project_overview.md` より)。
   - ESLint 設定強化 (型チェック連携、複雑度チェック、日本語コメント対応など)。
   - Prettier 設定拡張 (日本語コメント対応、HTML フォーマット最適化など)。
   - lint-staged の実装 (コミット前の自動チェック)。
   - npm scripts 拡張 (`lint:fix`, `check-format`, `check-all` 追加)。
-- **(日付不明、docs/project_overview.md より):**
-  - クリップボードコピー機能を `navigator.clipboard.writeText()` API に変更。
-  - データフロー統合テスト (`data-flow.test.ts`) を強化（模擬データ使用、シナリオテスト追加）。
-  - Parcel による `file://` プロトコル対応改善。
-  - バリデーション機能強化（エラー/警告区分、ヘッダー検証柔軟化など）。
-  - UI/UX 改善（ドラッグ＆ドロップ、クリアボタン、結果テキストエリアなど）。
+- **(日付不明):**
+  - クリップボードコピー機能を `navigator.clipboard.writeText()` API に変更 (`docs/project_overview.md` より)。
+  - データフロー統合テスト (`data-flow.test.ts`) を強化（模擬データ使用、シナリオテスト追加） (`docs/project_overview.md` より)。
+  - Parcel による `file://` プロトコル対応改善 (`docs/project_overview.md` より)。
+  - バリデーション機能強化（エラー/警告区分、ヘッダー検証柔軟化など） (`docs/project_overview.md` より)。
+  - UI/UX 改善（ドラッグ＆ドロップ、クリアボタン、結果テキストエリアなど） (`docs/project_overview.md` より)。
 
 ## 3. 次のステップ (Next Steps)
 
-1.  **テスト充実の継続:** リファクタリング計画3.2に基づき、他のファイルのテストカバレッジ向上（特に`utils.ts`など）。
-2.  **エラーハンドリング強化:** リファクタリング計画3.3に基づき、コアロジックでのエラーハンドリングとメッセージの改善を実施。
-3.  **コードコメント強化:** リファクタリング計画3.4に基づき、JSDocコメントのレビューと修正・追記。
-4.  **コミット:** テスト修正とリファクタリングの進捗を適切な粒度でコミット。
-5.  **Memory Bank 更新:** リファクタリング作業の進捗を継続的に反映させる。
+1.  **Memory Bank 更新:** 現在の更新作業を完了させる。
+2.  **ユーザー指示待機:** 次の作業（Lint警告修正再開、テスト充実、エラーハンドリング強化、コードコメント強化など）についてユーザーの指示を待つ。
+3.  **(候補) Lint 警告修正再開:** ユーザー指示があれば、残りの `@typescript-eslint/explicit-function-return-type` 警告 (3箇所) の修正を再開する。
+4.  **(候補) テスト充実の継続:** リファクタリング計画3.2に基づき、他のファイルのテストカバレッジ向上（特に`utils.ts`など）。
+5.  **(候補) エラーハンドリング強化:** リファクタリング計画3.3に基づき、コアロジックでのエラーハンドリングとメッセージの改善を実施。
+6.  **(候補) コードコメント強化:** リファクタリング計画3.4に基づき、JSDocコメントのレビューと修正・追記。
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
-- **コード品質の標準化:** `.prettierrc.json`と`.vscode/settings.json`による一貫したコードフォーマットの適用。チーム全体で同じフォーマット設定を共有することが重要。
+- **Lint 警告対応方針:** `@typescript-eslint/explicit-function-return-type` 警告は、コードの可読性と型安全性を高めるため、原則として修正する方針。ただし、現在はユーザー指示により一時中断中。
+- **コード品質の標準化:** `.prettierrc.json`と`.vscode/settings.json`による一貫したコードフォーマットの適用。
 - **UI/UX のさらなる改善:** 現在の UI は機能的だが、より洗練されたデザインやインタラクションの導入を検討。具体的な改善点は未定。
 - **テストカバレッジ向上:** `docs/refactoring_plan.md` 3.2 の目標達成。特に `src/core/common/utils.ts` や UI レイヤーのテスト拡充。
 - **テスト範囲の適切な選択:**
@@ -71,17 +77,19 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 - **コードフォーマット:** Prettierによる一貫したコードスタイル（シングルクォート、行幅100文字、2スペースインデント）の適用。VSCodeでの自動フォーマット（保存時）と連携。
 - **関心の分離:** UI (`src/ui`, `src/browser`) とコアロジック (`src/core`) を明確に分離する。コアロジックは環境非依存とする。
-- **型安全性:** TypeScript の静的型付けを最大限に活用し、`any` 型の使用は極力避ける。関数のインターフェース（引数、戻り値）には型を明記する (`@typescript-eslint/explicit-function-return-type`: warn)。
+- **型安全性:** TypeScript の静的型付けを最大限に活用し、`any` 型の使用は極力避ける。関数のインターフェース（引数、戻り値）には型を明記する (`@typescript-eslint/explicit-function-return-type`: warn)。**このルールに基づき、戻り値の型指定を進める。**
 - **イミュータビリティ:** 可能な限り、データ構造を直接変更せず、新しいオブジェクトや配列を生成して返すように心がける（特にコアロジック内）。
 - **コード品質ツール活用:** ESLint, Prettier, Jest, lint-staged を規約通りに利用する。
 - **日本語コメント:** コードの意図を明確にするため、適切な日本語コメントを付与する (`.clinerules` 準拠)。
 - **環境抽象化:** 環境依存処理 (ファイル読み込み等) は Adapter パターン (`src/core/adapters`) を介して行う。
 - **モダン API の利用:** `document.execCommand` のような古い API ではなく、`navigator.clipboard` のようなモダンな API を優先的に使用する。
-- **設定ファイル駆動:** リンター、フォーマッター、テスト、ビルドの設定は、それぞれの設定ファイル (`.eslintrc.json`, `.prettierrc.json`, `jest.config.js`, `package.json`) で管理する。
+- **設定ファイル駆動:** リンター、フォーマッター、テスト、ビルドの設定は、それぞれの設定ファイル (`eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `package.json`) で管理する。
 - **テスト戦略の柔軟性:** 技術的制約に直面した場合は、テストの範囲や方法を現実的に調整する柔軟性を持つ。特に、モックの問題など環境に依存する部分で困難がある場合は、代替アプローチを検討する。
 
 ## 6. 学びと洞察 (Learnings & Insights)
 
+- **ESLint ルールの誤検知と対処:** `validator.ts` の `prefer-const` エラーは、ESLint が条件分岐内の再代入を検知できないことによる誤検知だった。`eslint-disable` コメントで一時的に回避することも可能だが、根本解決としてロジック（フラグ管理方法）をリファクタリングすることで、よりクリーンなコードになった。
+- **リファクタリングとテストの連動:** コードのリファクタリング（特にインターフェース変更）を行う際は、関連するテストコードの修正が必須となる。`validator.ts` のリファクタリング後、`validator.test.ts` の修正が必要になった。
 - **開発環境設定の重要性:** VSCodeとPrettierの設定ファイル(`.vscode/settings.json`, `.prettierrc.json`)を整備することで、チーム全体で一貫したコードスタイルを維持できる。エディタの自動フォーマット機能と連携させることで、開発効率と品質が向上する。
 - **`file://` 環境の制約:** Parcel の `--public-url ./` 設定が `file://` でのリソース解決に重要。Web Workers など一部のブラウザ機能に制約がある可能性も考慮が必要。
 - **開発ツールの重要性:** ESLint, Prettier, Jest, lint-staged の組み合わせは、コードの一貫性と品質を保ち、リファクタリングや機能追加を安全に進める上で不可欠。特に日本語コメントを含むコードベースでは Prettier の `proseWrap: preserve` が有効。

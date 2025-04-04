@@ -243,9 +243,9 @@ describe('validator.ts', () => {
 111111111\t0000000001\t20240706`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
-      // 期待メッセージを実際のメッセージに合わせる (部分一致)
+      // 期待メッセージを実際のメッセージに合わせる (部分一致) - より具体的なメッセージを期待
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('一部のデータ行の列数が少ないようです'),
+        expect.stringContaining('一部のデータ行で入院年月日(4列目)が確認できません'),
       );
     });
 
@@ -306,13 +306,14 @@ describe('validator.ts', () => {
       // 警告が3件以上発生することを期待 (行為明細番号, 列数不足, タブ区切り)
       expect(result.warnings.length).toBeGreaterThanOrEqual(3);
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('行為明細番号(7列目)の形式が不正のようです'),
+        expect.stringContaining('行為明細番号(7列目)の形式が不正のようです'), // 行為明細番号不正
+      );
+      // 列数不足の警告は、より具体的なメッセージ（入院年月日 or 行為明細番号が確認できない）に変わった
+      expect(result.warnings).toContainEqual(
+        expect.stringContaining('一部のデータ行で入院年月日(4列目)が確認できません'), // 列数不足 (行3)
       );
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('一部のデータ行の列数が少ないようです'),
-      );
-      expect(result.warnings).toContainEqual(
-        expect.stringContaining('一部のデータ行にタブ区切りが見られません'),
+        expect.stringContaining('一部のデータ行にタブ区切りが見られません'), // タブ区切りなし (行4)
       );
     });
 

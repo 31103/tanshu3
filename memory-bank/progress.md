@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。リファクタリング作業に着手し、Jest テスト環境の修正とUI関連テストファイルの修正を実施中。ESLintを最新バージョンに更新。
-- **直近のマイルストーン:** リファクタリング計画 (`docs/refactoring_plan.md`) の完了とコード品質管理の標準化。
-- **現在のタスク:** リファクタリング作業継続中。UI関連テストの修正(`file-manager.test.ts`を簡素化して基本的なDOM操作テストのみに限定)。PrettierとVSCodeの設定整備による開発環境の標準化。開発ツール（ESLint）の最新化と設定の現代化。
+- **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。`validator.ts` のリファクタリングと関連テスト修正が完了。ESLint v9 導入済み。
+- **直近のマイルストーン:** `validator.ts` の `prefer-const` エラー解消。
+- **現在のタスク:** Memory Bank の更新作業中。残りの Lint 警告対応は一時中断。
 
 ## 2. 完了した機能 (What Works)
 
@@ -55,12 +55,19 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - `result-viewer.test.ts` のテストを修正完了。
   - `file-manager.ts` のドラッグ＆ドロップ関連メソッドを `public` に変更。
   - `file-manager.test.ts` を簡素化し、基本的なDOM操作とイベントハンドリングのテストに限定。
+- **リファクタリング (`validator.ts`):**
+  - `prefer-const` ESLint エラーを解消するため、警告フラグ管理ロジックをリファクタリング。
+  - 関連するテスト (`validator.test.ts`) を修正し、パスすることを確認。
+- **Lint 警告修正 (一部):**
+  - `src/ui/components/file-manager.ts` の `@typescript-eslint/explicit-function-return-type` 警告を修正。
 
 ## 3. 残りの作業 (What's Left to Build)
 
 `docs/refactoring_plan.md` および `activeContext.md` に基づく。
 
-- **[優先度 中] テストの充実 (リファクタリング計画 3.2) (作業継続中):**
+- **[優先度 高] Memory Bank 更新:** 現在の更新作業を完了させる。
+- **[優先度 ?] Lint 警告修正 (一時中断):** ユーザー指示があれば、残りの `@typescript-eslint/explicit-function-return-type` 警告 (3箇所) の修正を再開する。
+- **[優先度 中] テストの充実 (リファクタリング計画 3.2):**
   - `src/core/common/utils.ts` のカバレッジ向上 (目標 85% 以上)。
   - 全体のテストカバレッジを確認し、必要に応じてテストを追加。
 - **[優先度 中] エラーハンドリング強化 (リファクタリング計画 3.3):**
@@ -76,8 +83,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 - **[優先度 低] ドキュメント整備:**
   - `README.md`, `docs/` 内ドキュメントの最新化。
 - **[優先度 低] 結果ダウンロード機能:** 実装状況確認と必要に応じた修正。
+- **[完了] `validator.ts` リファクタリング:** `prefer-const` エラー解消のためのリファクタリング完了。
+- **[完了] `validator.test.ts` 修正:** 上記リファクタリングに伴うテスト修正完了。
 - **[完了] レガシーコード整理 (リファクタリング計画 3.1):** 主要なレガシーテストファイルは削除済み。
-- **[完了] テスト修正:**
+- **[完了] テスト修正 (UI関連):**
   - `notification.test.ts`, `result-viewer.test.ts`: 修正完了。
   - `file-manager.test.ts`: モック関連の問題を回避するため、テストを簡素化して基本的なDOM操作テストに限定し、修正完了。
 - **[完了] 開発環境の標準化:**
@@ -86,6 +95,7 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 4. 既知の問題とバグ (Known Issues & Bugs)
 
+- **[警告] 残存するLint警告:** `@typescript-eslint/explicit-function-return-type` 警告が3箇所残存 (ユーザー指示により対応一時中断)。
 - **[制約] `file-manager.test.ts`の範囲限定:** Jest+TypeScriptの環境でESモジュールのモック設定に関する技術的制約により、`file-manager.test.ts`のテスト範囲を基本的なDOM操作とイベントハンドリングに限定。複雑なファイル処理ロジックのテストは除外。
 - **[改善点] 大量データ処理時のパフォーマンス:** 未測定。
 - **[改善点] UI テスト不足:** 現在テスト作成中だが、カバレッジはまだ低い。
@@ -95,6 +105,8 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/project_overview.md` の「最近の機能強化」セクションを参照。
 
+- **[2025-04-04]:** `validator.ts` の `prefer-const` 誤検知に対し、`eslint-disable` ではなく、根本的なロジックリファクタリングを選択。理由: コードの可読性と保守性向上のため。
+- **[2025-04-04]:** 残りの Lint 警告 (`@typescript-eslint/explicit-function-return-type`) の修正をユーザー指示により一時中断。
 - **[2025-03-30]:** ESLintを最新のv9.23.0にアップデートし、関連パッケージも最新化。新しいESLint v9形式の設定ファイル（eslint.config.js）を導入。理由：最新の開発ツールを活用し、将来的なメンテナンス性と互換性を確保するため。
 - **[2025-03-30]:** VSCodeとPrettierの設定の整合性を確保。`.vscode/settings.json`を新規作成し、Prettier拡張機能と連携するよう設定。標準的なTypeScriptプロジェクトのベストプラクティスに沿った開発環境を整備。
 - **[2025-03-30]:** Jest テスト環境を `jsdom` に変更。UI コンポーネントのテスト修正に着手。`notification.ts` から集約通知機能を削除。`notification.test.ts`, `result-viewer.test.ts`, `file-manager.test.ts`のテストを修正完了。

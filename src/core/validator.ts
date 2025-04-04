@@ -161,21 +161,45 @@ function validateDataLines(lines: string[], result: FileValidationResult): void 
     // 空のデータ行はスキップ
     if (!line) continue;
 
-    validateDataLine(
-      line,
-      i,
-      result,
-      {
-        tabWarningIssued,
-        columnCountWarningIssued,
-        actionDetailNumWarningIssued,
-      },
-      (flags) => {
-        tabWarningIssued = flags.tabWarningIssued;
-        columnCountWarningIssued = flags.columnCountWarningIssued;
-        actionDetailNumWarningIssued = flags.actionDetailNumWarningIssued;
-      },
-    );
+    // 各行を検証し、発生した警告フラグを受け取る
+    const lineWarnings = validateDataLine(line, i, result);
+
+    // タブ区切り警告 (一度だけ追加)
+    if (lineWarnings.tabWarningIssued && !tabWarningIssued) {
+      result.warnings.push(`一部のデータ行にタブ区切りが見られません (最初の例: 行 ${i + 1})`);
+      tabWarningIssued = true;
+    }
+
+    // 列数不足警告 (一度だけ追加)
+    if (lineWarnings.columnCountWarningIssued && !columnCountWarningIssued) {
+      // validateDateAndActionDetail で列数不足が検出された場合も考慮
+      const columns = line.split('\t'); // 再度分割して実際の列数を取得
+      if (columns.length < 4) {
+        result.warnings.push(
+          `一部のデータ行で入院年月日(4列目)が確認できません (列数不足) (最初の例: 行 ${i + 1})`,
+        );
+      } else if (columns.length < 7) {
+        result.warnings.push(
+          `一部のデータ行で行為明細番号(7列目)が確認できません (列数不足) (最初の例: 行 ${i + 1})`,
+        );
+      } else {
+        // 上記以外 (validateDataLine の columns.length < 10 で検出)
+        result.warnings.push(
+          `一部のデータ行の列数が少ないようです (10列未満) (最初の例: 行 ${i + 1}, 列数: ${columns.length})`,
+        );
+      }
+      columnCountWarningIssued = true;
+    }
+
+    // 行為明細番号形式警告 (一度だけ追加)
+    if (lineWarnings.actionDetailNumWarningIssued && !actionDetailNumWarningIssued) {
+      const columns = line.split('\t'); // 再度分割
+      const actionDetailNum = columns.length > 6 ? columns[6].trim() : '';
+      result.warnings.push(
+        `行為明細番号(7列目)の形式が不正のようです (000 or 3桁数字) (最初の例: 行 ${i + 1}, 値: ${actionDetailNum})`,
+      );
+      actionDetailNumWarningIssued = true;
+    }
   }
 }
 
@@ -184,54 +208,48 @@ function validateDataLines(lines: string[], result: FileValidationResult): void 
  * @param line 検証対象の行
  * @param lineIndex 行のインデックス（0起点）
  * @param result 検証結果オブジェクト
- * @param flags 警告フラグの状態
- * @param updateFlags フラグを更新するコールバック
+ * @returns 発生した警告フラグの状態
  */
 function validateDataLine(
   line: string,
   lineIndex: number,
   result: FileValidationResult,
-  flags: {
-    tabWarningIssued: boolean;
-    columnCountWarningIssued: boolean;
-    actionDetailNumWarningIssued: boolean;
-  },
-  updateFlags: (updatedFlags: {
-    tabWarningIssued: boolean;
-    columnCountWarningIssued: boolean;
-    actionDetailNumWarningIssued: boolean;
-  }) => void,
-): void {
-  let { tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued } = flags;
+): {
+  tabWarningIssued: boolean;
+  columnCountWarningIssued: boolean;
+  actionDetailNumWarningIssued: boolean;
+} {
+  let tabWarningIssued = false;
+  let columnCountWarningIssued = false;
+  let actionDetailNumWarningIssued = false;
 
   // 5-1. タブ区切り形式チェック (警告)
-  if (!line.includes('\t') && !tabWarningIssued) {
-    result.warnings.push(
-      `一部のデータ行にタブ区切りが見られません (最初の例: 行 ${lineIndex + 1})`,
-    );
+  if (!line.includes('\t')) {
     tabWarningIssued = true;
     // タブがない場合、以降の列チェックは無意味なのでスキップ
-    updateFlags({ tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued });
-    return;
+    return { tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued };
   }
 
   // タブで列に分割
   const columns = line.split('\t');
 
   // 5-2. 列数チェック (警告) - 10列未満
-  if (columns.length < 10 && !columnCountWarningIssued) {
-    result.warnings.push(
-      `一部のデータ行の列数が少ないようです (10列未満) (最初の例: 行 ${lineIndex + 1}, 列数: ${columns.length})`,
-    );
+  if (columns.length < 10) {
     columnCountWarningIssued = true;
     // 列数が少ない場合、特定の列へのアクセスは危険なのでスキップ
     // (ただし、他の行で十分な列数がある可能性もあるため、ループは継続)
-    updateFlags({ tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued });
-    return;
+    // 警告メッセージは呼び出し元 (validateDataLines) で追加
+    return { tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued };
   }
 
   // 入院年月日と行為明細番号の検証
-  validateDateAndActionDetail(columns, lineIndex, result, flags, updateFlags);
+  const dateActionResult = validateDateAndActionDetail(columns, lineIndex, result);
+  // validateDateAndActionDetail内で列数不足が判明する場合があるため、ここで更新
+  columnCountWarningIssued = dateActionResult.columnCountWarningIssued;
+  actionDetailNumWarningIssued = dateActionResult.actionDetailNumWarningIssued;
+
+  // 警告メッセージは呼び出し元 (validateDataLines) で追加
+  return { tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued };
 }
 
 /**
@@ -239,27 +257,15 @@ function validateDataLine(
  * @param columns 行の列データ
  * @param lineIndex 行のインデックス（0起点）
  * @param result 検証結果オブジェクト
- * @param flags 警告フラグの状態
- * @param updateFlags フラグを更新するコールバック
+ * @returns 発生した警告フラグの状態 { columnCountWarningIssued, actionDetailNumWarningIssued }
  */
 function validateDateAndActionDetail(
   columns: string[],
   lineIndex: number,
   result: FileValidationResult,
-  flags: {
-    tabWarningIssued: boolean;
-    columnCountWarningIssued: boolean;
-    actionDetailNumWarningIssued: boolean;
-  },
-  updateFlags: (updatedFlags: {
-    tabWarningIssued: boolean;
-    columnCountWarningIssued: boolean;
-    actionDetailNumWarningIssued: boolean;
-  }) => void,
-): void {
-  const { tabWarningIssued } = flags;
-  // eslint-disable-next-line prefer-const
-  let { columnCountWarningIssued, actionDetailNumWarningIssued } = flags; // Disable prefer-const for this line
+): { columnCountWarningIssued: boolean; actionDetailNumWarningIssued: boolean } {
+  let columnCountWarningIssued = false;
+  let actionDetailNumWarningIssued = false;
 
   // 5-3. 入院年月日 (列4, インデックス3) の形式チェック (エラー)
   if (columns.length > 3) {
@@ -278,31 +284,23 @@ function validateDateAndActionDetail(
       }
       // エラーが見つかっても、他の警告を拾うためにループは継続
     }
-  } else if (!columnCountWarningIssued) {
-    // 列数が足りず、まだ警告が出ていない場合
-    result.warnings.push(
-      `一部のデータ行で入院年月日(4列目)が確認できません (列数不足) (最初の例: 行 ${lineIndex + 1})`,
-    );
-    columnCountWarningIssued = true; // 列数不足の警告として扱う
+  } else {
+    // 列数が足りない場合
+    columnCountWarningIssued = true; // 列数不足の警告フラグを立てる
   }
 
   // 5-4. 行為明細番号 (列7, インデックス6) の形式チェック (警告)
   if (columns.length > 6) {
     const actionDetailNum = columns[6].trim(); // 7列目の値を取得
     const actionDetailRegex = /^(000|\d{3})$/; // 000 または 3桁の数字
-    if (!actionDetailRegex.test(actionDetailNum) && !actionDetailNumWarningIssued) {
-      result.warnings.push(
-        `行為明細番号(7列目)の形式が不正のようです (000 or 3桁数字) (最初の例: 行 ${lineIndex + 1}, 値: ${actionDetailNum})`,
-      );
-      actionDetailNumWarningIssued = true; // 警告は最初の一つだけ
+    if (!actionDetailRegex.test(actionDetailNum)) {
+      actionDetailNumWarningIssued = true; // 警告フラグを立てる
     }
   } else if (!columnCountWarningIssued) {
-    // 列数が足りず、まだ警告が出ていない場合
-    result.warnings.push(
-      `一部のデータ行で行為明細番号(7列目)が確認できません (列数不足) (最初の例: 行 ${lineIndex + 1})`,
-    );
-    columnCountWarningIssued = true; // 列数不足の警告として扱う
+    // 列数が足りない場合 (入院年月日のチェックで既に立っている可能性もある)
+    columnCountWarningIssued = true; // 列数不足の警告フラグを立てる
   }
 
-  updateFlags({ tabWarningIssued, columnCountWarningIssued, actionDetailNumWarningIssued });
+  // 警告メッセージの追加は呼び出し元 (validateDataLines) で行う
+  return { columnCountWarningIssued, actionDetailNumWarningIssued };
 }

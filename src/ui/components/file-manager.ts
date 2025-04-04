@@ -467,7 +467,8 @@ export function getFileManager(): FileManager {
 
 // 既存のexport文を削除し、新しい初期化方法を使用
 export const fileManager = {
-  get instance() {
+  get instance(): FileManager {
+    // 戻り値の型を追加
     return getFileManager();
   },
 };
