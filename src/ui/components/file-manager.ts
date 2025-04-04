@@ -317,14 +317,11 @@ export class FileManager {
         }
       }
 
-      // ステータスタグは削除
-
       html += `
         <div class="file-item">
           <div class="file-icon">📄</div>
           <div class="file-name">${file.name}</div>
-          <button class="delete-file-button" data-filename="${file.name}" aria-label="${file.name} を削除">×</button>
-        `; // 削除ボタンを追加し、ステータスタグを削除
+      `;
 
       // バリデーションメッセージがある場合は表示
       if (fileStatus.messages && fileStatus.messages.length > 0) {
@@ -361,7 +358,10 @@ export class FileManager {
         `;
       }
 
-      html += '</div>'; // file-item end
+      // 削除ボタンを最後（右側）に配置
+      html += `
+          <button class="delete-file-button" data-filename="${file.name}" aria-label="${file.name} を削除">×</button>
+        </div>`; // file-item end
     });
 
     // HTMLを適用
