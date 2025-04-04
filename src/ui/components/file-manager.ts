@@ -85,6 +85,17 @@ export class FileManager {
     this.clearButton.addEventListener('click', () => {
       this.clearFiles();
     });
+
+    // ファイル削除ボタンのイベントリスナー (イベント委譲)
+    this.fileInfoArea.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('delete-file-button')) {
+        const fileName = target.dataset.filename;
+        if (fileName) {
+          this.removeFile(fileName);
+        }
+      }
+    });
   }
 
   /**
@@ -214,6 +225,22 @@ export class FileManager {
   }
 
   /**
+   * 指定されたファイルをリストから削除する
+   * @param fileName 削除するファイル名
+   */
+  public removeFile(fileName: string): void {
+    const initialLength = this.selectedFiles.length;
+    this.selectedFiles = this.selectedFiles.filter((file) => file.name !== fileName);
+
+    // ファイルが実際に削除されたか確認
+    if (this.selectedFiles.length < initialLength) {
+      notificationSystem.showToast('info', 'ファイル削除', `${fileName} を削除しました`);
+      this.updateFileInfo(); // UIを更新
+      this.validateSelectedFiles(); // 再検証して実行ボタンの状態を更新
+    }
+  }
+
+  /**
    * 選択されたファイルを検証する
    */
   public async validateSelectedFiles(): Promise<boolean> {
@@ -290,33 +317,14 @@ export class FileManager {
         }
       }
 
-      let statusClass = '';
-      let statusText = '';
-
-      switch (fileStatus.status) {
-        case 'valid':
-          statusClass = 'status-valid';
-          statusText = '有効';
-          break;
-        case 'warning':
-          statusClass = 'status-warning';
-          statusText = '警告';
-          break;
-        case 'error':
-          statusClass = 'status-error';
-          statusText = 'エラー';
-          break;
-        default:
-          statusClass = '';
-          statusText = '検証中...';
-      }
+      // ステータスタグは削除
 
       html += `
         <div class="file-item">
           <div class="file-icon">📄</div>
           <div class="file-name">${file.name}</div>
-          <div class="file-status ${statusClass}">${statusText}</div>
-        `;
+          <button class="delete-file-button" data-filename="${file.name}" aria-label="${file.name} を削除">×</button>
+        `; // 削除ボタンを追加し、ステータスタグを削除
 
       // バリデーションメッセージがある場合は表示
       if (fileStatus.messages && fileStatus.messages.length > 0) {

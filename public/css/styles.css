@@ -496,6 +496,29 @@ header h1 {
   flex: 1;
   font-size: var(--font-size-sm);
   word-break: break-all;
+  margin-right: var(--spacing-sm); /* Add margin to separate from delete button */
+}
+
+/* Removed .file-status styles */
+
+/* New styles for delete button */
+.delete-file-button {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: var(--font-size-lg); /* Make the '×' larger */
+  line-height: 1;
+  padding: 0 var(--spacing-xs); /* Minimal padding */
+  margin-left: auto; /* Push button to the right */
+  flex-shrink: 0; /* Prevent shrinking */
+  transition: color var(--transition-fast);
+}
+
+.delete-file-button:hover,
+.delete-file-button:focus {
+  color: var(--color-error);
+  outline: none; /* Remove default focus outline if desired */
 }
 
 .file-status {
