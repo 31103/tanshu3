@@ -209,9 +209,7 @@ describe('evaluateCases関数', () => {
   it('内視鏡的大腸ポリープ・粘膜切除術で特定加算がない場合は対象とする', () => {
     // 対象手術等コードリストに内視鏡的大腸ポリープ・粘膜切除術のコードが含まれているかチェック
     if (!TARGET_PROCEDURES.includes(COLONOSCOPY_PROCEDURE_CODES[0])) {
-      console.log(
-        '内視鏡的大腸ポリープ・粘膜切除術のコードが対象手術等に含まれていないためテストをスキップします',
-      );
+      // console.logを削除し、テストをスキップ
       return;
     }
 

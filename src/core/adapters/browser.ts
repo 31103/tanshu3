@@ -13,7 +13,7 @@ export function readFile(file: File): Promise<string> {
     try {
       const reader = new FileReader();
 
-      reader.onload = (event) => {
+      reader.onload = (event): void => {
         if (event.target && typeof event.target.result === 'string') {
           resolve(event.target.result);
         } else {
@@ -21,7 +21,7 @@ export function readFile(file: File): Promise<string> {
         }
       };
 
-      reader.onerror = (event) => {
+      reader.onerror = (event): void => {
         reject(
           new Error(
             `ファイルの読み込み中にエラーが発生しました: ${event.target?.error?.message || 'Unknown error'}`,

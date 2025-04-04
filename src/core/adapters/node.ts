@@ -37,8 +37,8 @@ export function writeFile(text: string, filePath: string): Promise<void> {
     if (!fs.existsSync(dirPath)) {
       try {
         fs.mkdirSync(dirPath, { recursive: true });
-      } catch (err) {
-        reject(new Error(`ディレクトリの作成に失敗しました: ${dirPath}`));
+      } catch (mkdirErr) {
+        reject(new Error(`Failed to create directory ${dirPath}: ${mkdirErr}`));
         return;
       }
     }

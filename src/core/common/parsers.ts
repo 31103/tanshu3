@@ -3,7 +3,7 @@
  * このファイルには、ファイル解析に関連する関数を含みます。
  */
 
-import { CaseData, RawCaseData, ValidationResult } from './types';
+import { CaseData, RawCaseData } from './types';
 import { TARGET_PROCEDURES } from './constants';
 
 /**
@@ -113,13 +113,15 @@ export function parseEFFile(content: string): CaseData[] {
         // 対象手術コードと名称を追加（procedureがnullでない場合のみ）
         if (procedure && !currentCase.procedures.includes(procedure)) {
           currentCase.procedures.push(procedure);
-          // procedureName が null の場合も考慮して追加 (明示的なチェックを追加)
-          if (currentCase.procedureNames) {
-            currentCase.procedureNames.push(procedureName ?? '(名称なし)');
+          // procedureName が null の場合も考慮して追加
+          // procedureNamesが未定義の場合は初期化してから追加
+          if (!currentCase.procedureNames) {
+            currentCase.procedureNames = [];
           }
+          currentCase.procedureNames.push(procedureName ?? '(名称なし)');
         }
       }
-    } catch (error) {
+    } catch {
       // エラーが発生しても処理を継続するが、ログは残さない
       continue;
     }
@@ -150,43 +152,74 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
   // 新しいケースをマージ
   for (const c of newCases) {
     if (caseMap[c.id]) {
-      const currentCase = caseMap[c.id];
-
-      // 退院日が確定した場合（00000000 から具体的な日付に変わった場合）
-      if (c.discharge !== '00000000') {
-        currentCase.discharge = c.discharge;
-      }
-
-      // procedures と procedureNames の初期化を確実に行う
-      if (!Array.isArray(currentCase.procedures)) {
-        currentCase.procedures = [];
-      }
-      if (!Array.isArray(currentCase.procedureNames)) {
-        currentCase.procedureNames = [];
-      }
-
-      // 新しい手術コードを追加（重複を避ける）
-      const procedures = Array.isArray(c.procedures) ? c.procedures : [];
-      const procedureNames = Array.isArray(c.procedureNames) ? c.procedureNames : [];
-
-      for (let i = 0; i < procedures.length; i++) {
-        const proc = procedures[i];
-        if (!currentCase.procedures.includes(proc)) {
-          currentCase.procedures.push(proc);
-
-          // 対応する手術名も追加（存在しない場合はデフォルト値）
-          currentCase.procedureNames.push(procedureNames[i] ?? '(名称なし)');
-        }
-      }
+      // 既存症例の更新処理
+      updateExistingCase(caseMap[c.id], c);
     } else {
       // 新しい症例を追加
-      caseMap[c.id] = {
-        ...c,
-        procedures: Array.isArray(c.procedures) ? [...c.procedures] : [],
-        procedureNames: Array.isArray(c.procedureNames) ? [...c.procedureNames] : [],
-      };
+      caseMap[c.id] = createSafeCase(c);
     }
   }
 
   return Object.values(caseMap);
+}
+
+/**
+ * 既存の症例データを新しいデータで更新する
+ * @param currentCase - 更新対象の症例データ
+ * @param newCase - 新しい症例データ
+ */
+function updateExistingCase(currentCase: CaseData, newCase: CaseData): void {
+  // 退院日が確定した場合（00000000 から具体的な日付に変わった場合）
+  if (newCase.discharge !== '00000000') {
+    currentCase.discharge = newCase.discharge;
+  }
+
+  // procedures と procedureNames の初期化を確実に行う
+  if (!Array.isArray(currentCase.procedures)) {
+    currentCase.procedures = [];
+  }
+  if (!Array.isArray(currentCase.procedureNames)) {
+    currentCase.procedureNames = [];
+  }
+
+  // 新しい手術コードを追加
+  mergeProcedures(currentCase, newCase);
+}
+
+/**
+ * 安全な症例データオブジェクトを作成する
+ * @param c - 元の症例データ
+ * @returns 配列が初期化された症例データ
+ */
+function createSafeCase(c: CaseData): CaseData {
+  return {
+    ...c,
+    procedures: Array.isArray(c.procedures) ? [...c.procedures] : [],
+    procedureNames: Array.isArray(c.procedureNames) ? [...c.procedureNames] : [],
+  };
+}
+
+/**
+ * 症例の処置データを統合する
+ * @param currentCase - 統合先の症例データ
+ * @param newCase - 統合元の症例データ
+ */
+function mergeProcedures(currentCase: CaseData, newCase: CaseData): void {
+  // 新しい手術コードを追加（重複を避ける）
+  const procedures = Array.isArray(newCase.procedures) ? newCase.procedures : [];
+  const procedureNames = Array.isArray(newCase.procedureNames) ? newCase.procedureNames : [];
+
+  for (let i = 0; i < procedures.length; i++) {
+    const proc = procedures[i];
+    if (!currentCase.procedures.includes(proc)) {
+      currentCase.procedures.push(proc);
+
+      // procedureNamesが未定義の場合は初期化
+      if (!currentCase.procedureNames) {
+        currentCase.procedureNames = [];
+      }
+      // 対応する手術名も追加（存在しない場合はデフォルト値）
+      currentCase.procedureNames.push(procedureNames[i] ?? '(名称なし)');
+    }
+  }
 }

@@ -6,13 +6,16 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 - **リファクタリング継続:** `docs/refactoring_plan.md`に基づき、テストの修正と充実に焦点を当てて作業を継続。
 - **開発環境整備:** PrettierとVSCodeの設定を整備し、コード品質とフォーマットの一貫性を確保。
+- **開発ツール最新化:** ESLintとその関連パッケージを最新バージョンに更新し、最新の開発ツールを活用。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
 - **2025-03-30 (最新):**
-  - Prettierの設定ファイル(`.prettierrc.json`)を確認・整備。
-  - VSCode設定(`.vscode/settings.json`)を新規作成し、Prettier拡張機能と連携するように設定。
-  - ESLintとPrettierの整合性を確認。
+  - ESLintを8.0.1から最新のv9.23.0にアップデート。
+  - @typescript-eslint/eslint-pluginと@typescript-eslint/parserを6.4.0から8.28.0に更新。
+  - 新しいESLint v9の設定形式に対応するため、`.eslintrc.json`を削除し、新しい`eslint.config.js`ファイルを作成。
+  - ESLint v9に必要な追加依存関係（`@eslint/js`など）をインストール。
+  - Memory Bankの`techContext.md`を更新し、最新のツールバージョン情報を反映。
 - **2025-03-30:**
   - リファクタリング作業再開。現状調査と計画更新 (`docs/refactoring_plan.md`)。
   - Jest テスト環境を `node` から `jsdom` に変更 (`jest.config.js`, `jest-environment-jsdom` 導入)。

@@ -25,8 +25,8 @@ describe('非同期テスト', () => {
   });
 
   it('タイムアウト後にPromiseが解決される', async () => {
-    const result = await new Promise((resolve) => {
-      setTimeout(() => resolve('timeout success'), 100);
+    const result = await new Promise<string>((resolve) => {
+      setTimeout((): void => resolve('timeout success'), 100); // Added : void
     });
     expect(result).toBe('timeout success');
   });
@@ -35,7 +35,7 @@ describe('非同期テスト', () => {
 // 例外処理のテスト
 describe('例外テスト', () => {
   it('エラーがスローされる', () => {
-    const throwError = () => {
+    const throwError = (): void => {
       throw new Error('テストエラー');
     };
     expect(throwError).toThrow('テストエラー');

@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。リファクタリング作業に着手し、Jest テスト環境の修正とUI関連テストファイルの修正を実施中。
+- **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。リファクタリング作業に着手し、Jest テスト環境の修正とUI関連テストファイルの修正を実施中。ESLintを最新バージョンに更新。
 - **直近のマイルストーン:** リファクタリング計画 (`docs/refactoring_plan.md`) の完了とコード品質管理の標準化。
-- **現在のタスク:** リファクタリング作業継続中。UI関連テストの修正(`file-manager.test.ts`を簡素化して基本的なDOM操作テストのみに限定)。PrettierとVSCodeの設定整備による開発環境の標準化。
+- **現在のタスク:** リファクタリング作業継続中。UI関連テストの修正(`file-manager.test.ts`を簡素化して基本的なDOM操作テストのみに限定)。PrettierとVSCodeの設定整備による開発環境の標準化。開発ツール（ESLint）の最新化と設定の現代化。
 
 ## 2. 完了した機能 (What Works)
 
@@ -37,10 +37,13 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - TypeScript による開発。
   - Parcel によるビルドとバンドル (`file://` 対応)。
   - Jest によるユニットテスト・統合テスト (コアロジック中心)。
-  - ESLint/Prettier によるコード品質・フォーマット維持。
+  - ESLint(v9.23.0)/Prettier によるコード品質・フォーマット維持。
+  - eslint.config.js によるESLint v9設定の実装。
   - VSCode設定(`.vscode/settings.json`)とPrettier設定(`.prettierrc.json`)の整備による一貫したコード品質管理。
   - Husky/lint-staged による自動品質チェック。
 - **リファクタリング (一部):**
+  - ESLintを8.0.1から9.23.0に更新し、関連パッケージも最新化。
+  - 古い`.eslintrc.json`を削除し、新しいESLint v9形式の`eslint.config.js`を作成。
   - レガシーテストファイル削除 (`test/run-tests.js` など)。
   - グローバル型定義削除・整理 (`src/types/types.d.ts` -> `src/core/common/types.ts`)。
   - Jest テスト環境を `jsdom` に変更。
@@ -92,6 +95,7 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/project_overview.md` の「最近の機能強化」セクションを参照。
 
+- **[2025-03-30]:** ESLintを最新のv9.23.0にアップデートし、関連パッケージも最新化。新しいESLint v9形式の設定ファイル（eslint.config.js）を導入。理由：最新の開発ツールを活用し、将来的なメンテナンス性と互換性を確保するため。
 - **[2025-03-30]:** VSCodeとPrettierの設定の整合性を確保。`.vscode/settings.json`を新規作成し、Prettier拡張機能と連携するよう設定。標準的なTypeScriptプロジェクトのベストプラクティスに沿った開発環境を整備。
 - **[2025-03-30]:** Jest テスト環境を `jsdom` に変更。UI コンポーネントのテスト修正に着手。`notification.ts` から集約通知機能を削除。`notification.test.ts`, `result-viewer.test.ts`, `file-manager.test.ts`のテストを修正完了。
 - **[2025-03-30]:** `file-manager.test.ts`の技術的制約（Jest+TypeScript環境でのESモジュールモック設定問題）のため、テスト範囲を基本的なDOM操作に限定する決定を実施。

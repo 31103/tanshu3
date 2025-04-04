@@ -91,7 +91,8 @@ export class FileManager {
    * ドラッグオーバーイベントのハンドラ
    * @param event ドラッグイベント
    */
-  public handleDragOver(event: DragEvent): void { // Changed to public
+  public handleDragOver(event: DragEvent): void {
+    // Changed to public
     event.preventDefault(); // デフォルトの処理をキャンセル
     this.dropArea.classList.add('drag-over');
   }
@@ -100,7 +101,8 @@ export class FileManager {
    * ドラッグリーブイベントのハンドラ
    * @param event ドラッグイベント
    */
-  public handleDragLeave(event: DragEvent): void { // Changed to public
+  public handleDragLeave(event: DragEvent): void {
+    // Changed to public
     event.preventDefault();
     this.dropArea.classList.remove('drag-over');
   }
@@ -109,7 +111,8 @@ export class FileManager {
    * ドロップイベントのハンドラ
    * @param event ドラッグイベント
    */
-  public handleDrop(event: DragEvent): void { // Changed to public
+  public handleDrop(event: DragEvent): void {
+    // Changed to public
     event.preventDefault();
     this.dropArea.classList.remove('drag-over');
 
@@ -119,12 +122,12 @@ export class FileManager {
     }
   }
 
-
   /**
    * 新しく選択されたファイルを処理する
    * @param files 処理対象のファイル配列
    */
-  public async processNewFiles(files: File[]): Promise<void> { // async と Promise<void> を追加
+  public async processNewFiles(files: File[]): Promise<void> {
+    // async と Promise<void> を追加
     // テキストファイルのみをフィルタリング
     const textFiles = Array.from(files).filter(
       (file) => file.type === 'text/plain' || file.name.endsWith('.txt'),
@@ -148,7 +151,8 @@ export class FileManager {
     this.updateFileInfo();
 
     // 結果をユーザーに通知
-    if (newFiles.length === 0 && textFiles.length > 0) { // Check if only duplicates were added
+    if (newFiles.length === 0 && textFiles.length > 0) {
+      // Check if only duplicates were added
       this.handleError(new Error('すべてのファイルが既に追加されています'), 'file-duplicate', {
         recoveryAction: {
           message: '既存のファイルをクリアして新しいファイルを追加しますか？',
@@ -173,7 +177,8 @@ export class FileManager {
         5000,
         3,
       );
-    } else if (newFiles.length > 0) { // Only show success if new files were actually added
+    } else if (newFiles.length > 0) {
+      // Only show success if new files were actually added
       notificationSystem.showToast(
         'success',
         'ファイル追加完了',
@@ -445,6 +450,10 @@ export class FileManager {
 let fileManagerInstance: FileManager | null = null;
 
 // インスタンスを取得または作成する関数
+/**
+ * インスタンスを取得または作成する関数
+ * @returns FileManagerのインスタンス
+ */
 export function getFileManager(): FileManager {
   if (!fileManagerInstance) {
     // DOMが準備できているか確認
