@@ -68,7 +68,8 @@ function extractCaseData(
  */
 export function parseEFFile(content: string): CaseData[] {
   const lines = content.split(/\r?\n/);
-  const caseMap: Record<string, CaseData> = {}; // 同一患者の情報を一時的に保持するためのマップ
+  // キーを複合キー (dataId_admission) に変更
+  const caseMap: Record<string, CaseData> = {};
 
   // ヘッダー行を除いたデータ行を処理
   for (let i = 1; i < lines.length; i++) {
@@ -84,8 +85,11 @@ export function parseEFFile(content: string): CaseData[] {
       if (extractedData) {
         const { dataId, discharge, admission, procedure, procedureName } = extractedData;
 
-        // 既存の症例データを取得または新規作成
-        let currentCase = caseMap[dataId];
+        // 複合キーを作成
+        const caseKey = `${dataId}_${admission}`;
+
+        // 既存の症例データを取得または新規作成 (複合キーを使用)
+        let currentCase = caseMap[caseKey];
         if (!currentCase) {
           currentCase = {
             id: dataId,
@@ -94,11 +98,11 @@ export function parseEFFile(content: string): CaseData[] {
             procedures: [],
             procedureNames: [],
           };
-          caseMap[dataId] = currentCase;
+          caseMap[caseKey] = currentCase;
         }
 
         // 退院日の更新 (00000000 でなく、既存より新しい日付の場合)
-        // 注意: 日付文字列の単純比較で良いか要確認。YYYYMMDD形式ならOK。
+        // この症例 (複合キーで特定) の退院日を更新
         if (
           discharge &&
           discharge !== '00000000' &&
@@ -108,13 +112,11 @@ export function parseEFFile(content: string): CaseData[] {
         ) {
           currentCase.discharge = discharge;
         }
-        // 入院日も同様に更新が必要な場合があるかもしれないが、今回は退院日のみ考慮
 
         // 対象手術コードと名称を追加（procedureがnullでない場合のみ）
+        // この症例 (複合キーで特定) の手術リストに追加
         if (procedure && !currentCase.procedures.includes(procedure)) {
           currentCase.procedures.push(procedure);
-          // procedureName が null の場合も考慮して追加
-          // procedureNamesが未定義の場合は初期化してから追加
           if (!currentCase.procedureNames) {
             currentCase.procedureNames = [];
           }
@@ -138,25 +140,24 @@ export function parseEFFile(content: string): CaseData[] {
  * @returns 統合された症例データ
  */
 export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): CaseData[] {
+  // キーを複合キー (dataId_admission) に変更
   const caseMap: Record<string, CaseData> = {};
 
-  // 既存のケースをマップに追加
+  // 既存のケースをマップに追加 (複合キーを使用)
   for (const c of existingCases) {
-    caseMap[c.id] = {
-      ...c,
-      procedures: Array.isArray(c.procedures) ? [...c.procedures] : [],
-      procedureNames: Array.isArray(c.procedureNames) ? [...c.procedureNames] : [],
-    };
+    const caseKey = `${c.id}_${c.admission}`;
+    caseMap[caseKey] = createSafeCase(c); // 既存データも安全にコピー
   }
 
-  // 新しいケースをマージ
+  // 新しいケースをマージ (複合キーを使用)
   for (const c of newCases) {
-    if (caseMap[c.id]) {
-      // 既存症例の更新処理
-      updateExistingCase(caseMap[c.id], c);
+    const caseKey = `${c.id}_${c.admission}`;
+    if (caseMap[caseKey]) {
+      // 既存症例の更新処理 (複合キーで特定された症例を更新)
+      updateExistingCase(caseMap[caseKey], c);
     } else {
-      // 新しい症例を追加
-      caseMap[c.id] = createSafeCase(c);
+      // 新しい症例を追加 (複合キーでマップに追加)
+      caseMap[caseKey] = createSafeCase(c);
     }
   }
 
@@ -170,7 +171,14 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
  */
 function updateExistingCase(currentCase: CaseData, newCase: CaseData): void {
   // 退院日が確定した場合（00000000 から具体的な日付に変わった場合）
-  if (newCase.discharge !== '00000000') {
+  // または、より新しい退院日が来た場合 (YYYYMMDD形式なので文字列比較でOK)
+  if (
+    newCase.discharge &&
+    newCase.discharge !== '00000000' &&
+    (!currentCase.discharge ||
+      currentCase.discharge === '00000000' ||
+      newCase.discharge > currentCase.discharge)
+  ) {
     currentCase.discharge = newCase.discharge;
   }
 
