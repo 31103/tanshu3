@@ -1,4 +1,4 @@
-import { OutputSettings } from '../../core/common/types'; // さらに正しいパスに修正
+import { OutputSettings } from '../../core/common/types.ts'; // さらに正しいパスに修正
 
 /**
  * 結果表示クラス

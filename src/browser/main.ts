@@ -4,11 +4,11 @@
  * このファイルは、アプリケーションのエントリーポイントです。
  * 各コンポーネントの初期化と連携を行います。
  */
-import { FileManager, fileManager } from '../ui/components/file-manager'; // FileManager クラスもインポート
-import { ResultViewer } from '../ui/components/result-viewer'; // ResultViewer クラスをインポート (グローバルインスタンスは削除)
-import { notificationSystem } from '../ui/components/notification';
-import { fileProcessor } from '../core/file-processor';
-import { ErrorHandlerOptions } from '../core/common/types'; // types.d.ts 削除に伴いパス変更
+import { FileManager, fileManager } from '../ui/components/file-manager.ts'; // FileManager クラスもインポート
+import { ResultViewer } from '../ui/components/result-viewer.ts'; // ResultViewer クラスをインポート (グローバルインスタンスは削除)
+import { notificationSystem } from '../ui/components/notification.ts';
+import { fileProcessor } from '../core/file-processor.ts';
+import { ErrorHandlerOptions } from '../core/common/types.ts'; // types.d.ts 削除に伴いパス変更
 
 /**
  * アプリケーションクラス

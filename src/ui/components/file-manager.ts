@@ -1,7 +1,7 @@
-import { FileValidationResult } from '../../core/file-processor'; // Import from file-processor
-import { ErrorHandlerOptions } from '../../core/common/types'; // Import from common/types
-import { notificationSystem } from './notification';
-import { validateFiles } from '../../core/validator';
+import { FileValidationResult } from '../../core/file-processor.ts'; // Import from file-processor
+import { ErrorHandlerOptions } from '../../core/common/types.ts'; // Import from common/types
+import { notificationSystem } from './notification.ts';
+import { validateFiles } from '../../core/validator.ts';
 
 /**
  * ファイル管理クラス
