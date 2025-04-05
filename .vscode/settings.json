@@ -1,8 +1,30 @@
 {
+  "deno.enable": true,
+  "deno.lint": true,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.requireConfig": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+  // "prettier.requireConfig": true, // Deno fmt を使うため不要に
+  // "editor.codeActionsOnSave": {
+  //   "source.fixAll.eslint": "explicit" // ESLint は使わなくなるためコメントアウト
+  // },
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
   }
 }

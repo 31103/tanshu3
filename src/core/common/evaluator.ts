@@ -3,8 +3,8 @@
  * このファイルには、短手３該当症例の判定などの評価ロジックを含みます。
  */
 
-import { CaseData, OutputSettings } from './types';
-import { calculateHospitalDays, formatDate } from './utils'; // formatDate をインポート
+import { CaseData, OutputSettings } from './types.ts';
+import { calculateHospitalDays, formatDate } from './utils.ts'; // formatDate をインポート
 import {
   COLONOSCOPY_PROCEDURE_CODES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
@@ -13,7 +13,7 @@ import {
   MAX_HOSPITAL_DAYS,
   PROCEDURE_NAME_MAP,
   TARGET_PROCEDURES,
-} from './constants';
+} from './constants.ts';
 
 /**
  * 短手３該当症例を判定する関数
@@ -102,7 +102,7 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
 
       // 特定加算が含まれているかどうか
       const hasSpecialAddition = c.procedures.some((p) =>
-        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p)
+        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p),
       );
 
       // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
@@ -155,9 +155,8 @@ export function formatResults(
   settings: OutputSettings, // デフォルト値を削除し、必須引数とする
 ): string {
   // 設定に基づいて出力する症例をフィルタリング
-  const filteredCases = settings.outputMode === 'allCases'
-    ? cases
-    : cases.filter((c) => c.isEligible === true);
+  const filteredCases =
+    settings.outputMode === 'allCases' ? cases : cases.filter((c) => c.isEligible === true);
 
   // 症例が存在しない場合
   if (filteredCases.length === 0) {

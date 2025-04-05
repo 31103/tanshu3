@@ -1,8 +1,8 @@
-import { CaseData, OutputSettings } from './common/types'; // OutputSettings をインポート
-import { readFileAsText } from './validator'; // readFileAsText は validator からインポートされる想定
-import { mergeCases, parseEFFile } from './common/parsers';
-import { evaluateCases, formatResults } from './common/evaluator';
-import { DEFAULT_RESULT_HEADER } from './common/constants'; // DEFAULT_RESULT_HEADER をインポート
+import { CaseData, OutputSettings } from './common/types.ts'; // OutputSettings をインポート
+import { readFileAsText } from './validator.ts'; // readFileAsText は validator からインポートされる想定
+import { mergeCases, parseEFFile } from './common/parsers.ts';
+import { evaluateCases, formatResults } from './common/evaluator.ts';
+import { DEFAULT_RESULT_HEADER } from './common/constants.ts'; // DEFAULT_RESULT_HEADER をインポート
 
 /**
  * ファイル検証結果型

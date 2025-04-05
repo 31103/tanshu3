@@ -3,8 +3,8 @@
  * このファイルには、ファイル解析に関連する関数を含みます。
  */
 
-import { CaseData, RawCaseData } from './types';
-import { TARGET_PROCEDURES } from './constants';
+import { CaseData, RawCaseData } from './types.ts';
+import { TARGET_PROCEDURES } from './constants.ts';
 
 /**
  * EFファイルの行からデータを抽出する共通関数

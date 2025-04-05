@@ -4,11 +4,11 @@
  */
 
 // 共通モジュールのエクスポート
-export * from './common/types';
-export * from './common/constants';
-export * from './common/utils';
-export * from './common/parsers';
-export * from './common/evaluator';
+export * from './common/types.ts';
+export * from './common/constants.ts';
+export * from './common/utils.ts';
+export * from './common/parsers.ts';
+export * from './common/evaluator.ts';
 
 // 環境によって適切なアダプターをエクスポート
 // Webpackなどのバンドラーで環境に応じた適切なファイルが選択されるようにする
@@ -16,5 +16,4 @@ export * from './common/evaluator';
 
 // 開発時には両方のアダプターをエクスポートしておく
 // ビルド時に適切なものが選択される
-export * as browserAdapter from './adapters/browser';
-export * as nodeAdapter from './adapters/node';
+export * as browserAdapter from './adapters/browser.ts';

@@ -1,4 +1,4 @@
-import { FileValidationResult } from './file-processor'; // Import from file-processor where it was moved
+import { FileValidationResult } from './file-processor.ts'; // Import from file-processor where it was moved
 
 /**
  * ファイルのバリデーションを実行する関数
