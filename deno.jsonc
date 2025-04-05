@@ -19,7 +19,7 @@
   "compilerOptions": {
     // tsconfig.json から必要な設定を移行 (例: strict, lib)
     "strict": true,
-    "lib": ["dom", "dom.iterable", "esnext"]
+    "lib": ["dom", "dom.iterable", "esnext", "deno.ns"] // deno.ns を追加
   },
   "importMap": "./import_map.json" // importMap を使用する宣言
 }

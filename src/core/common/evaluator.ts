@@ -65,7 +65,23 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
         }
       }
 
-      // 5. 入院期間中に対象手術等に加えて、他の手術を実施していないかチェック
+      // 5. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック (他の手術チェックより先に実施)
+      // 内視鏡的大腸ポリープ・粘膜切除術を実施したかどうか
+      const hasColonoscopy = c.procedures.some((p) => COLONOSCOPY_PROCEDURE_CODES.includes(p));
+
+      // 特定加算が含まれているかどうか
+      const hasSpecialAddition = c.procedures.some((p) =>
+        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p)
+      );
+
+      // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
+      if (hasColonoscopy && hasSpecialAddition) {
+        evaluatedCase.isEligible = false;
+        evaluatedCase.reason = INELIGIBILITY_REASONS.SPECIAL_ADDITION;
+        return evaluatedCase;
+      }
+
+      // 6. 入院期間中に対象手術等に加えて、他の手術を実施していないかチェック
       // 手術コードは通常 '15' で始まるが、診療明細名称に「加算」が含まれるコードは手術ではないため除外
       const surgeryProcedures = c.procedures.filter((p, index) => {
         // 対象手術等に含まれるコードは除外
@@ -93,22 +109,6 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
       if (surgeryProcedures.length > 0) {
         evaluatedCase.isEligible = false;
         evaluatedCase.reason = INELIGIBILITY_REASONS.OTHER_SURGERY;
-        return evaluatedCase;
-      }
-
-      // 6. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック
-      // 内視鏡的大腸ポリープ・粘膜切除術を実施したかどうか
-      const hasColonoscopy = c.procedures.some((p) => COLONOSCOPY_PROCEDURE_CODES.includes(p));
-
-      // 特定加算が含まれているかどうか
-      const hasSpecialAddition = c.procedures.some((p) =>
-        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p),
-      );
-
-      // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
-      if (hasColonoscopy && hasSpecialAddition) {
-        evaluatedCase.isEligible = false;
-        evaluatedCase.reason = INELIGIBILITY_REASONS.SPECIAL_ADDITION;
         return evaluatedCase;
       }
 
@@ -155,8 +155,9 @@ export function formatResults(
   settings: OutputSettings, // デフォルト値を削除し、必須引数とする
 ): string {
   // 設定に基づいて出力する症例をフィルタリング
-  const filteredCases =
-    settings.outputMode === 'allCases' ? cases : cases.filter((c) => c.isEligible === true);
+  const filteredCases = settings.outputMode === 'allCases'
+    ? cases
+    : cases.filter((c) => c.isEligible === true);
 
   // 症例が存在しない場合
   if (filteredCases.length === 0) {
