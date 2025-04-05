@@ -4,9 +4,9 @@
  * このファイルは、アプリケーションのエントリーポイントです。
  * 各コンポーネントの初期化と連携を行います。
  */
-import { FileManager, fileManager } from '../ui/components/file-manager.ts'; // FileManager クラスもインポート
+import { FileManager } from '../ui/components/file-manager.ts'; // fileManager シングルトンは使わない
 import { ResultViewer } from '../ui/components/result-viewer.ts'; // ResultViewer クラスをインポート (グローバルインスタンスは削除)
-import { notificationSystem } from '../ui/components/notification.ts';
+import { getNotificationSystem } from '../ui/components/notification.ts'; // getNotificationSystem をインポート
 import { fileProcessor } from '../core/file-processor.ts';
 import { ErrorHandlerOptions } from '../core/common/types.ts'; // types.d.ts 削除に伴いパス変更
 
@@ -23,8 +23,9 @@ class Application {
    * アプリケーションクラスのコンストラクタ
    */
   constructor() {
-    // インスタンスの作成
-    this.fileManagerInstance = fileManager.instance; // 既存のシングルトンパターンを利用
+    // インスタンスの作成 (依存性注入)
+    const notificationInstance = getNotificationSystem(); // 先にインスタンスを取得
+    this.fileManagerInstance = new FileManager(notificationInstance); // FileManager に注入
     this.resultViewerInstance = new ResultViewer(); // ResultViewer をインスタンス化
   }
 
@@ -109,7 +110,7 @@ class Application {
       this.resultViewerInstance.displayResult(resultText);
 
       // 成功通知
-      notificationSystem.showToast('success', '処理完了', '処理が正常に完了しました', 5000, 2);
+      getNotificationSystem().showToast('success', '処理完了', '処理が正常に完了しました', 5000, 2); // ゲッターを使用
     } catch (error) {
       this.handleError(error instanceof Error ? error : new Error('不明なエラー'), 'processing', {
         recoveryAction: {
@@ -173,7 +174,7 @@ class Application {
       : message;
 
     // 通知を表示
-    notificationSystem.showToast('error', title, fullMessage, 8000, priority);
+    getNotificationSystem().showToast('error', title, fullMessage, 8000, priority); // ゲッターを使用
 
     // エラー回復のためのアクションを提供
     if (
@@ -189,7 +190,7 @@ class Application {
       };
 
       setTimeout(() => {
-        notificationSystem.showRecoveryToast(recoveryAction);
+        getNotificationSystem().showRecoveryToast(recoveryAction); // ゲッターを使用
       }, 1000);
     }
 

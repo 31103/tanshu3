@@ -448,5 +448,43 @@ export class NotificationSystem {
   }
 }
 
-// グローバルでアクセス可能なインスタンスを作成
-export const notificationSystem = new NotificationSystem();
+// グローバルインスタンス（遅延初期化）
+let notificationSystemInstance: NotificationSystem | null = null;
+
+/**
+ * NotificationSystem のシングルトンインスタンスを取得する関数
+ * @returns NotificationSystem のインスタンス
+ */
+export function getNotificationSystem(): NotificationSystem {
+  if (!notificationSystemInstance) {
+    // DOMが準備できているか確認してからインスタンス化
+    if (typeof document === 'undefined' || document.readyState === 'loading') {
+      // DOM準備前に呼ばれた場合のエラーハンドリング（テスト環境などを考慮）
+      // console.warn('NotificationSystem accessed before DOM ready.');
+      // 仮のコンテナIDで初期化するか、エラーを投げるか検討。
+      // ここでは、テスト環境で document が未定義の場合を考慮し、
+      // documentアクセスを避けるか、モックを期待する。
+      // 実際のブラウザ環境では DOMContentLoaded 後に呼ばれる想定。
+      // 簡単のため、ここではインスタンス化を試みる。
+      // テスト側で document を適切にモックする必要がある。
+      try {
+        notificationSystemInstance = new NotificationSystem();
+      } catch (e) {
+        // document が利用できない場合のエラー処理
+        console.error('Failed to initialize NotificationSystem likely due to missing document.', e);
+        // 代替実装やエラーを投げるなど、適切な処理を追加
+        throw new Error('NotificationSystem cannot be initialized without a document.');
+      }
+    } else {
+      notificationSystemInstance = new NotificationSystem();
+    }
+  }
+  if (!notificationSystemInstance) {
+    // 上記 try-catch で初期化失敗した場合のフォールバック
+    throw new Error('Failed to get NotificationSystem instance.');
+  }
+  return notificationSystemInstance;
+}
+
+// notificationSystem を直接エクスポートする代わりにゲッターを使用
+// export const notificationSystem = getNotificationSystem(); // これは即時実行されるためNG

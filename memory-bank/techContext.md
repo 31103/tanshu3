@@ -7,7 +7,7 @@ _このドキュメントは、プロジェクトで使用されている技術�
 - **言語:** TypeScript (v5.7.3 - Deno内蔵), JavaScript (ES Modules), HTML5, CSS3
 - **ランタイム:** Deno (v2.2.7)
 - **フレームワーク/ライブラリ:** なし (Vanilla TypeScript/JavaScript)
-- **テスト:** Deno Test (Deno内蔵)
+- **テスト:** Deno Test (Deno内蔵), deno-dom (UIテスト用)
 - **ビルド/バンドル:** Deno Bundle (検討中)
 - **リンティング:** Deno Lint (Deno内蔵)
 - **フォーマット:** Deno Format (Deno内蔵)
@@ -18,12 +18,12 @@ _このドキュメントは、プロジェクトで使用されている技術�
 
 1. **前提条件:** Deno (v2.2.7 以上推奨)
 2. **リポジトリクローン:** `git clone [リポジトリURL]`
-3. **依存関係:** Deno は URL インポートを使用するため、`npm install` は不要。初回実行時に依存関係が自動でダウンロード・キャッシュされる。
-4. **開発モード (監視 & バンドル):** `deno task dev` (※フェーズ7で定義予定。現在は未実装)
-5. **手動バンドル:** `deno task bundle` (※フェーズ7で定義予定。現在は未実装)
-6. **テスト実行:** `deno task test` (※フェーズ7で定義予定。現在は `deno test --allow-read src/core/` で実行可能)
+3. **依存関係:** Deno は URL インポートを使用するため、`npm install` は不要。初回実行時や `deno cache` コマンドで依存関係がダウンロード・キャッシュされる (`deno.lock` ファイル生成)。
+4. **開発モード (監視 & バンドル):** `deno task dev` (※フェーズ7で定義予定)
+5. **手動バンドル:** `deno task bundle` (※フェーズ7で定義予定)
+6. **テスト実行:** `deno task test` (※フェーズ7で定義予定)。現在は個別に `deno test --allow-read [ファイル/ディレクトリ]` で実行。UIテスト (`file-manager_test.ts`) は現在失敗中。
 7. **リンティング/フォーマット:**
-   - `deno task lint` (※フェーズ7で定義予定。現在は `deno lint` で実行可能)
+   - `deno task lint` (※フェーズ7で定義予定)。現在は `deno lint` で実行可能。
    - `deno task fmt` (※フェーズ7で定義予定。現在は `deno fmt` で実行可能)
 8. **アプリケーション実行:** `public/index.html` を Web ブラウザで開く (`file://` プロトコル)。(※フェーズ7完了までは、`deno bundle` で生成された JS を読み込む想定)
 9. **コマンド実行環境に関する注意:** システム情報 (`environment_details`) ではデフォルトシェルが `cmd.exe` と表示される場合がありますが、実際のコマンド実行環境は **PowerShell (`pwsh.exe`)** である可能性が高いです。`execute_command` ツールを使用する際は、PowerShell 構文でコマンドを記述してください (例: `rmdir /s /q` ではなく `Remove-Item -Recurse -Force`)。
@@ -42,8 +42,9 @@ Deno 環境では、`npm install` のような明示的なインストールス�
 
 - **Deno Standard Library (`deno.land/std`):**
   - `assert`: テスト用アサーション関数。
-  - (今後追加される可能性あり)
-- **(UIテスト用検討中)** `deno-dom` (`deno.land/x/deno_dom`): Deno Test での DOM 環境シミュレーション用。
+  - `testing/mock`: `spy` などのテスト用モック関数。
+- **Deno Third Party Modules (`deno.land/x`):**
+  - `deno-dom`: Deno Test での DOM 環境シミュレーション用。
 
 ## 5. ツール利用パターン
 
@@ -57,9 +58,9 @@ Deno 環境では、`npm install` のような明示的なインストールス�
   - 規約: `deno.jsonc` の `fmt.options` で設定 (行長100, インデント2スペース, シングルクォート, proseWrap: preserve など)。VS Code と連携済み。
 - **テスト (Deno Test):**
   - 設定ファイル: `deno.jsonc` の `test` セクション (今後設定追加の可能性あり)
-  - 実行: `deno test [対象ファイル/ディレクトリ]` (または `deno task test`)。必要な権限 (例: `--allow-read`) を付与。
+  - 実行: `deno test --allow-read [対象ファイル/ディレクトリ]` (または `deno task test`)。
   - 対象: `*_test.ts` または `*.test.ts` という命名規則のファイル。
-  - 環境: Deno ネイティブ環境。DOM が必要なテストは `deno-dom` を利用検討。
+  - 環境: Deno ネイティブ環境。DOM が必要なテストは `deno-dom` を使用。
   - カバレッジ: `deno coverage coverage/` でレポート生成可能 (要 `--coverage` フラグ付きテスト実行)。
 - **ビルド/バンドル (Deno Bundle - 検討中):**
   - 設定: `deno.jsonc` の `tasks` セクションで定義予定。

@@ -1,6 +1,6 @@
-import { FileValidationResult } from '../../core/file-processor.ts'; // Import from file-processor
-import { ErrorHandlerOptions } from '../../core/common/types.ts'; // Import from common/types
-import { notificationSystem } from './notification.ts';
+import { FileValidationResult } from '../../core/file-processor.ts';
+import { ErrorHandlerOptions } from '../../core/common/types.ts';
+import { getNotificationSystem, NotificationSystem } from './notification.ts'; // NotificationSystem 型もインポート
 import { validateFiles } from '../../core/validator.ts';
 
 /**
@@ -15,11 +15,15 @@ export class FileManager {
   private dropArea: HTMLElement;
   private selectedFiles: File[] = [];
   private validFiles: number = 0;
+  private notification: NotificationSystem; // 通知システムへの参照を追加
 
   /**
    * ファイル管理クラスのコンストラクタ
+   * @param notificationSystemInstance - 使用する通知システムのインスタンス
    */
-  constructor() {
+  constructor(notificationSystemInstance: NotificationSystem) { // 依存性注入
+    this.notification = notificationSystemInstance; // 注入されたインスタンスを使用
+
     // DOM要素の取得
     this.fileInput = document.getElementById('fileInput') as HTMLInputElement;
     this.fileInfoArea = document.getElementById('fileInfoArea') as HTMLElement;
@@ -171,7 +175,7 @@ export class FileManager {
           handler: () => {
             this.selectedFiles = [...textFiles]; // Keep only the newly added (duplicate) files after clearing
             this.updateFileInfo();
-            notificationSystem.showToast(
+            this.notification.showToast( // 注入されたインスタンスを使用
               'success',
               'ファイル更新完了',
               `${textFiles.length}ファイルを追加しました`,
@@ -181,7 +185,7 @@ export class FileManager {
         },
       });
     } else if (duplicateCount > 0) {
-      notificationSystem.showToast(
+      this.notification.showToast( // 注入されたインスタンスを使用
         'warning',
         'ファイル重複',
         `${newFiles.length}ファイルを追加しました (${duplicateCount}ファイルは重複)`, // Show count of actually added files
@@ -190,7 +194,7 @@ export class FileManager {
       );
     } else if (newFiles.length > 0) {
       // Only show success if new files were actually added
-      notificationSystem.showToast(
+      this.notification.showToast( // 注入されたインスタンスを使用
         'success',
         'ファイル追加完了',
         `${newFiles.length}ファイルを追加しました`,
@@ -221,7 +225,7 @@ export class FileManager {
     const event = new CustomEvent('filesClear');
     document.dispatchEvent(event);
 
-    notificationSystem.showToast('info', 'クリア完了', 'ファイル選択をクリアしました');
+    this.notification.showToast('info', 'クリア完了', 'ファイル選択をクリアしました'); // 注入されたインスタンスを使用
   }
 
   /**
@@ -234,7 +238,7 @@ export class FileManager {
 
     // ファイルが実際に削除されたか確認
     if (this.selectedFiles.length < initialLength) {
-      notificationSystem.showToast('info', 'ファイル削除', `${fileName} を削除しました`);
+      this.notification.showToast('info', 'ファイル削除', `${fileName} を削除しました`); // 注入されたインスタンスを使用
       this.updateFileInfo(); // UIを更新
       this.validateSelectedFiles(); // 再検証して実行ボタンの状態を更新
     }
@@ -411,7 +415,7 @@ export class FileManager {
       : message;
 
     // 通知を表示
-    notificationSystem.showToast('error', title, fullMessage, 8000, priority);
+    this.notification.showToast('error', title, fullMessage, 8000, priority); // 注入されたインスタンスを使用
 
     // エラー回復のためのアクションを提供
     if (
@@ -427,7 +431,7 @@ export class FileManager {
       };
 
       setTimeout(() => {
-        notificationSystem.showRecoveryToast(recoveryAction);
+        this.notification.showRecoveryToast(recoveryAction); // 注入されたインスタンスを使用
       }, 1000);
     }
 
@@ -468,7 +472,8 @@ export function getFileManager(): FileManager {
     if (document.readyState === 'loading') {
       throw new Error('DOM is not ready. Call this function after DOMContentLoaded');
     }
-    fileManagerInstance = new FileManager();
+    // 依存性を注入してインスタンス化
+    fileManagerInstance = new FileManager(getNotificationSystem());
   }
   return fileManagerInstance;
 }
