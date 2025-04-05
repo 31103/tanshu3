@@ -96,15 +96,33 @@
   - 非同期処理（タイマーなど）に依存するテストは特に注意が必要で、タイマーリーク検出に対応するよう設計を変更すべき
   - テスト対象の実装によっては、テスト用のサブクラス（`TestableXXX`）を作成して内部メソッドにアクセスする方法が効果的
 
-### フェーズ 6: 統合テストの移行 (未着手)
+### フェーズ 6: 統合テストの移行 (完了)
 
 - **目的:** アプリケーション全体の流れを確認する統合テストを Deno Test に移行する。
 - **作業内容:**
-  1. テストファイルリネーム/移動: `test/jest/integration/` 内のテストを `test/integration/` など適切な場所に移動/コピー。
-  2. テストコード書き換え: Deno Test API に書き換え。
-  3. テスト実行: `deno test test/integration/**/*.test.ts` を実行し、テストがパスすることを確認。
-- **注意点:**
-  - 統合テストは複数のモジュールにまたがるため、依存関係の解決やモックの設定が複雑になる場合がある。
+  1. **テストディレクトリ作成:** `test/integration/` ディレクトリを作成。(**完了**)
+  2. **テストファイル移行:**
+     - `test/jest/integration/module-integration.test.ts` を `test/integration/module-integration_test.ts` に移行。(**完了**)
+     - `test/jest/integration/data-flow.test.ts` を `test/integration/data-flow_test.ts` に移行。(**完了**)
+  3. **テストコード書き換え (module-integration_test.ts):**
+     - Jest のテスト構文 (`describe`/`test`/`expect`) を Deno Test 構文 (`Deno.test`/`assert`) に書き換え。(**完了**)
+     - インポートパスに `.ts` 拡張子を追加。(**完了**)
+     - 必要な標準アサーションモジュール (`assertEquals`, `assertNotEquals`, `assert`) をインポート。(**完了**)
+     - テスト実行で発生したエラーを修正。(**完了**)
+  4. **テストコード書き換え (data-flow_test.ts):**
+     - Jest のテスト構文を Deno Test 構文に書き換え。(**完了**)
+     - インポートパスに `.ts` 拡張子を追加。(**完了**)
+     - Node.js の `fs`, `path`, `url` モジュールを Deno の同等モジュール (`Deno.readTextFile()`, `path` モジュール) に置き換え。(**完了**)
+     - `beforeAll` ブロックを、各テスト内でのファイル読み込みに変更。(**完了**)
+     - Deno のファイル読み込み権限フラグ (`--allow-read`) の追加。(**完了**)
+     - テスト実行で発生したエラーを修正。(**完了**)
+  5. **テスト実行:**
+     - `deno test --allow-read test/integration/` を実行し、統合テスト全件 (14件) がパスすることを確認。(**完了**)
+- **教訓と知見:**
+  - ファイル操作は Node.js と Deno で大きく異なる。特に `fs.readFileSync()` → `Deno.readTextFile()` (非同期) への変換が必要。
+  - ファイルパス解決方法もDeno仕様に合わせる必要がある (`import.meta.url` と `fromFileUrl` の組み合わせ)。
+  - Denoのセキュリティモデルに従い、ファイルアクセスには明示的な `--allow-read` 権限が必要。
+  - Jest の global な関数 (`expect`, `describe` など) は Deno では明示的なインポートが必要。
 
 ### フェーズ 7: ビルドと実行方法の確立 (未着手)
 

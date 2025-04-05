@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **Deno 移行作業中 (フェーズ5完了、フェーズ6準備中)。**
-- **直近のマイルストーン:** Deno 移行フェーズ5の完了 (UI レイヤーテスト移行 - すべてのUIコンポーネントテスト完了)。
-- **現在のタスク:** Deno 移行フェーズ6「統合テストの移行」の準備。
+- **全体進捗:** **Deno 移行作業中 (フェーズ6完了、フェーズ7準備中)。**
+- **直近のマイルストーン:** Deno 移行フェーズ6の完了 (統合テスト移行 - 全ての統合テスト完了)。
+- **現在のタスク:** Deno 移行フェーズ7「ビルド/実行方法の確立」の準備。
 
 ## 2. 完了した機能 (What Works)
 
@@ -47,7 +47,7 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **テスト:** Jest -> Deno Test (`deno.jsonc` で設定)
     - **ビルド:** Parcel -> `deno bundle` (検討中)
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
-- **Deno 移行 (フェーズ1-5 完了):**
+- **Deno 移行 (フェーズ1-6 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
   - **フェーズ2:** コアロジック依存関係移行 (インポートパス修正、`node.ts` 削除)。
   - **フェーズ3:** コアロジックテスト移行 (Jest -> Deno Test)。
@@ -59,6 +59,13 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - クリップボードAPIやURL生成などの外部APIの適切なモック化
     - タイマー処理のモック化とクリーンアップ
     - `deno test --allow-read src/ui/components/`で全テスト（20件）のパスを確認
+  - **フェーズ6:** 統合テスト移行
+    - `test/integration/`ディレクトリの作成
+    - `module-integration_test.ts`と`data-flow_test.ts`の移行
+    - JestからDeno Testへのテスト構文変換
+    - Node.jsのファイル操作APIをDenoの同等機能に置き換え
+    - テスト実行で発生したエラーの修正
+    - `deno test --allow-read test/integration/`で全テスト（14件）のパスを確認
 - **リファクタリング:**
   - `NotificationSystem` 遅延初期化、`FileManager` への DI 導入。
   - (旧) ESLint v9 へのアップデート。
@@ -76,12 +83,14 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `docs/deno_migration_plan.md` に基づく。
 
-- **[未着手] Deno 移行 (フェーズ6):** 統合テストの移行。
-  - `test/jest/integration/` 内のテストを `test/integration/` に移動/コピー。
-  - テストコードを Deno Test API に書き換え。
-  - 複数モジュールにまたがる依存関係の解決とモック設定の準備。
 - **[未着手] Deno 移行 (フェーズ7):** ビルド/実行方法の確立 (`deno bundle` 検討)。
+  - Parcel関連の設定を削除
+  - `deno.jsonc`の`tasks`セクションを定義・拡充
+  - `file://`プロトコルでの動作確認
 - **[未着手] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
+  - Node.js関連ファイルの削除
+  - `README.md`の更新
+  - Memory Bankの最終更新
 - **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所。
 - **[保留] テストの充実:** UI レイヤーなど。
 - **[保留] エラーハンドリング強化:** 全体見直し。
@@ -105,6 +114,7 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
 
+- **[2025-04-05]:** Deno 移行フェーズ6完了。`module-integration_test.ts`と`data-flow_test.ts`の統合テストをDeno Test環境に移行し、14件すべてのテストがパス。
 - **[2025-04-05]:** Deno 移行フェーズ5完了。`file-manager_test.ts`、`notification_test.ts`と`result-viewer_test.ts`のすべてのテストが成功。テスト実行で20件すべてのテストがパス。
 - **[2025-04-05]:** Deno 移行フェーズ4完了 (UIレイヤー依存関係移行)。
 - **[2025-04-05]:** Deno 移行フェーズ3完了 (コアロジックテスト移行)。

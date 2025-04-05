@@ -56,11 +56,11 @@ function setupClipboardMocks(shouldSucceed = true) {
       }
     },
   };
-  
+
   (globalThis as any).navigator = {
     clipboard: mockClipboard,
   };
-  
+
   return mockClipboard;
 }
 
@@ -72,7 +72,7 @@ class TestResultViewer extends ResultViewer {
     // 親のsetResultViewを呼ぶ前にプロパティを修正
     const textResultView = document.getElementById('textResultView') as HTMLElement;
     const tableResultView = document.getElementById('tableResultView') as HTMLElement;
-    
+
     // オリジナルの処理をオーバーライド
     if (viewMode === 'text') {
       textResultView.setAttribute('style', 'display: block;');
@@ -89,18 +89,18 @@ class TestResultViewer extends ResultViewer {
       document.getElementById('textViewButton')?.setAttribute('aria-pressed', 'false');
       document.getElementById('tableViewButton')?.setAttribute('aria-pressed', 'true');
     }
-    
+
     // 現在のビューを内部変数に設定（privateプロパティへの直接アクセスの代わり）
     (this as any).currentView = viewMode;
   }
-  
+
   // プライベートメソッドをテスト用に公開（型キャストでアクセス）
   public exposedCopyToClipboard(): Promise<void> {
     const textToCopy = (document.getElementById('resultTextarea') as HTMLTextAreaElement).value;
     if (!textToCopy) return Promise.resolve();
-    
+
     const copyMessage = document.getElementById('copyMessage') as HTMLElement;
-    
+
     try {
       // navigator.clipboardを直接使用（テスト環境ではモック化されている）
       return navigator.clipboard.writeText(textToCopy)
@@ -141,26 +141,29 @@ class TestResultViewer extends ResultViewer {
     // @ts-ignore: privateメソッドにアクセス
     this.updateDownloadLink(resultText);
   }
-  
+
   // テスト用のダミーgetOutputSettingsメソッド（deno-dom環境の制限に対応）
-  override getOutputSettings(): { outputMode: 'eligibleOnly' | 'allCases'; dateFormat: 'yyyymmdd' | 'yyyy/mm/dd' } {
+  override getOutputSettings(): {
+    outputMode: 'eligibleOnly' | 'allCases';
+    dateFormat: 'yyyymmdd' | 'yyyy/mm/dd';
+  } {
     const eligibleOnlyRadio = document.getElementById('eligibleOnly') as HTMLInputElement;
     const dateFormatRadios = document.querySelectorAll(
-      'input[name="dateFormat"]'
+      'input[name="dateFormat"]',
     ) as NodeListOf<HTMLInputElement>;
 
     // 直接要素の状態を確認
     const outputMode = eligibleOnlyRadio?.checked ? 'eligibleOnly' : 'allCases';
-    
+
     // テスト内で直接要素の状態をチェック
     let dateFormat: 'yyyymmdd' | 'yyyy/mm/dd' = 'yyyymmdd';
     const yyyymmddRadio = document.getElementById('dateFormat_yyyymmdd') as HTMLInputElement;
     const yyyyslashRadio = document.getElementById('dateFormat_yyyy/mm/dd') as HTMLInputElement;
-    
+
     if (yyyyslashRadio && yyyyslashRadio.checked) {
       dateFormat = 'yyyy/mm/dd';
     }
-    
+
     return {
       outputMode,
       dateFormat,
@@ -210,7 +213,7 @@ function setupTestEnvironment(): {
 } {
   // DOMをセットアップ
   const document = setupMinimalDOM();
-  
+
   // 各種モックのセットアップ
   setupTimerMocks();
   setupURLMocks();
@@ -400,13 +403,13 @@ Deno.test('ResultViewer - クリップボードコピー成功時のUI更新', a
   // 単純な成功するモックを設定
   let wasCalled = false;
   let calledWithText = '';
-  
+
   (navigator.clipboard as any).writeText = (text: string) => {
     wasCalled = true;
     calledWithText = text;
     return Promise.resolve();
   };
-  
+
   const resultTextarea = document.getElementById('resultTextarea') as HTMLTextAreaElement;
   const copyMessage = document.getElementById('copyMessage');
 
@@ -418,10 +421,16 @@ Deno.test('ResultViewer - クリップボードコピー成功時のUI更新', a
 
   // クリップボードAPIが呼び出されたことを確認
   assert(wasCalled, 'クリップボードAPIが呼び出されていない');
-  assert(calledWithText === 'テストデータ', `期待するテキスト "テストデータ" と実際の値 "${calledWithText}" が一致しない`);
+  assert(
+    calledWithText === 'テストデータ',
+    `期待するテキスト "テストデータ" と実際の値 "${calledWithText}" が一致しない`,
+  );
 
   // メッセージ確認
-  assert(copyMessage.textContent === 'コピーしました！', `期待するメッセージと実際の値 "${copyMessage.textContent}" が一致しない`);
+  assert(
+    copyMessage.textContent === 'コピーしました！',
+    `期待するメッセージと実際の値 "${copyMessage.textContent}" が一致しない`,
+  );
   assert(copyMessage.classList.contains('visible'));
   assertFalse(copyMessage.classList.contains('error'));
 
@@ -434,12 +443,12 @@ Deno.test('ResultViewer - クリップボードコピー失敗時のUI更新', a
 
   // 失敗するクリップボードモックを設定
   let wasAttempted = false;
-  
+
   (navigator.clipboard as any).writeText = (text: string) => {
     wasAttempted = true;
     return Promise.reject(new Error('Mock clipboard failure'));
   };
-  
+
   const resultTextarea = document.getElementById('resultTextarea') as HTMLTextAreaElement;
   const copyMessage = document.getElementById('copyMessage');
 
@@ -457,7 +466,10 @@ Deno.test('ResultViewer - クリップボードコピー失敗時のUI更新', a
   assert(wasAttempted, 'クリップボードAPIの呼び出しが試みられていない');
 
   // メッセージ確認
-  assert(copyMessage.textContent === 'コピーに失敗しました', `期待するエラーメッセージと実際の値 "${copyMessage.textContent}" が一致しない`);
+  assert(
+    copyMessage.textContent === 'コピーに失敗しました',
+    `期待するエラーメッセージと実際の値 "${copyMessage.textContent}" が一致しない`,
+  );
   assert(copyMessage.classList.contains('visible'));
   assert(copyMessage.classList.contains('error'));
 
@@ -528,9 +540,11 @@ Deno.test('ResultViewer - getOutputSettingsは現在の設定を返す', () => {
 
   eligibleOnlyRadio.checked = true;
   dateFormatSlashRadio.checked = true;
-  
+
   // YYYY/MM/DD形式のラジオボタンにチェックが移ったことを確認
-  const dateFormatYYYYMMDDRadio = document.getElementById('dateFormat_yyyymmdd') as HTMLInputElement;
+  const dateFormatYYYYMMDDRadio = document.getElementById(
+    'dateFormat_yyyymmdd',
+  ) as HTMLInputElement;
   dateFormatYYYYMMDDRadio.checked = false;
 
   // 変更後の設定を確認 - 直接チェック属性を確認
