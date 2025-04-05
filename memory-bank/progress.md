@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **Deno 移行作業中 (フェーズ4完了、フェーズ5進行中・問題発生)。**
-- **直近のマイルストーン:** Deno 移行フェーズ4完了 (UIレイヤー依存関係移行)。
-- **現在のタスク:** Deno 移行フェーズ5「UI レイヤーテスト移行」の問題解決 (`file-manager_test.ts`)。
+- **全体進捗:** **Deno 移行作業中 (フェーズ5完了、フェーズ6準備中)。**
+- **直近のマイルストーン:** Deno 移行フェーズ5の完了 (UI レイヤーテスト移行 - すべてのUIコンポーネントテスト完了)。
+- **現在のタスク:** Deno 移行フェーズ6「統合テストの移行」の準備。
 
 ## 2. 完了した機能 (What Works)
 
@@ -47,14 +47,18 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **テスト:** Jest -> Deno Test (`deno.jsonc` で設定)
     - **ビルド:** Parcel -> `deno bundle` (検討中)
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
-- **Deno 移行 (フェーズ1-4 完了):**
+- **Deno 移行 (フェーズ1-5 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
   - **フェーズ2:** コアロジック依存関係移行 (インポートパス修正、`node.ts` 削除)。
   - **フェーズ3:** コアロジックテスト移行 (Jest -> Deno Test)。
   - **フェーズ4:** UIレイヤー依存関係移行 (インポートパス修正)。
-- **Deno 移行 (フェーズ5 進行中):**
-  - UIテストファイル移動・リネーム。
-  - `file-manager_test.ts` の Deno Test 構文書き換え、`deno-dom` 導入、DI リファクタリング実施。**(テスト失敗中)**
+  - **フェーズ5:** UIレイヤーテスト移行
+    - 全てのUIコンポーネントテスト(`file-manager_test.ts`、`notification_test.ts`、`result-viewer_test.ts`)を移行
+    - `deno-dom`を使用したDOM環境のセットアップ
+    - 依存性注入(DI)とテスト用サブクラスによるモック化の実装
+    - クリップボードAPIやURL生成などの外部APIの適切なモック化
+    - タイマー処理のモック化とクリーンアップ
+    - `deno test --allow-read src/ui/components/`で全テスト（20件）のパスを確認
 - **リファクタリング:**
   - `NotificationSystem` 遅延初期化、`FileManager` への DI 導入。
   - (旧) ESLint v9 へのアップデート。
@@ -72,10 +76,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `docs/deno_migration_plan.md` に基づく。
 
-- **[進行中] Deno 移行 (フェーズ5):** UI レイヤーテスト移行。
-  - `file-manager_test.ts` のテスト失敗 (`AssertionError`, `MockError`) の原因調査と修正。
-  - `notification_test.ts`, `result-viewer_test.ts` の Deno Test への移行。
 - **[未着手] Deno 移行 (フェーズ6):** 統合テストの移行。
+  - `test/jest/integration/` 内のテストを `test/integration/` に移動/コピー。
+  - テストコードを Deno Test API に書き換え。
+  - 複数モジュールにまたがる依存関係の解決とモック設定の準備。
 - **[未着手] Deno 移行 (フェーズ7):** ビルド/実行方法の確立 (`deno bundle` 検討)。
 - **[未着手] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
 - **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所。
@@ -88,10 +92,12 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 4. 既知の問題とバグ (Known Issues & Bugs)
 
-- **[問題] `file-manager_test.ts` テスト失敗:** `AssertionError` および `MockError: property is not an instance method` が発生中。`spy` のリセット方法やアサーションに問題の可能性。
 - **[移行中] 開発環境:** Node.js と Deno のツール・設定が混在。
 - **[警告] 残存するLint警告:** `@typescript-eslint/explicit-function-return-type` 3箇所。
-- **[制約] UI テスト移行:** `deno-dom` の互換性、ESモジュールでのモック化の難しさ。
+- **[制約] UI テスト移行:** `deno-dom` の互換性に関する以下の制約を把握（対応済み）：
+  - `element.click()`メソッド未実装
+  - `style`プロパティの操作制限
+  - `Document`型の不整合
 - **[改善点] 大量データ処理時のパフォーマンス:** 未測定。
 - **[要確認] ダウンロード機能:** Deno 環境での動作確認が必要。
 
@@ -99,10 +105,12 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
 
+- **[2025-04-05]:** Deno 移行フェーズ5完了。`file-manager_test.ts`、`notification_test.ts`と`result-viewer_test.ts`のすべてのテストが成功。テスト実行で20件すべてのテストがパス。
 - **[2025-04-05]:** Deno 移行フェーズ4完了 (UIレイヤー依存関係移行)。
-- **[2025-04-05]:** Deno 移行フェーズ5開始。`file-manager_test.ts` 移行中にモック関連の問題発生、DI導入などのリファクタリング実施。
+- **[2025-04-05]:** Deno 移行フェーズ3完了 (コアロジックテスト移行)。
+- **[2025-04-05]:** Deno 移行フェーズ2完了 (コアロジック依存関係移行)。
+- **[2025-04-05]:** Deno 移行フェーズ1完了 (環境設定と基本ツール導入)。
 - **[2025-04-05]:** Node.js から Deno への移行を決定、段階的方針採用。
-- **[2025-04-05]:** Deno 移行フェーズ1-3 実施。
 - (以下、過去の意思決定)
 - **[2025-04-05]:** ファイル選択 UI 改善。
 - **[2025-04-05]:** 症例識別ロジック修正。

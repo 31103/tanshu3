@@ -57,7 +57,7 @@
   2. `deno check src/ui/**/*.ts src/browser/**/*.ts` で型エラーがないことを確認。
 - **コミット:** `c823d2e`
 
-### フェーズ 5: UI レイヤー (`src/ui`, `src/browser`) のテスト移行 (進行中)
+### フェーズ 5: UI レイヤー (`src/ui`, `src/browser`) のテスト移行 (完了)
 
 - **目的:** UI コンポーネントのテストを Deno Test に移行する。DOM 環境の再現が課題。
 - **作業内容:**
@@ -65,21 +65,36 @@
   2. **テストコード書き換え (`file-manager_test.ts`):**
      - Jest 構文を Deno Test 構文に書き換え。(**完了**)
      - `deno-dom` を使用して DOM 環境をセットアップ。(**完了**)
-     - `notificationSystem` のモック化で問題発生 (`document is not defined` エラー)。(**発生**)
-     - `NotificationSystem` を遅延初期化、`FileManager` を依存性注入 (DI) を使うようにリファクタリング。(**実施**)
-     - テスト内でモジュール関数 (`getNotificationSystem`) を直接上書きしようとして `TypeError: Cannot assign to read only property` エラー発生。(**発生**)
-     - DI を利用してテスト時にモック (`mockNotificationSystem`) を `FileManager` コンストラクタに渡すように修正。(**実施**)
-     - `spy` した関数の `calls` プロパティに関する型エラーが発生。`any` キャストで回避。(**実施**)
-     - `deno-dom` の `HTMLDocument` と標準 `Document` の型不整合エラーが発生。`setupDOM` とラッパー関数の型定義を `any` に変更して回避。(**実施**)
-     - `deno test` で `file-manager_test.ts` がパスすることを確認。(**未完了 - 再度テスト実行が必要**)
-  3. **テストコード書き換え (残り):** `notification_test.ts`, `result-viewer_test.ts` を同様に Deno Test API に書き換え、DOM 環境とモックを設定する。
-  4. **テスト実行:** `deno test src/ui/components/` を実行し、テストがパスすることを確認。
-- **注意点:**
-  - `deno-dom` は `jsdom` と完全互換ではないため、テストコードの調整が必要になる可能性が高い。
-  - UI テストの移行は最も困難な部分になる可能性がある。
-  - ESモジュールの特性上、インポートした関数の動的な上書きによるモック化は困難な場合がある。依存性注入 (DI) の導入や、テスト対象の設計見直しが必要になることがある。
-  - `deno-dom` で作成した `document` は `globalThis` に手動で設定する必要がある。テスト後のクリーンアップも必要。
-  - Deno の `testing/mock` の `spy` でモック化した関数の呼び出し回数は `spy.calls.length` で取得する。型エラーが発生する場合は `any` キャストが必要な場合がある。
+     - `notificationSystem` のモック化で問題発生 (`document is not defined` エラー)。(**解決済**)
+     - `NotificationSystem` を遅延初期化、`FileManager` を依存性注入 (DI) を使うようにリファクタリング。(**完了**)
+     - テスト内でモジュール関数 (`getNotificationSystem`) を直接上書きしようとして `TypeError: Cannot assign to read only property` エラー発生。(**解決済**)
+     - DI を利用してテスト時にモック (`mockNotificationSystem`) を `FileManager` コンストラクタに渡すように修正。(**完了**)
+     - `spy` した関数の `calls` プロパティに関する型エラーが発生。`deno test`環境では`spy.calls = []`が使用できない問題が発生。(**解決済**)
+     - `deno-dom` の `HTMLDocument` と標準 `Document` の型不整合エラーが発生。`setupDOM` とラッパー関数の型定義を `any` に変更して回避。(**完了**)
+     - `deno test` で `file-manager_test.ts` がパスすることを確認。(**完了**)
+  3. **テストコード書き換え (`notification_test.ts`):**
+     - Jest 構文を Deno Test 構文に書き換え。(**完了**)
+     - `deno-dom` を使用して DOM 環境をセットアップ。(**完了**)
+     - タイマー処理（`setTimeout`）によるリークの問題が発生。(**解決済**)
+     - DOM要素の`style.opacity`などのスタイル操作がdeno-dom環境で動作しない問題に対応。(**解決済**)
+     - モンキーパッチを使用してタイマー処理を回避する方法に変更。(**完了**)
+     - `deno test` で `notification_test.ts` がパスすることを確認。(**完了**)
+  4. **テストコード書き換え (`result-viewer_test.ts`):**
+     - Jest 構文を Deno Test 構文に書き換え。(**完了**)
+     - `deno-dom` を使用して DOM 環境をセットアップ。(**完了**)
+     - クリップボード操作、URL生成などの外部APIに依存するテストをモック化。(**完了**)
+     - テスト用サブクラス（`TestResultViewer`）を作成し、内部メソッドにアクセス可能にするアプローチを実装。(**完了**)
+     - `deno test` で `result-viewer_test.ts` がパスすることを確認。(**完了**)
+  5. **テスト実行:** `deno test --allow-read src/ui/components/` を実行し、全テストがパスすることを確認。(**完了**)
+- **教訓と知見:**
+  - `deno-dom` は `jsdom` と完全互換ではない:
+    - `element.click()`メソッドが実装されていないため、代わりにイベントを直接ディスパッチする必要がある
+    - `style`プロパティの扱いに制限があり、要素を直接操作する代替手段（`setAttribute('style', '...')`など）が必要
+    - `Document` 型の不整合が発生するため、`any`キャストを使用する場合がある
+  - ESモジュールの特性上、インポートした関数の動的な上書きによるモック化は困難。依存性注入 (DI) を活用。
+  - Denoの`testing/mock`モジュールの`spy`は、Jestと異なり、`calls`プロパティが読み取り専用で、`.calls = []`でリセットできない
+  - 非同期処理（タイマーなど）に依存するテストは特に注意が必要で、タイマーリーク検出に対応するよう設計を変更すべき
+  - テスト対象の実装によっては、テスト用のサブクラス（`TestableXXX`）を作成して内部メソッドにアクセスする方法が効果的
 
 ### フェーズ 6: 統合テストの移行 (未着手)
 
