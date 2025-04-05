@@ -1,6 +1,6 @@
 import {
   assert,
-  assertArrayIncludes, // 追加
+  assertArrayIncludes,
   assertEquals,
   assertFalse,
   assertGreater,
@@ -10,8 +10,8 @@ import {
   assertStrictEquals,
   assertStringIncludes,
 } from 'https://deno.land/std/assert/mod.ts';
-import { readFileAsText, validateFileContent, validateFiles } from './validator.ts'; // 拡張子を追加
-import { FileValidationResult } from './file-processor.ts'; // 拡張子を追加
+import { readFileAsText, validateFileContent, validateFiles } from './validator.ts';
+import { FileValidationResult } from './file-processor.ts';
 
 // Deno環境用のブラウザAPIのポリフィル/モック
 class MockProgressEvent {

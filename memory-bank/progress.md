@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** 主要機能は実装済み。開発ツール設定も整備。**ファイル選択 UI の改善完了。**
-- **直近のマイルストーン:** ファイル選択 UI の改善完了（ステータスタグ削除、個別削除機能追加）。
-- **現在のタスク:** Memory Bank の更新作業中。
+- **全体進捗:** **Deno 移行作業中 (フェーズ3完了)。** 主要機能は実装済み。
+- **直近のマイルストーン:** Deno 移行フェーズ1-3完了 (環境設定、コアロジック依存関係・テスト移行)。
+- **現在のタスク:** Deno 移行フェーズ4「UI レイヤー依存関係移行」を開始。
 
 ## 2. 完了した機能 (What Works)
 
@@ -37,97 +37,76 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - 全症例/対象症例のみのフィルタリング表示。
   - 日付フォーマット選択 (YYYYMMDD / YYYY/MM/DD)。
   - 結果のクリップボードへのコピー (`navigator.clipboard.writeText()`)。
-  - (ダウンロード機能は未確認だが `project_overview.md` に記載あり)
+  - (ダウンロード機能は未確認)
 - **開発基盤:**
   - TypeScript による開発。
-  - Parcel によるビルドとバンドル (`file://` 対応)。
-  - Jest によるユニットテスト・統合テスト (コアロジック中心)。
-  - ESLint(v9.23.0)/Prettier によるコード品質・フォーマット維持。
-  - eslint.config.js によるESLint v9設定の実装。
-  - VSCode設定(`.vscode/settings.json`)とPrettier設定(`.prettierrc.json`)の整備による一貫したコード品質管理。
-  - Husky/lint-staged による自動品質チェック。
+  - **Deno 移行中:**
+    - **ランタイム:** Node.js -> Deno (v2.2.7)
+    - **パッケージ管理:** npm -> URL Import / `import_map.json`
+    - **Lint/Format:** ESLint/Prettier -> `deno lint`/`deno fmt` (`deno.jsonc` で設定)
+    - **テスト:** Jest -> Deno Test (`deno.jsonc` で設定)
+    - **ビルド:** Parcel -> `deno bundle` (検討中)
+    - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)
+  - (旧) Parcel によるビルドとバンドル (`file://` 対応)。
+  - (旧) Jest によるユニットテスト・統合テスト (コアロジック中心)。
+  - (旧) ESLint(v9.23.0)/Prettier によるコード品質・フォーマット維持。
+  - (旧) eslint.config.js によるESLint v9設定の実装。
+  - (旧) Husky/lint-staged による自動品質チェック。
+- **Deno 移行 (フェーズ1-3 完了):**
+  - 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
+  - コアロジック (`src/core/`) の依存関係移行 (インポートパス修正、`node.ts` 削除)。
+  - コアロジックのテスト移行 (Jest -> Deno Test、テストファイル移動、構文書き換え、`evaluator.ts` ロジック修正)。
 - **リファクタリング (一部):**
-  - ESLintを8.0.1から9.23.0に更新し、関連パッケージも最新化。
-  - 古い`.eslintrc.json`を削除し、新しいESLint v9形式の`eslint.config.js`を作成。
-  - レガシーテストファイル削除 (`test/run-tests.js` など)。
-  - グローバル型定義削除・整理 (`src/types/types.d.ts` -> `src/core/common/types.ts`)。
-  - Jest テスト環境を `jsdom` に変更。
-  - UI コンポーネントのインスタンス化方法を一部修正 (`ResultViewer`)。
-  - `result-viewer.test.ts` で `URL.createObjectURL`/`revokeObjectURL` をモック化、関連アサーションを修正。
-  - `notification.ts` から集約通知機能を削除。
-  - `notification.test.ts` のテストを修正完了。
-  - `result-viewer.ts` の `displayResult`, `copyResultToClipboard` を修正。
-  - `result-viewer.test.ts` のテストを修正完了。
-  - `file-manager.ts` のドラッグ＆ドロップ関連メソッドを `public` に変更。
-  - `file-manager.test.ts` を簡素化し、基本的なDOM操作とイベントハンドリングのテストに限定。
-- **リファクタリング (`validator.ts`):**
-  - `prefer-const` ESLint エラーを解消するため、警告フラグ管理ロジックをリファクタリング。
-  - 関連するテスト (`validator.test.ts`) を修正し、パスすることを確認。
+  - (旧) ESLint v9 へのアップデート。
+  - (旧) レガシーテスト・型定義削除。
+  - (旧) Jest テスト環境変更 (`jsdom`)。
+  - (旧) UI テスト修正 (一部)。
+  - (旧) `validator.ts` リファクタリング。
 - **Lint 警告修正 (一部):**
-  - `src/ui/components/file-manager.ts` の `@typescript-eslint/explicit-function-return-type` 警告を修正。
+  - (旧) `src/ui/components/file-manager.ts` の `@typescript-eslint/explicit-function-return-type` 警告修正。
 - **症例識別ロジック修正:**
-  - `parsers.ts` の `parseEFFile`, `mergeCases` を修正。
-  - 関連テスト (`parsers.test.ts`, `data-flow.test.ts`) を修正・追加し、パスを確認。
+  - `parsers.ts` の `parseEFFile`, `mergeCases` 修正 (複合キー導入)。
+  - 関連テスト修正・追加。
 
 ## 3. 残りの作業 (What's Left to Build)
 
-`docs/refactoring_plan.md` および `activeContext.md` に基づく。
+`docs/deno_migration_plan.md` に基づく。
 
-- **[完了] Memory Bank 更新:** ファイル選択 UI 変更に関する更新完了。
-- **[優先度 ?] ユーザー指示待機:** 次のタスクについてユーザーの指示を待つ。
-  - (候補) Lint 警告修正再開 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)
-  - (候補) テスト充実の継続 (`utils.ts` など)
-  - (候補) エラーハンドリング強化
-  - (候補) コードコメント強化
-- **[優先度 中] テストの充実 (リファクタリング計画 3.2):**
-  - `src/core/common/utils.ts` のカバレッジ向上 (目標 85% 以上)。
-  - 全体のテストカバレッジを確認し、必要に応じてテストを追加。
-- **[優先度 中] エラーハンドリング強化 (リファクタリング計画 3.3):**
-  - コアロジック (`file-processor`, `validator`, `parsers`) での詳細なエラーハンドリング実装。
-  - エラーメッセージの日本語化と具体化。
-  - `Notification` コンポーネントとの連携強化。
-- **[優先度 中] コードコメント修正・強化 (リファクタリング計画 3.4):**
-  - `src/` 配下の全ファイルに対する JSDoc コメントのレビューと修正・追記。
-- **[優先度 低] UI/UX の継続的改善:**
-  - デザイン、インタラクション、アクセシビリティの改善検討。
-- **[優先度 低] パフォーマンス最適化:**
-  - 大量データ処理時のパフォーマンス測定と最適化検討。
-- **[優先度 低] ドキュメント整備:**
-  - `README.md`, `docs/` 内ドキュメントの最新化。
-- **[優先度 低] 結果ダウンロード機能:** 実装状況確認と必要に応じた修正。
-- **[完了] `validator.ts` リファクタリング:** `prefer-const` エラー解消のためのリファクタリング完了。
-- **[完了] `validator.test.ts` 修正:** 上記リファクタリングに伴うテスト修正完了。
-- **[完了] レガシーコード整理 (リファクタリング計画 3.1):** 主要なレガシーテストファイルは削除済み。
-- **[完了] テスト修正 (UI関連):**
-  - `notification.test.ts`, `result-viewer.test.ts`: 修正完了。
-  - `file-manager.test.ts`: モック関連の問題を回避するため、テストを簡素化して基本的なDOM操作テストに限定し、修正完了。
-- **[完了] 開発環境の標準化:**
-  - `.prettierrc.json`の設定確認と整備。
-  - `.vscode/settings.json`の作成によるVSCode環境の標準化とPrettier連携。
-- **[完了] 症例識別ロジック修正:** `parsers.ts` と関連テストの修正完了。
-- **[完了] ファイル選択 UI 変更:** ステータスタグ削除、個別削除機能追加。
+- **[進行中] Deno 移行 (フェーズ4):** UI レイヤー (`src/ui`, `src/browser`) の依存関係移行。
+- **[未着手] Deno 移行 (フェーズ5):** UI レイヤーのテスト移行 (`deno-dom` 検討)。
+- **[未着手] Deno 移行 (フェーズ6):** 統合テストの移行。
+- **[未着手] Deno 移行 (フェーズ7):** ビルド/実行方法の確立 (`deno bundle` 検討)。
+- **[未着手] Deno 移行 (フェーズ8):** クリーンアップ (Node.js 関連ファイル削除)、ドキュメント更新 (`README.md`, Memory Bank)。
+- **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所 (Deno 移行後 `deno lint` で対応)。
+- **[保留] テストの充実:** Deno 移行後、`deno coverage` でカバレッジを確認し、UI レイヤーなどを中心に追加。
+- **[保留] エラーハンドリング強化:** Deno 移行後に全体を見直し。
+- **[保留] コードコメント修正・強化:** Deno 移行後に全体を見直し。
+- **[保留] UI/UX の継続的改善:** Deno 移行後に検討。
+- **[保留] パフォーマンス最適化:** Deno 移行後に検討。
+- **[保留] 結果ダウンロード機能:** 実装状況確認と Deno 環境での動作確認。
 
 ## 4. 既知の問題とバグ (Known Issues & Bugs)
 
-- **[警告] 残存するLint警告:** `@typescript-eslint/explicit-function-return-type` 警告が3箇所残存 (ユーザー指示により対応一時中断)。
-- **[制約] `file-manager.test.ts`の範囲限定:** Jest+TypeScriptの環境でESモジュールのモック設定に関する技術的制約により、`file-manager.test.ts`のテスト範囲を基本的なDOM操作とイベントハンドリングに限定。複雑なファイル処理ロジックのテストは除外。
+- **[移行中] 開発環境:** 現在 Node.js と Deno のツール・設定が混在している状態。
+- **[警告] 残存するLint警告:** `@typescript-eslint/explicit-function-return-type` 警告が3箇所残存 (Deno 移行後に `deno lint` で対応予定)。
+- **[制約] UI テスト移行:** Deno Test での DOM 環境再現 (`deno-dom`) が課題となる可能性。
 - **[改善点] 大量データ処理時のパフォーマンス:** 未測定。
-- **[改善点] UI テスト不足:** 現在テスト作成中だが、カバレッジはまだ低い。
-- **[要確認] ダウンロード機能:** 実装状況と動作確認が必要。
+- **[要確認] ダウンロード機能:** 実装状況と Deno 環境での動作確認が必要。
 
 ## 5. 意思決定の変遷 (Evolution of Decisions)
 
-`activeContext.md` の「最近の主な変更点」および `docs/project_overview.md` の「最近の機能強化」セクションを参照。
+`activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
 
-- **[2025-04-05]:** ファイル選択 UI 改善のため、ステータスタグを削除し、個別削除ボタンを追加することを決定。理由: UI の簡素化と操作性向上のため。詳細な検証メッセージは維持。(`file-manager.ts`, `styles.css` を修正)
-- **[2025-04-05]:** 症例識別ロジックの問題（同一患者の複数入院が区別されない）に対し、識別キーを `データ識別番号` のみから `データ識別番号` + `入院年月日` の複合キーに変更することを決定。理由: EFファイル仕様と短手３判定要件に準拠し、正確なデータ処理を実現するため。(`parsers.ts` を修正)
-- **[2025-04-04]:** `validator.ts` の `prefer-const` 誤検知に対し、`eslint-disable` ではなく、根本的なロジックリファクタリングを選択。理由: コードの可読性と保守性向上のため。
-- **[2025-04-04]:** 残りの Lint 警告 (`@typescript-eslint/explicit-function-return-type`) の修正をユーザー指示により一時中断。
-- **[2025-03-30]:** ESLintを最新のv9.23.0にアップデートし、関連パッケージも最新化。新しいESLint v9形式の設定ファイル（eslint.config.js）を導入。理由：最新の開発ツールを活用し、将来的なメンテナンス性と互換性を確保するため。
-- **[2025-03-30]:** VSCodeとPrettierの設定の整合性を確保。`.vscode/settings.json`を新規作成し、Prettier拡張機能と連携するよう設定。標準的なTypeScriptプロジェクトのベストプラクティスに沿った開発環境を整備。
-- **[2025-03-30]:** Jest テスト環境を `jsdom` に変更。UI コンポーネントのテスト修正に着手。`notification.ts` から集約通知機能を削除。`notification.test.ts`, `result-viewer.test.ts`, `file-manager.test.ts`のテストを修正完了。
-- **[2025-03-30]:** `file-manager.test.ts`の技術的制約（Jest+TypeScript環境でのESモジュールモック設定問題）のため、テスト範囲を基本的なDOM操作に限定する決定を実施。
-- **[2025-03-29]:** リファクタリング開始。レガシーコード削除、型定義整理。
-- **[2025-03-27]:** ESLint, Prettier, Husky の設定を強化・最適化。 (理由: コード品質と開発効率向上のため)
-- **[日付不明]:** クリップボードコピー API を `document.execCommand` から `navigator.clipboard.writeText` に変更。 (理由: 前者は廃止予定であり、後者の方がモダンで信頼性が高いため)
-- **[日付不明]:** ビルドツールとして Webpack ではなく Parcel を採用。 (理由: `file://` 環境での設定がよりシンプルだったため)
+- **[2025-04-05]:** Node.js から Deno への移行を決定。段階的に進める方針を採用 (`docs/deno_migration_plan.md` 作成)。
+- **[2025-04-05]:** Deno 移行フェーズ1-3 を実施。環境設定、コアロジック依存関係・テスト移行完了。VS Code Deno 拡張機能連携設定。
+- (以下、過去の意思決定)
+- **[2025-04-05]:** ファイル選択 UI 改善。
+- **[2025-04-05]:** 症例識別ロジック修正 (複合キー導入)。
+- **[2025-04-04]:** `validator.ts` リファクタリング。
+- **[2025-03-30]:** ESLint v9 移行。
+- **[2025-03-30]:** VS Code Prettier 設定標準化。
+- **[2025-03-30]:** Jest 環境変更 (`jsdom`)、UI テスト修正。
+- **[2025-03-29]:** リファクタリング開始 (レガシーコード削除)。
+- **[2025-03-27]:** 開発ツール設定最適化。
+- **[日付不明]:** クリップボード API 変更。
+- **[日付不明]:** Parcel 採用。
