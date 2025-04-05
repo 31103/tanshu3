@@ -1,7 +1,7 @@
 /**
  * ResultViewer クラスのユニットテスト
  */
-import { jest, describe, beforeEach, afterEach, it, expect } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ResultViewer } from '../../../src/ui/components/result-viewer';
 
 // notificationSystem をモック化
@@ -144,7 +144,8 @@ describe('ResultViewer', () => {
     const debugInfo = 'デバッグ情報テスト';
     resultViewer.displayResult(resultText, debugInfo);
 
-    const expectedDisplayText = `=== デバッグ情報 ===\n${debugInfo}\n\n=== 処理結果 ===\n${resultText}`;
+    const expectedDisplayText =
+      `=== デバッグ情報 ===\n${debugInfo}\n\n=== 処理結果 ===\n${resultText}`;
     expect(resultTextArea.value).toBe(expectedDisplayText);
 
     // テーブルにはデバッグ情報が含まれないことを確認

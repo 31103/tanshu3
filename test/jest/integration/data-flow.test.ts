@@ -6,10 +6,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { parseEFFile, mergeCases } from '../../../src/core/common/parsers.js';
+import { mergeCases, parseEFFile } from '../../../src/core/common/parsers.js';
 import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js'; // formatResults をインポート
-import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils.js';
-import { TARGET_PROCEDURES, DEFAULT_RESULT_HEADER } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
+import { calculateHospitalDays, parseDate } from '../../../src/core/common/utils.js';
+import { DEFAULT_RESULT_HEADER, TARGET_PROCEDURES } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
 import type { CaseData, OutputSettings } from '../../../src/core/common/types.js'; // OutputSettings をインポート
 
 // ESモジュールで__dirnameの代替を設定
@@ -132,7 +132,7 @@ describe('データフロー統合テスト', () => {
 
       // 対象手術が少なくとも1つ含まれている
       const hasTargetProcedure = eligibleCase.procedures.some((procedure) =>
-        TARGET_PROCEDURES.includes(procedure),
+        TARGET_PROCEDURES.includes(procedure)
       );
       expect(hasTargetProcedure).toBe(true);
 

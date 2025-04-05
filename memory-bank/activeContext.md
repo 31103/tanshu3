@@ -62,12 +62,12 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 3. 次のステップ (Next Steps)
 
-1.  **Memory Bank 更新:** ファイル選択 UI 変更に関する更新作業を完了させる (`progress.md`, `systemPatterns.md` も確認・更新)。
-2.  **ユーザー指示待機:** 次のタスクについてユーザーの指示を待つ。
-    - (候補) Lint 警告修正再開 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)
-    - (候補) テスト充実の継続 (`utils.ts` など)
-    - (候補) エラーハンドリング強化
-    - (候補) コードコメント強化
+1. **Memory Bank 更新:** ファイル選択 UI 変更に関する更新作業を完了させる (`progress.md`, `systemPatterns.md` も確認・更新)。
+2. **ユーザー指示待機:** 次のタスクについてユーザーの指示を待つ。
+   - (候補) Lint 警告修正再開 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)
+   - (候補) テスト充実の継続 (`utils.ts` など)
+   - (候補) エラーハンドリング強化
+   - (候補) コードコメント強化
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 

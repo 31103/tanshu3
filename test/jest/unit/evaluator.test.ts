@@ -9,12 +9,12 @@
 import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js';
 import { CaseData, OutputSettings } from '../../../src/core/common/types.js'; // OutputSettings をインポート
 import {
-  MAX_HOSPITAL_DAYS,
-  TARGET_PROCEDURES,
   COLONOSCOPY_PROCEDURE_CODES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
-  INELIGIBILITY_REASONS,
   DEFAULT_RESULT_HEADER,
+  INELIGIBILITY_REASONS,
+  MAX_HOSPITAL_DAYS,
+  TARGET_PROCEDURES,
 } from '../../../src/core/common/constants.js'; // DEFAULT_RESULT_HEADER をインポート
 
 describe('evaluateCases関数', () => {

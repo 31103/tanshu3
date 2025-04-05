@@ -240,7 +240,9 @@ export class ResultViewer {
 
     // ファイル名の設定
     const date = new Date();
-    const dateStr = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+    const dateStr = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${
+      date.getDate().toString().padStart(2, '0')
+    }`;
     this.downloadLink.setAttribute('download', `短手3判定結果_${dateStr}.txt`);
 
     // ダウンロードリンクを表示

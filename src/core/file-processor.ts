@@ -1,6 +1,6 @@
 import { CaseData, OutputSettings } from './common/types'; // OutputSettings をインポート
 import { readFileAsText } from './validator'; // readFileAsText は validator からインポートされる想定
-import { parseEFFile, mergeCases } from './common/parsers';
+import { mergeCases, parseEFFile } from './common/parsers';
 import { evaluateCases, formatResults } from './common/evaluator';
 import { DEFAULT_RESULT_HEADER } from './common/constants'; // DEFAULT_RESULT_HEADER をインポート
 

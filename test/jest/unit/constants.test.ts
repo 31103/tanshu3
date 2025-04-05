@@ -5,10 +5,10 @@
  */
 
 import {
-  TARGET_PROCEDURES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
   DEFAULT_RESULT_HEADER,
   MAX_HOSPITAL_DAYS,
+  TARGET_PROCEDURES,
 } from '../../../src/core/common/constants.js';
 
 describe('定数定義', () => {

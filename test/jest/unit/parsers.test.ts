@@ -4,7 +4,7 @@
  * ファイル解析関連の機能をテストします。
  */
 
-import { parseEFFile, mergeCases } from '../../../src/core/common/parsers.js';
+import { mergeCases, parseEFFile } from '../../../src/core/common/parsers.js';
 import { CaseData } from '../../../src/core/common/types.js';
 import { TARGET_PROCEDURES } from '../../../src/core/common/constants.js';
 
@@ -22,7 +22,8 @@ describe('parseEFFile関数', () => {
 
   it('有効なEFデータを正しくパースする', () => {
     const targetCode = TARGET_PROCEDURES[0];
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`;
 
     const result = parseEFFile(content);
@@ -42,7 +43,8 @@ describe('parseEFFile関数', () => {
     const targetCode2 = TARGET_PROCEDURES[1] || TARGET_PROCEDURES[0];
     const admissionDate = '20220101'; // 同一入院日
 
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 データ1\t12345\t20220105\t${admissionDate}\tその他\tその他\tその他\tその他\t${targetCode1}
 データ2\t12345\t20220105\t${admissionDate}\tその他\tその他\tその他\tその他\t${targetCode2}`;
 
@@ -66,7 +68,8 @@ describe('parseEFFile関数', () => {
     const admissionDate1 = '20220101';
     const admissionDate2 = '20220115'; // 異なる入院日
 
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 データ1\t12345\t20220105\t${admissionDate1}\tその他\tその他\tその他\tその他\t${targetCode1}
 データ2\t12345\t20220120\t${admissionDate2}\tその他\tその他\tその他\tその他\t${targetCode2}`;
 
@@ -118,7 +121,8 @@ describe('parseEFFile関数', () => {
 
   it('診療明細名称（10列目）が含まれるデータを正しくパースする', () => {
     const targetCode = TARGET_PROCEDURES[0];
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9\tヘッダー10\tヘッダー11
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9\tヘッダー10\tヘッダー11
 データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}\tその他\t手術名A`; // 11列目に名称
 
     const result = parseEFFile(content);
@@ -135,7 +139,8 @@ describe('parseEFFile関数', () => {
 
   it('データ識別番号（2列目）が空の行は無視される', () => {
     const targetCode = TARGET_PROCEDURES[0];
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 データ1\t\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}`; // IDが空
 
     const result = parseEFFile(content);
@@ -144,7 +149,8 @@ describe('parseEFFile関数', () => {
 
   it('行為明細番号（7列目）が"000"の行は無視される', () => {
     const targetCode = TARGET_PROCEDURES[0];
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 データ1\t12345\t20220101\t20220101\tその他\tその他\t000\tその他\t${targetCode}`; // 行為明細番号が000
 
     const result = parseEFFile(content);
@@ -153,7 +159,8 @@ describe('parseEFFile関数', () => {
 
   it('空白のみの行は無視される', () => {
     const targetCode = TARGET_PROCEDURES[0];
-    const content = `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
+    const content =
+      `ヘッダー1\tヘッダー2\tヘッダー3\tヘッダー4\tヘッダー5\tヘッダー6\tヘッダー7\tヘッダー8\tヘッダー9
 
 データ1\t12345\t20220101\t20220101\tその他\tその他\tその他\tその他\t${targetCode}
       `; // 空白行と末尾の空白のみの行

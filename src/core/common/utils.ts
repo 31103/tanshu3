@@ -24,7 +24,9 @@ export function parseDate(dateStr: string): Date | null {
     return date;
   } catch (error) {
     console.error(
-      `日付の解析中にエラーが発生しました: ${dateStr} - ${error instanceof Error ? error.message : String(error)}`,
+      `日付の解析中にエラーが発生しました: ${dateStr} - ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return null;
   }

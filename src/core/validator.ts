@@ -185,7 +185,9 @@ function validateDataLines(lines: string[], result: FileValidationResult): void 
       } else {
         // 上記以外 (validateDataLine の columns.length < 10 で検出)
         result.warnings.push(
-          `一部のデータ行の列数が少ないようです (10列未満) (最初の例: 行 ${i + 1}, 列数: ${columns.length})`,
+          `一部のデータ行の列数が少ないようです (10列未満) (最初の例: 行 ${
+            i + 1
+          }, 列数: ${columns.length})`,
         );
       }
       columnCountWarningIssued = true;
@@ -196,7 +198,9 @@ function validateDataLines(lines: string[], result: FileValidationResult): void 
       const columns = line.split('\t'); // 再度分割
       const actionDetailNum = columns.length > 6 ? columns[6].trim() : '';
       result.warnings.push(
-        `行為明細番号(7列目)の形式が不正のようです (000 or 3桁数字) (最初の例: 行 ${i + 1}, 値: ${actionDetailNum})`,
+        `行為明細番号(7列目)の形式が不正のようです (000 or 3桁数字) (最初の例: 行 ${
+          i + 1
+        }, 値: ${actionDetailNum})`,
       );
       actionDetailNumWarningIssued = true;
     }
@@ -279,7 +283,9 @@ function validateDateAndActionDetail(
         !result.errors.some((e: string) => e.startsWith('入院年月日'))
       ) {
         result.errors.push(
-          `入院年月日(4列目)の形式が不正です (yyyymmdd or 00000000) (最初の例: 行 ${lineIndex + 1}, 値: ${admission})`,
+          `入院年月日(4列目)の形式が不正です (yyyymmdd or 00000000) (最初の例: 行 ${
+            lineIndex + 1
+          }, 値: ${admission})`,
         );
       }
       // エラーが見つかっても、他の警告を拾うためにループは継続

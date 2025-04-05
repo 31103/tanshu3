@@ -1,7 +1,7 @@
 /**
  * NotificationSystem クラスのユニットテスト
  */
-import { jest, describe, beforeEach, afterEach, it, expect } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { NotificationSystem } from '../../../src/ui/components/notification';
 
 describe('NotificationSystem', () => {

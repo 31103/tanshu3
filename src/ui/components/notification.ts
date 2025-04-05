@@ -35,8 +35,8 @@ export class NotificationSystem {
    * @param containerId 通知コンテナのID
    */
   constructor(containerId: string = 'toastContainer') {
-    this.toastContainer =
-      document.getElementById(containerId) || this.createToastContainer(containerId);
+    this.toastContainer = document.getElementById(containerId) ||
+      this.createToastContainer(containerId);
     this.setupHistoryButton();
   }
 

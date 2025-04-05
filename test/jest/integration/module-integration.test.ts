@@ -5,7 +5,7 @@
 
 import { parseEFFile } from '../../../src/core/common/parsers.js';
 import { evaluateCases, formatResults } from '../../../src/core/common/evaluator.js';
-import { parseDate, calculateHospitalDays } from '../../../src/core/common/utils.js';
+import { calculateHospitalDays, parseDate } from '../../../src/core/common/utils.js';
 import {
   // 未使用の定数をコメントアウト
   // TARGET_PROCEDURES,

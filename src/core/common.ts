@@ -176,7 +176,9 @@ export function parseEFFile(content: string): CaseData[] {
     } catch (error) {
       // 解析エラーの場合はその行をスキップして続行
       console.error(
-        `Line ${i + 1}の解析中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `Line ${i + 1}の解析中にエラーが発生しました: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       continue;
     }
@@ -253,7 +255,9 @@ function _parseDate(dateStr: string): Date | null {
     return date;
   } catch (error) {
     console.error(
-      `日付の解析中にエラーが発生しました: ${dateStr} - ${error instanceof Error ? error.message : String(error)}`,
+      `日付の解析中にエラーが発生しました: ${dateStr} - ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return null;
   }
@@ -309,7 +313,7 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
 
         // 特定加算が含まれているかどうか
         const hasSpecialAddition = c.procedures.some((p) =>
-          colonoscopySpecialAdditions.includes(p),
+          colonoscopySpecialAdditions.includes(p)
         );
 
         // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
@@ -318,7 +322,9 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
         return true;
       } catch (error) {
         console.error(
-          `症例ID ${c.id} の評価中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+          `症例ID ${c.id} の評価中にエラーが発生しました: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
         return false;
       }
@@ -344,7 +350,9 @@ export function formatResults(
     return result;
   } catch (error) {
     console.error(
-      `結果のフォーマット中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+      `結果のフォーマット中にエラーが発生しました: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return headerLine + '\n'; // 最低限ヘッダーは返す
   }

@@ -7,6 +7,7 @@ node_modules/
 # ロックファイル (プロジェクトや環境によってはバージョン固定のため含める場合もある)
 # package-lock.json
 # yarn.lock
+deno.lock # Deno lock file
 
 # Yarn PnP 用ファイル (使用している場合)
 .pnp.*

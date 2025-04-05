@@ -869,9 +869,7 @@ button:disabled {
   font-size: var(--font-size-sm);
   line-height: 1.5;
   resize: vertical;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   white-space: pre;
   overflow-x: auto;
 }
@@ -916,9 +914,7 @@ button:disabled {
   border-radius: var(--border-radius-md);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
-  transition:
-    background-color var(--transition-fast),
-    transform var(--transition-fast);
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
   border: none;
   cursor: pointer;
 }
@@ -1375,9 +1371,7 @@ footer {
   z-index: var(--z-index-modal);
   opacity: 0;
   visibility: hidden;
-  transition:
-    opacity var(--transition-normal),
-    visibility var(--transition-normal);
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
 }
 
 .notification-history-modal.active {
@@ -1530,9 +1524,7 @@ footer {
 /* 既存のトーストスタイルの拡張 */
 .toast {
   position: relative;
-  transition:
-    opacity var(--transition-normal),
-    transform var(--transition-normal);
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
 }
 
 /* 

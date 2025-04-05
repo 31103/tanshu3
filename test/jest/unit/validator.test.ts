@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { validateFileContent, validateFiles, readFileAsText } from '../../../src/core/validator';
+import { readFileAsText, validateFileContent, validateFiles } from '../../../src/core/validator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +17,7 @@ class MockProgressEvent {
   }
 }
 
-global.ProgressEvent = MockProgressEvent as any;
+globalThis.ProgressEvent = MockProgressEvent as any;
 
 describe('validator.ts', () => {
   // モック化のためのヘルパー関数
@@ -29,7 +29,7 @@ describe('validator.ts', () => {
   // FileReaderのモック化
   let originalFileReader: typeof FileReader;
   beforeAll((): void => {
-    originalFileReader = (global as any).FileReader;
+    originalFileReader = (globalThis as any).FileReader;
 
     // モックFileReaderインスタンス
     const mockFileReader = function (this: any) {
@@ -85,11 +85,11 @@ describe('validator.ts', () => {
     (mockFileReader as any).LOADING = 1;
     (mockFileReader as any).DONE = 2;
 
-    (global as any).FileReader = mockFileReader;
+    (globalThis as any).FileReader = mockFileReader;
   });
 
   afterAll((): void => {
-    (global as any).FileReader = originalFileReader;
+    (globalThis as any).FileReader = originalFileReader;
   });
 
   describe('validateFiles関数', () => {
@@ -175,8 +175,8 @@ describe('validator.ts', () => {
       async (): Promise<void> => {
         const mockFailedFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
         // FileReaderの代わりにエラーをスローするモックを設定
-        const originalFileReader = (global as any).FileReader;
-        (global as any).FileReader = class {
+        const originalFileReader = (globalThis as any).FileReader;
+        (globalThis as any).FileReader = class {
           readAsText(): void {
             throw new Error('Cannot start reading file');
           }
@@ -188,7 +188,7 @@ describe('validator.ts', () => {
           );
         } finally {
           // テスト後に元のFileReaderを復元
-          (global as any).FileReader = originalFileReader;
+          (globalThis as any).FileReader = originalFileReader;
         }
       },
       TIMEOUT,
@@ -216,7 +216,8 @@ describe('validator.ts', () => {
     });
 
     it('退院未定（00000000）の症例を許容', (): void => {
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t00000000\t20240701\t60\t0001\t000\t641300\t160098110\tD4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
@@ -226,7 +227,8 @@ describe('validator.ts', () => {
 
     it('不正な入院日付をエラーとして検出', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\tINVALID\t60\t0001\t000\t641300\t160098110\tD4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
@@ -251,7 +253,8 @@ describe('validator.ts', () => {
 
     it('不正なデータ区分を警告として検出', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\tXX\t0001\t000\t641300\t160098110\tD4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
@@ -276,7 +279,9 @@ describe('validator.ts', () => {
 
     it('特殊なケース：30列以上のデータを検証', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t${Array(25).fill('その他').join('\t')}
+      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t${
+        Array(25).fill('その他').join('\t')
+      }
 111111111\t0000000001\t20240706\t20240704\t60\t${Array(25).fill('データ').join('\t')}`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
@@ -290,7 +295,8 @@ describe('validator.ts', () => {
       // 1行目: 入院日不正(エラー), 行為明細番号不正(警告)
       // 2行目: 列数不足(警告)
       // 3行目: タブ区切りなし(警告)
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\tINVALID\t60\t0001\tABC\t641300\t160098110\tD4132
 111111111\t0000000002\t20240707
 111111111,0000000003,20240708,20240705,60,0001,000,641300,160098110,D4132`;
@@ -319,7 +325,8 @@ describe('validator.ts', () => {
 
     it('コードをチェック（番号形式）', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 
@@ -329,7 +336,8 @@ describe('validator.ts', () => {
 
     it('異なる区切り文字が混在している場合を検証', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t20240706\t20240704\t60\t0001\t000\t641300\t160098110\tD4132
 111111111,0000000002,20240706,20240704,60,0001,000,641300,160098110,D4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
@@ -342,7 +350,8 @@ describe('validator.ts', () => {
 
     it('退院日未定を示すゼロ埋めの日付を許容', (): void => {
       // Added :void
-      const content = `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
+      const content =
+        `施設コード\tデータ識別番号\t退院年月日\t入院年月日\tデータ区分\t順序番号\t行為明細番号\t病院点数マスタコード\tレセプト電算コード\t解釈番号
 111111111\t0000000001\t00000000\t20240704\t60\t0001\t000\t641300\t160098110\tD4132`;
       const result = validateFileContent(createMockFile('test.txt'), content);
 

@@ -1,0 +1,25 @@
+{
+  "fmt": {
+    "options": {
+      "lineWidth": 100,
+      "indentWidth": 2,
+      "singleQuote": true, // Prettier設定に合わせる
+      "proseWrap": "preserve" // Prettier設定に合わせる
+    }
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "exclude": ["no-explicit-any", "no-unused-vars"] // 初期設定 (必要に応じて調整)
+    }
+  },
+  "tasks": {
+    // この時点では空か、基本的なタスクのみ
+  },
+  "compilerOptions": {
+    // tsconfig.json から必要な設定を移行 (例: strict, lib)
+    "strict": true,
+    "lib": ["dom", "dom.iterable", "esnext"]
+  },
+  "importMap": "./import_map.json" // importMap を使用する宣言
+}

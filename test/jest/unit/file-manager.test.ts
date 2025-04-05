@@ -2,7 +2,7 @@
  * FileManager クラスの最小限のユニットテスト
  * モックの複雑さを回避し、基本的なDOMテストに限定
  */
-import { jest, describe, beforeEach, afterEach, it, expect } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { FileManager } from '../../../src/ui/components/file-manager';
 
 // 最小限のモック

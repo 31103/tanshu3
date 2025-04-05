@@ -15,20 +15,20 @@ _このドキュメントは、プロジェクトで使用されている技術�
 
 ## 2. 開発環境セットアップ
 
-1.  **前提条件:** Node.js (推奨 v18 以上), npm (Node.js に同梱)
-2.  **リポジトリクローン:** `git clone [リポジトリURL]`
-3.  **依存関係インストール:** `cd tanshu3` して `npm install` を実行
-4.  **開発モード (監視 & 自動ビルド):** `npm run watch` を実行。変更が `public/js/` に反映される。
-5.  **手動ビルド:** `npm run build` を実行。`public/js/` にバンドルされたファイルが出力される。
-6.  **テスト実行:** `npm test` を実行。
-7.  **リンティング/フォーマット:**
-    - `npm run lint`: コード検証
-    - `npm run lint:fix`: 自動修正
-    - `npm run format`: コード整形
-    - `npm run check-format`: 整形チェック
-    - `npm run check-all`: リント、フォーマット、テストを一括実行
-8.  **アプリケーション実行:** `public/index.html` を Web ブラウザで開く (`file://` プロトコル)。
-9.  **コマンド実行環境に関する注意:** システム情報 (`environment_details`) ではデフォルトシェルが `cmd.exe` と表示される場合がありますが、実際のコマンド実行環境は **PowerShell (`pwsh.exe`)** である可能性が高いです。`execute_command` ツールを使用する際は、PowerShell 構文でコマンドを記述してください (例: `rmdir /s /q` ではなく `Remove-Item -Recurse -Force`)。
+1. **前提条件:** Node.js (推奨 v18 以上), npm (Node.js に同梱)
+2. **リポジトリクローン:** `git clone [リポジトリURL]`
+3. **依存関係インストール:** `cd tanshu3` して `npm install` を実行
+4. **開発モード (監視 & 自動ビルド):** `npm run watch` を実行。変更が `public/js/` に反映される。
+5. **手動ビルド:** `npm run build` を実行。`public/js/` にバンドルされたファイルが出力される。
+6. **テスト実行:** `npm test` を実行。
+7. **リンティング/フォーマット:**
+   - `npm run lint`: コード検証
+   - `npm run lint:fix`: 自動修正
+   - `npm run format`: コード整形
+   - `npm run check-format`: 整形チェック
+   - `npm run check-all`: リント、フォーマット、テストを一括実行
+8. **アプリケーション実行:** `public/index.html` を Web ブラウザで開く (`file://` プロトコル)。
+9. **コマンド実行環境に関する注意:** システム情報 (`environment_details`) ではデフォルトシェルが `cmd.exe` と表示される場合がありますが、実際のコマンド実行環境は **PowerShell (`pwsh.exe`)** である可能性が高いです。`execute_command` ツールを使用する際は、PowerShell 構文でコマンドを記述してください (例: `rmdir /s /q` ではなく `Remove-Item -Recurse -Force`)。
 
 ## 3. 技術的な制約
 

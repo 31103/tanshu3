@@ -6,13 +6,13 @@
 import { CaseData, OutputSettings } from './types';
 import { calculateHospitalDays, formatDate } from './utils'; // formatDate をインポート
 import {
-  TARGET_PROCEDURES,
+  COLONOSCOPY_PROCEDURE_CODES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
   DEFAULT_RESULT_HEADER,
-  MAX_HOSPITAL_DAYS,
-  COLONOSCOPY_PROCEDURE_CODES,
-  PROCEDURE_NAME_MAP,
   INELIGIBILITY_REASONS,
+  MAX_HOSPITAL_DAYS,
+  PROCEDURE_NAME_MAP,
+  TARGET_PROCEDURES,
 } from './constants';
 
 /**
@@ -102,7 +102,7 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
 
       // 特定加算が含まれているかどうか
       const hasSpecialAddition = c.procedures.some((p) =>
-        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p),
+        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p)
       );
 
       // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
@@ -122,7 +122,9 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
       return evaluatedCase;
     } catch (error) {
       console.error(
-        `症例 ${c.id} の評価中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        `症例 ${c.id} の評価中にエラーが発生しました: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       // エラーが発生した場合は該当しないと判断
       return {
@@ -153,8 +155,9 @@ export function formatResults(
   settings: OutputSettings, // デフォルト値を削除し、必須引数とする
 ): string {
   // 設定に基づいて出力する症例をフィルタリング
-  const filteredCases =
-    settings.outputMode === 'allCases' ? cases : cases.filter((c) => c.isEligible === true);
+  const filteredCases = settings.outputMode === 'allCases'
+    ? cases
+    : cases.filter((c) => c.isEligible === true);
 
   // 症例が存在しない場合
   if (filteredCases.length === 0) {
@@ -170,7 +173,9 @@ export function formatResults(
     const admissionDate = formatDate(c.admission, settings.dateFormat);
     const dischargeDate = formatDate(c.discharge, settings.dateFormat);
 
-    const line = `${c.id}\t${admissionDate}\t${dischargeDate}\t${c.isEligible ? 'Yes' : 'No'}\t${c.reason || ''}`;
+    const line = `${c.id}\t${admissionDate}\t${dischargeDate}\t${c.isEligible ? 'Yes' : 'No'}\t${
+      c.reason || ''
+    }`;
     lines.push(line);
   });
 

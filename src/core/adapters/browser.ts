@@ -24,7 +24,9 @@ export function readFile(file: File): Promise<string> {
       reader.onerror = (event): void => {
         reject(
           new Error(
-            `ファイルの読み込み中にエラーが発生しました: ${event.target?.error?.message || 'Unknown error'}`,
+            `ファイルの読み込み中にエラーが発生しました: ${
+              event.target?.error?.message || 'Unknown error'
+            }`,
           ),
         );
       };
@@ -118,5 +120,5 @@ export function isFileReaderAvailable(): boolean {
  * @returns ブラウザがダウンロード機能をサポートしているかどうか
  */
 export function isDownloadSupported(): boolean {
-  return !!window.Blob && !!URL.createObjectURL;
+  return !!globalThis.Blob && !!URL.createObjectURL;
 }
