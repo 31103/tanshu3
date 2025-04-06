@@ -31,7 +31,7 @@ async function createSingleHtml(): Promise<void> {
 
   console.log('Injecting CSS and JavaScript into HTML...');
   let processedHtml = htmlContent.replace(
-    /<link rel="stylesheet" href="css\/styles\.css">/,
+    /<link rel="stylesheet" href="css\/styles\.css" \/>/, // Added space and slash to match the actual tag
     `<style>\n${cssContent}\n</style>`,
   );
   processedHtml = processedHtml.replace(
