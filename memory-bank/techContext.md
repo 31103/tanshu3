@@ -13,7 +13,7 @@ _このドキュメントは、プロジェクトで使用されている技術�
 - **リンティング:** Deno Lint (Deno 内蔵)
 - **フォーマット:** Deno Format (Deno 内蔵)
 - **パッケージ管理:** URL Imports, Import Map (`import_map.json`)
-- **CI/CD:** GitHub Actions (`.github/workflows/release.yml`)
+- **CI/CD:** GitHub Actions (`.github/workflows/ci.yml`, `.github/workflows/release.yml`)
 - **実行環境:** Web ブラウザ (実行時)
 
 ## 2. 開発環境セットアップ
@@ -74,9 +74,17 @@ Deno 環境では、`npm install` のような明示的なインストールス�
   - 設定: `scripts/release.ts` で実装。`deno.jsonc` の `tasks.release:build` で実行。
   - 実行: `deno task release:build`
   - 出力: `dist/tanshu3.html`。
-- **リリース自動化 (GitHub Actions):**
-  - 設定: `.github/workflows/release.yml`
-  - トリガー: `v*.*.*` 形式のタグプッシュ。
-  - 処理: `deno task release:build` を実行し、成果物を GitHub Release にアップロード。
+- **CI/CD (GitHub Actions):**
+  - **CI:**
+    - 設定: `.github/workflows/ci.yml`
+    - トリガー: `main` ブランチへの push および pull request 作成・更新時。
+    - 処理: Lint, Format チェック, テスト, ビルド確認を自動実行。
+  - **CD:**
+    - 設定: `.github/workflows/release.yml`, `.github/release-drafter.yml`
+    - トリガー: `v*.*.*` 形式のタグプッシュ。
+    - 処理:
+      1. `release-drafter` を使用し、Conventional Commits 規約に基づいてリリースノートを自動生成し、ドラフトを作成。
+      2. `deno task release:build` を実行して単一HTMLファイルを生成。
+      3. 生成されたファイルを GitHub Release にアップロードし、ドラフトを公開。
 - **ステージング時チェック:**
   - Git フックは設定しない方針。

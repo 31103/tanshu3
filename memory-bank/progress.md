@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **リリース自動化実装完了。Deno 移行完了。**
-- **直近のマイルストーン:** GitHub Actions を利用したリリース自動化の実装、Deno 移行フェーズ8の完了 (`README.md` 更新など)。
-- **現在のタスク:** リリース自動化のテスト、残存タスクの対応。
+- **全体進捗:** **CI/CD 推進計画 (Issue #1) 完了。Deno 移行完了。**
+- **直近のマイルストーン:** CI/CD ワークフローの実装と強化、関連ドキュメント更新。
+- **現在のタスク:** CI/CD ワークフローのテスト、残存タスクの対応。
 
 ## 2. 完了した機能 (What Works)
 
@@ -47,7 +47,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **テスト:** Deno Test (`deno.jsonc` で設定)
     - **ビルド:** esbuild (`deno.land/x/esbuild`) (`deno task bundle` で実行)。
     - **単一HTML生成:** `scripts/release.ts` (`deno task release:build` で実行)。
-    - **リリース自動化:** GitHub Actions (`.github/workflows/release.yml`) によるタグプッシュ時の自動ビルド＆リリース。
+    - **CI/CD (GitHub Actions):**
+      - **CI:** `.github/workflows/ci.yml` - `main` ブランチへの push/pull request 時に Lint/Format/Test/Build を実行。
+      - **CD:** `.github/workflows/release.yml` と `.github/release-drafter.yml` - タグプッシュ時に Conventional Commits ベースのリリースノート自動生成と成果物リリース。
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
 - **Deno 移行 (フェーズ1-8 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
@@ -78,13 +80,19 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **[完了]** Node.js関連ファイル (`package.json`, `node_modules/` など) の削除。
     - **[完了]** Memory Bank (`techContext.md`, `activeContext.md`, `progress.md`) の更新。
     - **[完了]** `README.md` の更新。
-- **リリース自動化:**
+- **CI/CD 推進計画 (Issue #1):**
+  - **[完了]** CI ワークフロー (`.github/workflows/ci.yml`) 実装。
+  - **[完了]** CD ワークフロー (`.github/workflows/release.yml`) 強化 (`release-drafter` 統合)。
+  - **[完了]** リリースノート生成設定 (`.github/release-drafter.yml`) 作成。
+  - **[完了]** `README.md` 更新。
+  - **[完了]** Memory Bank 更新 (`systemPatterns.md`, `techContext.md`, `activeContext.md`, `progress.md`)。
+- **リリース自動化 (旧):** (CI/CD 推進計画に統合・強化)
   - **[完了]** 単一HTML生成スクリプト (`scripts/release.ts`) 作成。
   - **[完了]** `deno.jsonc` に `release:build` タスク追加。
   - **[完了]** `.gitignore` 更新 (ビルド成果物除外)。
-  - **[完了]** GitHub Actions ワークフロー (`.github/workflows/release.yml`) 作成。
+  - **[完了]** (旧) GitHub Actions ワークフロー (`.github/workflows/release.yml`) 作成。
   - **[完了]** `docs/release_plan.md` 更新。
-  - **[完了]** `README.md` 更新。
+  - **[完了]** (旧) `README.md` 更新。
   - **[完了]** `scripts/release.ts` の CSS 埋め込みバグ修正。
   - **[完了]** `.gitignore` 設定修正と Git 追跡からの除外。
 - **リファクタリング:**
@@ -95,9 +103,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 3. 残りの作業 (What's Left to Build)
 
-- **[未着手] リリース自動化テスト:**
-  - `v*.*.*` 形式のタグをプッシュし、GitHub Actions ワークフローが正常に実行され、リリースが作成されるか確認。
-  - 生成された `dist/tanshu3.html` をダウンロードし、動作確認。
+- **[未着手] CI/CD ワークフローテスト:**
+  - **CI:** `feature/issue-1-ci-cd` から `main` への PR 作成時に `ci.yml` が正常に動作するか確認。
+  - **CD:** `v*.*.*` タグプッシュ時に `release.yml` がトリガーされ、リリースノート付きのリリースが作成・公開されるか確認。
 - **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所。
 - **[保留] テストの充実:** UI レイヤーなど。
 - **[保留] エラーハンドリング強化:** 全体見直し。
@@ -120,7 +128,8 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」を参照。
 
-- **[2025-04-06]:** リリース自動化実装。単一HTML生成スクリプト、GitHub Actions ワークフロー導入。関連ドキュメント更新、バグ修正。
+- **[2025-04-06]:** CI/CD 推進計画 (Issue #1) 完了。CI ワークフロー実装、CD ワークフロー強化 (リリースノート自動生成)、関連ドキュメント更新。
+- **[2025-04-06]:** (旧) リリース自動化実装。単一HTML生成スクリプト、GitHub Actions ワークフロー導入。関連ドキュメント更新、バグ修正。(CI/CD 推進計画に統合)
 - **[2025-04-06]:** Deno 移行フェーズ8完了。Node.js 関連ファイル削除、Memory Bank 更新、README 更新。
 - **[2025-04-06]:** Deno 移行フェーズ7完了。ビルドツールを Parcel から esbuild に変更。`deno.jsonc` にタスクを定義。
 - **[2025-04-05]:** Deno 移行フェーズ6完了。統合テストを Deno Test 環境に移行。

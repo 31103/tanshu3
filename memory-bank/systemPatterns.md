@@ -48,6 +48,9 @@ graph LR
 - **ESLint & Prettier 導入:** コーディング規約の強制とコードフォーマットの自動化により、コードの一貫性と品質を維持。
 - **Jest によるテスト:** ユニットテストと統合テストにより、コアロジックの正確性と安定性を担保。特に `validator` や `evaluator` のロジックはテストで品質を保証。
 - **`navigator.clipboard.writeText()` API 採用:** 廃止予定の `document.execCommand('copy')` を避け、モダンで信頼性の高いクリップボード操作を実現。
+- **GitHub Actions による CI/CD:**
+  - **CI:** `main` ブランチへの push/pull request 時に Lint/Format/Test/Build を自動実行し、コード品質を維持 (`.github/workflows/ci.yml`)。
+  - **CD:** タグプッシュ時にリリースノート自動生成 (`release-drafter` と Conventional Commits 規約を利用) とビルド成果物の GitHub Release への自動公開 (`.github/workflows/release.yml`)。
 
 ## 3. デザインパターン
 

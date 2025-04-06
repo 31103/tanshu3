@@ -4,25 +4,33 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 1. 現在の作業焦点 (Current Focus)
 
-- **リリース自動化:** GitHub Actions を利用したリリースプロセスの確立とテスト。
-- **Deno 移行:** フェーズ8「クリーンアップとドキュメント更新」完了。
+- **CI/CD 推進計画 (Issue #1):** 完了。CI ワークフロー実装、CD ワークフロー強化 (リリースノート自動生成)、関連ドキュメント更新。
+- **Deno 移行:** 完了。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
 - **2025-04-06 (最新):**
-  - **リリース自動化実装:**
+  - **CI/CD 推進計画 (Issue #1) 完了:**
+    - **CI ワークフロー実装:** `.github/workflows/ci.yml` を新規作成。`main` ブランチへの push/pull request 時に Lint/Format/Test/Build を実行。
+    - **CD ワークフロー強化:**
+      - `.github/release-drafter.yml` を新規作成し、Conventional Commits ベースのリリースノート生成ルールを定義。
+      - `.github/workflows/release.yml` を修正し、`release-drafter` を統合。タグプッシュ時にリリースノート自動生成と成果物アップロードを実行。
+    - **ドキュメント更新:** `README.md` に CI/CD プロセス、Conventional Commits について追記。
+    - **Memory Bank 更新:** `systemPatterns.md`, `techContext.md`, `activeContext.md`, `progress.md` を更新。
+    - **ブランチ:** `feature/issue-1-ci-cd` で作業し、コミット (`feat(ci): implement CI workflow and enhance CD with release drafter`)。
+  - **リリース自動化実装 (旧):** (CI/CD 推進計画に統合・強化されたため、個別の項目としては完了扱い)
     - 単一HTML生成スクリプト `scripts/release.ts` を作成。
     - `deno.jsonc` に `release:build` タスクを追加。
     - `.gitignore` を更新し、ビルド成果物 (`public/js/main.js`, `.map`, `dist/`) を無視するように設定。Git追跡対象からも除外。
-    - GitHub Actions ワークフロー (`.github/workflows/release.yml`) を作成し、タグプッシュ時に自動でビルドとリリースを行うように設定。
+    - (旧) GitHub Actions ワークフロー (`.github/workflows/release.yml`) を作成し、タグプッシュ時に自動でビルドとリリースを行うように設定。
     - `docs/release_plan.md` を更新し、自動化手順を反映。
-    - `README.md` を更新し、新しいスクリプト、タスク、ワークフローを反映。
+    - (旧) `README.md` を更新し、新しいスクリプト、タスク、ワークフローを反映。
     - `scripts/release.ts` の CSS 埋め込み正規表現を修正。
   - **Deno 移行 (フェーズ8 完了):**
     - **[完了]** Node.js関連ファイルの削除。
     - **[完了]** Memory Bank の更新 (`techContext.md`, `activeContext.md`, `progress.md`)。
     - **[完了]** `README.md` の更新 (セットアップ手順、実行方法など)。
-- **2025-04-06:**
+- **2025-04-06 (以前):**
   - **Deno 移行 (フェーズ7 完了):**
     - **ビルドツールを Parcel から esbuild に変更:** `deno bundle` が廃止されたため、代替として `esbuild` (`deno.land/x/esbuild`) を採用。
     - **Parcel 関連削除:** `package.json` から Parcel の依存関係とスクリプトを削除。
@@ -79,9 +87,9 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 3. 次のステップ (Next Steps)
 
-1. **リリース自動化テスト:**
-   - `v*.*.*` 形式のタグをプッシュし、GitHub Actions ワークフローが正常に実行され、GitHub Release が作成されることを確認する。
-   - 生成された `dist/tanshu3.html` をダウンロードし、デザインや機能が期待通りか確認する。
+1. **CI/CD ワークフローテスト:**
+   - **CI:** `feature/issue-1-ci-cd` ブランチから `main` ブランチへの Pull Request を作成し、`ci.yml` ワークフローがトリガーされ、すべてのチェックが成功することを確認する。
+   - **CD:** `v*.*.*` 形式のタグをプッシュし、`release.yml` ワークフローがトリガーされ、リリースノートが自動生成された GitHub Release が作成・公開され、`tanshu3.html` がアップロードされることを確認する。
 2. **残存タスク対応:**
    - **[保留]** Lint 警告修正 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)。
    - **[保留]** テストの充実 (UI レイヤーなど)。
@@ -93,9 +101,13 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
-- **リリースプロセス:** GitHub Actions を利用したタグベースの自動リリースプロセスを確立。
+- **CI/CD パイプライン:** GitHub Actions を利用。
+  - **CI:** `main` ブランチへの push/pull request をトリガーに、Lint/Format/Test/Build を実行 (`ci.yml`)。
+  - **CD:** タグプッシュをトリガーに、リリースノート自動生成 (`release-drafter`) とビルド成果物のリリース (`release.yml`)。
+- **コミット規約:** Conventional Commits を採用。リリースノート自動生成に利用。
+- **リリースプロセス:** タグプッシュによる自動化。`release-drafter` がリリースノートを作成し、`release.yml` がビルドと公開を行う。
 - **Deno 移行:** 完了。
-- **ビルド方法:** esbuild (`deno.land/x/esbuild`) を使用したバンドルプロセス (`deno task bundle`) を維持。
+- **ビルド方法:** esbuild (`deno.land/x/esbuild`) を使用したバンドルプロセス (`deno task bundle`) と単一HTML生成 (`deno task release:build`) を維持。
   - **タスク定義:** `deno.jsonc` の `tasks` で主要な開発コマンド (`check`, `lint`, `fmt`, `test`, `bundle`) を定義済み。
   - **権限フラグの管理:** `deno.jsonc` の `tasks` で必要な権限 (`--allow-read`, `--allow-write`) を設定済み。
   - **テスト環境の互換性:** `deno-dom` は `jsdom` と完全には互換性がなく、UIテストで確認された制約（DOMイベント処理、スタイル操作）が統合テストにも影響する可能性があります。
