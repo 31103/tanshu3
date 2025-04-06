@@ -19,7 +19,7 @@ const originalURL = globalThis.URL;
 
 // タイマー処理のモック化（テスト内で即時実行するように）
 function setupTimerMocks() {
-  (globalThis as any).setTimeout = (callback: Function, _timeout?: number) => {
+  (globalThis as any).setTimeout = (callback: () => void, _timeout?: number) => {
     // テストでは待機せずに即時実行
     callback();
     return 0; // タイマーIDの代わり
