@@ -53,7 +53,7 @@ Deno.test('FileManager - 基本DOM操作テスト: コンストラクタ', () =>
     showToast: spy(),
     showRecoveryToast: spy(),
   };
-  
+
   const document = setupDOM();
   // FileManagerインスタンスを作成し、モックを注入
   const fileManager = new FileManager(testMockNotification as any);
@@ -99,7 +99,7 @@ Deno.test('FileManager - 基本DOM操作テスト: ファイル選択ボタン�
   // clickメソッドを直接モックする代わりに、イベントハンドラが呼び出されることを検証する別のアプローチ
   let clickCalled = false;
   const originalClick = fileInput.click;
-  fileInput.click = function() {
+  fileInput.click = function () {
     clickCalled = true;
   } as any;
 
@@ -107,7 +107,7 @@ Deno.test('FileManager - 基本DOM操作テスト: ファイル選択ボタン�
   // deno-domでは.click()メソッドが存在しないため、直接イベントをディスパッチする
   const clickEvent = new Event('click');
   fileSelectButton.dispatchEvent(clickEvent);
-  
+
   assert(clickCalled, 'fileInput.click() should be called');
 
   // クリーンアップ
@@ -124,7 +124,7 @@ Deno.test('FileManager - 基本DOM操作テスト: handleDragOver', () => {
     showToast: spy(),
     showRecoveryToast: spy(),
   };
-  
+
   const document = setupDOM();
   const fileManager = new FileManager(testMockNotification as any);
   const dropArea = document.getElementById('dropArea') as HTMLElement;
@@ -132,7 +132,7 @@ Deno.test('FileManager - 基本DOM操作テスト: handleDragOver', () => {
   // DragEventのモック - 通常の関数として作成して変数にキャプチャ
   let preventDefaultCalled = false;
   const mockEvent = {
-    preventDefault: function() {
+    preventDefault: function () {
       preventDefaultCalled = true;
     },
     dataTransfer: null,
@@ -155,7 +155,7 @@ Deno.test('FileManager - 基本DOM操作テスト: handleDragLeave', () => {
     showToast: spy(),
     showRecoveryToast: spy(),
   };
-  
+
   const document = setupDOM();
   const fileManager = new FileManager(testMockNotification as any); // モックを注入
   const dropArea = document.getElementById('dropArea') as HTMLElement;
@@ -164,7 +164,7 @@ Deno.test('FileManager - 基本DOM操作テスト: handleDragLeave', () => {
   // mockPreventDefault をクラシックなモックに変更
   let preventDefaultCalled = false;
   const mockEvent = {
-    preventDefault: function() {
+    preventDefault: function () {
       preventDefaultCalled = true;
     },
     dataTransfer: null,

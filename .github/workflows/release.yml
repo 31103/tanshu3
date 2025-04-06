@@ -9,8 +9,8 @@ jobs:
   draft_release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write      # to create release drafts
-      pull-requests: read  # to read pull request information
+      contents: write # to create release drafts
+      pull-requests: read # to read pull request information
     steps:
       - name: Draft release notes
         uses: release-drafter/release-drafter@v6
