@@ -1,0 +1,40 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # vで始まるタグがプッシュされたときに実行
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest # 実行環境
+    permissions:
+      contents: write # リリース作成のために必要
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: deno-dev/setup-deno@v1
+        with:
+          deno-version: v1.x # プロジェクトのDenoバージョンに合わせて調整 (例: v1.40.0)
+
+      # オプション: Denoの依存関係キャッシュ (ビルド高速化のため)
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Build single HTML file
+        run: deno task release:build
+
+      - name: Create GitHub Release and Upload Artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
+        run: |
+          gh release create ${{ github.ref_name }} ./dist/tanshu3.html --generate-notes --title "Release ${{ github.ref_name }}"
+          echo "Release ${{ github.ref_name }} created with tanshu3.html artifact."

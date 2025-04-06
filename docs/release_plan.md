@@ -47,27 +47,70 @@
    dist/
    ```
 
-### ステップ3: GitHub Releaseでの公開手順 (手動)
+### ステップ3: GitHub Actions によるリリース自動化
 
-1. **単一HTML生成:**
-   - ターミナルで `deno task release:build` を実行し、`dist/tanshu3.html` が生成されることを確認する。
-2. **GitHub CLIの確認:**
-   - ターミナルで `gh --version` を実行し、GitHub CLIがインストールされているか確認する。
-   - インストールされていない場合は、[公式ドキュメント](https://cli.github.com/)に従ってインストールするよう案内する。
-3. **リリースタグ作成 (任意):**
-   - 必要に応じて、Gitでリリースタグを作成する (例: `git tag v1.0.0`)。
-   - タグをリモートリポジトリにプッシュする (例: `git push origin v1.0.0`)。
-4. **リリース作成とファイルアップロード:**
-   - ターミナルで以下のコマンドを実行する (タグ名、タイトル、ノートは適宜変更)。
-   ```bash
-   gh release create [タグ名] ./dist/tanshu3.html --title "[リリースタイトル]" --notes "[リリースノート]"
+手動でのリリース作業を自動化するため、GitHub Actions ワークフローを導入します。
+
+1. **ワークフローファイル作成:**
+   - リポジトリのルートに `.github/workflows/` ディレクトリを作成します (存在しない場合)。
+   - `.github/workflows/release.yml` という名前で以下の内容のファイルを作成します。
+
+   ```yaml
+   name: Create GitHub Release
+
+   on:
+     push:
+       tags:
+         - 'v*.*.*' # vで始まるタグがプッシュされたときに実行
+
+   jobs:
+     build-and-release:
+       runs-on: ubuntu-latest # 実行環境
+       permissions:
+         contents: write # リリース作成のために必要
+
+       steps:
+         - name: Checkout repository
+           uses: actions/checkout@v4
+
+         - name: Setup Deno
+           uses: deno-dev/setup-deno@v1
+           with:
+             deno-version: v1.x # プロジェクトのDenoバージョンに合わせて調整
+
+         # オプション: Denoの依存関係キャッシュ (ビルド高速化のため)
+         - name: Cache Deno dependencies
+           uses: actions/cache@v4
+           with:
+             path: ~/.cache/deno
+             key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
+             restore-keys: |
+               ${{ runner.os }}-deno-
+
+         - name: Build single HTML file
+           run: deno task release:build
+
+         - name: Create GitHub Release and Upload Artifact
+           env:
+             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
+           run: |
+             gh release create ${{ github.ref_name }} ./dist/tanshu3.html --generate-notes --title "Release ${{ github.ref_name }}"
+             echo "Release ${{ github.ref_name }} created with tanshu3.html artifact."
    ```
-   - 例:
-   ```bash
-   gh release create v1.0.0 ./dist/tanshu3.html --title "バージョン 1.0.0" --notes "最初のリリース。単一HTMLファイル版です。"
-   ```
-5. **確認:**
-   - GitHubリポジトリのReleasesページを開き、リリースが作成され、`tanshu3.html` がアセットとしてアップロードされていることを確認する。
+
+2. **リリース手順:**
+   - ローカルで変更をコミットし、`v` から始まる新しいタグを作成します (例: `git tag v1.0.1`)。
+   - 作成したタグを GitHub リポジトリにプッシュします (例: `git push origin v1.0.1`)。
+   - GitHub Actions ワークフローが自動的にトリガーされ、以下の処理を実行します:
+     - リポジトリをチェックアウトします。
+     - Deno 環境をセットアップします。
+     - `deno task release:build` を実行し、`dist/tanshu3.html` を生成します。
+     - プッシュされたタグ名で新しい GitHub Release を作成します。
+     - 生成された `dist/tanshu3.html` をリリースのアセットとしてアップロードします。
+     - リリースノートを自動生成します。
+3. **確認:**
+   - GitHub リポジトリの Actions タブでワークフローの実行状況を確認します。
+   - ワークフロー完了後、Releases ページで新しいリリースとアップロードされた `tanshu3.html` を確認します。
 
 ## 3. 成果物
 
@@ -75,10 +118,10 @@
 - 更新された `deno.jsonc` (`release:build` タスク追加)
 - 更新された `.gitignore` (ビルド成果物除外)
 - `docs/release_plan.md` (この計画書)
+- `.github/workflows/release.yml` (GitHub Actions ワークフローファイル)
 - (実行後) `dist/tanshu3.html` (単一HTMLファイル)
 
 ## 4. 前提条件
 
 - Deno (v2.2.7以上推奨) がインストールされていること。
 - プロジェクトがGitリポジトリとして管理されており、GitHubにリモートリポジトリが存在すること。
-- GitHub Release操作のためにGitHub CLI (`gh`) が利用可能であること (推奨)。

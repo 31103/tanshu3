@@ -19,7 +19,8 @@
     "fmt": "deno fmt",
     "test": "deno test --allow-read", // Allow read for test fixtures
     "bundle": "deno run --allow-read --allow-write --allow-env --allow-run scripts/build.ts",
-    "dev": "deno run --allow-read --allow-write --allow-env --allow-run scripts/build.ts" // Placeholder for dev task, currently just builds
+    "dev": "deno run --allow-read --allow-write --allow-env --allow-run scripts/build.ts", // Placeholder for dev task, currently just builds
+    "release:build": "deno run --allow-read --allow-write --allow-run=deno scripts/release.ts"
   },
   "compilerOptions": {
     // tsconfig.json から必要な設定を移行 (例: strict, lib)
