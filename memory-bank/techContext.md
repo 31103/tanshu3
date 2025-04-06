@@ -8,10 +8,12 @@ _このドキュメントは、プロジェクトで使用されている技術�
 - **ランタイム:** Deno (v2.2.7)
 - **フレームワーク/ライブラリ:** なし (Vanilla TypeScript/JavaScript)
 - **テスト:** Deno Test (Deno 内蔵), deno-dom (UI テスト用)
-- **ビルド/バンドル:** esbuild (`deno.land/x/esbuild`)
+- **ビルド/バンドル:** esbuild (`deno.land/x/esbuild`) - `deno task bundle` 経由
+- **リリーススクリプト:** Deno (`scripts/release.ts`) - `deno task release:build` 経由
 - **リンティング:** Deno Lint (Deno 内蔵)
 - **フォーマット:** Deno Format (Deno 内蔵)
 - **パッケージ管理:** URL Imports, Import Map (`import_map.json`)
+- **CI/CD:** GitHub Actions (`.github/workflows/release.yml`)
 - **実行環境:** Web ブラウザ (実行時)
 
 ## 2. 開発環境セットアップ
@@ -68,5 +70,13 @@ Deno 環境では、`npm install` のような明示的なインストールス�
   - 設定: `scripts/build.ts` 内で esbuild API を使用して設定。`deno.jsonc` の `tasks.bundle` で実行。
   - 実行: `deno task bundle`
   - 出力: `public/js/main.js` および `public/js/main.js.map`。`file://` 環境での実行を維持。
+- **単一HTML生成 (リリース用):**
+  - 設定: `scripts/release.ts` で実装。`deno.jsonc` の `tasks.release:build` で実行。
+  - 実行: `deno task release:build`
+  - 出力: `dist/tanshu3.html`。
+- **リリース自動化 (GitHub Actions):**
+  - 設定: `.github/workflows/release.yml`
+  - トリガー: `v*.*.*` 形式のタグプッシュ。
+  - 処理: `deno task release:build` を実行し、成果物を GitHub Release にアップロード。
 - **ステージング時チェック:**
   - Git フックは設定しない方針。

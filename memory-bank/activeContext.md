@@ -4,11 +4,25 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 1. 現在の作業焦点 (Current Focus)
 
-- **Deno 移行:** フェーズ8「クリーンアップとドキュメント更新」実行中。
+- **リリース自動化:** GitHub Actions を利用したリリースプロセスの確立とテスト。
+- **Deno 移行:** フェーズ8「クリーンアップとドキュメント更新」完了。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
 - **2025-04-06 (最新):**
+  - **リリース自動化実装:**
+    - 単一HTML生成スクリプト `scripts/release.ts` を作成。
+    - `deno.jsonc` に `release:build` タスクを追加。
+    - `.gitignore` を更新し、ビルド成果物 (`public/js/main.js`, `.map`, `dist/`) を無視するように設定。Git追跡対象からも除外。
+    - GitHub Actions ワークフロー (`.github/workflows/release.yml`) を作成し、タグプッシュ時に自動でビルドとリリースを行うように設定。
+    - `docs/release_plan.md` を更新し、自動化手順を反映。
+    - `README.md` を更新し、新しいスクリプト、タスク、ワークフローを反映。
+    - `scripts/release.ts` の CSS 埋め込み正規表現を修正。
+  - **Deno 移行 (フェーズ8 完了):**
+    - **[完了]** Node.js関連ファイルの削除。
+    - **[完了]** Memory Bank の更新 (`techContext.md`, `activeContext.md`, `progress.md`)。
+    - **[完了]** `README.md` の更新 (セットアップ手順、実行方法など)。
+- **2025-04-06:**
   - **Deno 移行 (フェーズ7 完了):**
     - **ビルドツールを Parcel から esbuild に変更:** `deno bundle` が廃止されたため、代替として `esbuild` (`deno.land/x/esbuild`) を採用。
     - **Parcel 関連削除:** `package.json` から Parcel の依存関係とスクリプトを削除。
@@ -17,10 +31,10 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
     - **動作確認:** `deno task bundle` で `public/js/main.js` が正常に生成され、`index.html` が `file://` 環境で動作することを確認。
 - **2025-04-06 (フェーズ8 進行中):**
   - **Node.js 関連ファイル削除:** `package.json`, `package-lock.json`, `eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `tsconfig.json`, `tsconfig.test.json`, `test/jest/`, `node_modules/` を削除。
-  - **Memory Bank 更新:** `techContext.md` を Deno 環境に合わせて全面更新。
+  - **Memory Bank 更新:** `techContext.md` を Deno 環境に合わせて全面更新 (フェーズ8の一部として実施)。
 - **2025-04-05:**
   - **Deno 移行 (フェーズ6 完了):**
-    - **統合テストをDeno Test環境に移行:** すべての統合テストファイルをDeno用に書き換え、テストが正常に通ることを確認しました。
+    - **統合テストをDeno Test環境に移行:** すべての統合テストファイルをDeno用に書き換え、テストが正常に通ることを確認。
     - **`test/integration/`ディレクトリ作成:** 新しい統合テストディレクトリを作成し、そこにテストファイルを配置しました。
     - **テスト構文変換:** Jest構文からDenoのテスト構文に変換し、必要なインポート調整を行いました。
     - **ファイルAPI変換:** Node.jsのファイル操作(`fs`, `path`)をDenoの同等機能に置き換えました。
@@ -65,16 +79,23 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 3. 次のステップ (Next Steps)
 
-1. **Deno 移行 (フェーズ8):** クリーンアップとドキュメント更新を継続。
-   - **[完了]** Node.js関連ファイルの削除。
-   - **[進行中]** Memory Bank の更新 (`activeContext.md`, `progress.md`)。
-   - **[未着手]** `README.md` の更新 (セットアップ手順、実行方法など)。
-   - **[スキップ]** Git フック設定。
+1. **リリース自動化テスト:**
+   - `v*.*.*` 形式のタグをプッシュし、GitHub Actions ワークフローが正常に実行され、GitHub Release が作成されることを確認する。
+   - 生成された `dist/tanshu3.html` をダウンロードし、デザインや機能が期待通りか確認する。
+2. **残存タスク対応:**
+   - **[保留]** Lint 警告修正 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)。
+   - **[保留]** テストの充実 (UI レイヤーなど)。
+   - **[保留]** エラーハンドリング強化。
+   - **[保留]** コードコメント修正・強化。
+   - **[保留]** UI/UX の継続的改善。
+   - **[保留]** パフォーマンス最適化。
+   - **[保留]** 結果ダウンロード機能の Deno 環境での動作確認。
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
-- **Deno 移行:**
-  - **ビルド方法:** **esbuild (`deno.land/x/esbuild`) を使用したバンドルプロセスを確立済み。** `deno task bundle` で実行可能。
+- **リリースプロセス:** GitHub Actions を利用したタグベースの自動リリースプロセスを確立。
+- **Deno 移行:** 完了。
+- **ビルド方法:** esbuild (`deno.land/x/esbuild`) を使用したバンドルプロセス (`deno task bundle`) を維持。
   - **タスク定義:** `deno.jsonc` の `tasks` で主要な開発コマンド (`check`, `lint`, `fmt`, `test`, `bundle`) を定義済み。
   - **権限フラグの管理:** `deno.jsonc` の `tasks` で必要な権限 (`--allow-read`, `--allow-write`) を設定済み。
   - **テスト環境の互換性:** `deno-dom` は `jsdom` と完全には互換性がなく、UIテストで確認された制約（DOMイベント処理、スタイル操作）が統合テストにも影響する可能性があります。

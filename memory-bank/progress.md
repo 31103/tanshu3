@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **Deno 移行完了 (フェーズ8 進行中)。**
-- **直近のマイルストーン:** Deno 移行フェーズ7の完了 (ビルド/実行方法の確立 - esbuild 採用)、フェーズ8の一部完了 (ファイル削除、Memory Bank 更新)。
-- **現在のタスク:** Deno 移行フェーズ8「クリーンアップとドキュメント更新」の残作業 (`progress.md` 更新、`README.md` 更新)。
+- **全体進捗:** **リリース自動化実装完了。Deno 移行完了。**
+- **直近のマイルストーン:** GitHub Actions を利用したリリース自動化の実装、Deno 移行フェーズ8の完了 (`README.md` 更新など)。
+- **現在のタスク:** リリース自動化のテスト、残存タスクの対応。
 
 ## 2. 完了した機能 (What Works)
 
@@ -45,9 +45,11 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **パッケージ管理:** URL Import / `import_map.json`
     - **Lint/Format:** `deno lint`/`deno fmt` (`deno.jsonc` で設定)
     - **テスト:** Deno Test (`deno.jsonc` で設定)
-    - **ビルド:** **esbuild (`deno.land/x/esbuild`)** (`deno.jsonc` の `bundle` タスクで実行)
+    - **ビルド:** esbuild (`deno.land/x/esbuild`) (`deno task bundle` で実行)。
+    - **単一HTML生成:** `scripts/release.ts` (`deno task release:build` で実行)。
+    - **リリース自動化:** GitHub Actions (`.github/workflows/release.yml`) によるタグプッシュ時の自動ビルド＆リリース。
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
-- **Deno 移行 (フェーズ1-7 完了):**
+- **Deno 移行 (フェーズ1-8 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
   - **フェーズ2:** コアロジック依存関係移行 (インポートパス修正、`node.ts` 削除)。
   - **フェーズ3:** コアロジックテスト移行 (Jest -> Deno Test)。
@@ -72,10 +74,19 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - ビルドスクリプト `scripts/build.ts` を作成
     - `deno.jsonc` に `check`, `lint`, `fmt`, `test`, `bundle` タスクを定義
     - `deno task bundle` でビルド成功を確認
-  - **フェーズ8:** クリーンアップとドキュメント更新 (進行中)
+  - **フェーズ8:** クリーンアップとドキュメント更新
     - **[完了]** Node.js関連ファイル (`package.json`, `node_modules/` など) の削除。
-    - **[完了]** `memory-bank/techContext.md` の更新。
-    - **[完了]** `memory-bank/activeContext.md` の更新。
+    - **[完了]** Memory Bank (`techContext.md`, `activeContext.md`, `progress.md`) の更新。
+    - **[完了]** `README.md` の更新。
+- **リリース自動化:**
+  - **[完了]** 単一HTML生成スクリプト (`scripts/release.ts`) 作成。
+  - **[完了]** `deno.jsonc` に `release:build` タスク追加。
+  - **[完了]** `.gitignore` 更新 (ビルド成果物除外)。
+  - **[完了]** GitHub Actions ワークフロー (`.github/workflows/release.yml`) 作成。
+  - **[完了]** `docs/release_plan.md` 更新。
+  - **[完了]** `README.md` 更新。
+  - **[完了]** `scripts/release.ts` の CSS 埋め込みバグ修正。
+  - **[完了]** `.gitignore` 設定修正と Git 追跡からの除外。
 - **リファクタリング:**
   - `NotificationSystem` 遅延初期化、`FileManager` への DI 導入。
 - **症例識別ロジック修正:**
@@ -84,14 +95,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 3. 残りの作業 (What's Left to Build)
 
-`docs/deno_migration_plan.md` に基づく。
-
-- **[進行中] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
-  - **[完了]** Node.js関連ファイルの削除
-  - **[完了]** Memory Bank (`techContext.md`, `activeContext.md`) の更新
-  - **[進行中]** Memory Bank (`progress.md`) の更新
-  - **[未着手]** `README.md` の更新
-  - **[スキップ]** Git フック設定
+- **[未着手] リリース自動化テスト:**
+  - `v*.*.*` 形式のタグをプッシュし、GitHub Actions ワークフローが正常に実行され、リリースが作成されるか確認。
+  - 生成された `dist/tanshu3.html` をダウンロードし、動作確認。
 - **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所。
 - **[保留] テストの充実:** UI レイヤーなど。
 - **[保留] エラーハンドリング強化:** 全体見直し。
@@ -112,9 +118,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 5. 意思決定の変遷 (Evolution of Decisions)
 
-`activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
+`activeContext.md` の「最近の主な変更点」を参照。
 
-- **[2025-04-06]:** Deno 移行フェーズ8開始。Node.js 関連ファイル削除、Memory Bank 更新 (`techContext.md`, `activeContext.md`)。
+- **[2025-04-06]:** リリース自動化実装。単一HTML生成スクリプト、GitHub Actions ワークフロー導入。関連ドキュメント更新、バグ修正。
+- **[2025-04-06]:** Deno 移行フェーズ8完了。Node.js 関連ファイル削除、Memory Bank 更新、README 更新。
 - **[2025-04-06]:** Deno 移行フェーズ7完了。ビルドツールを Parcel から esbuild に変更。`deno.jsonc` にタスクを定義。
 - **[2025-04-05]:** Deno 移行フェーズ6完了。統合テストを Deno Test 環境に移行。
 - **[2025-04-05]:** Deno 移行フェーズ5完了。UI テストを Deno Test 環境に移行。
