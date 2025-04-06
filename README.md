@@ -41,32 +41,37 @@ git clone https://github.com/31103/tanshu3.git
 cd tanshu3
 
 # 依存関係のキャッシュ (初回実行時などに自動で行われます)
-# 必要に応じて deno cache scripts/build.ts --reload
+# 必要に応じて deno cache --reload scripts/build.ts scripts/release.ts
 ```
 
 ### 開発環境
 
 - **ランタイム**: Deno (v2.2.7 以上推奨)
 - **パッケージ管理**: URL Imports / Import Map (`import_map.json`)
-- **ビルドツール**: esbuild (`deno.land/x/esbuild`)
+- **ビルドツール**: esbuild (`deno.land/x/esbuild`) - `deno task bundle` 経由で使用
+- **リリーススクリプト**: Deno (`scripts/release.ts`) - `deno task release:build` 経由で使用
 - **言語**: TypeScript
 - **テスト**: Deno Test + deno-dom
 - **コード品質**: Deno Lint + Deno Format
+- **CI/CD**: GitHub Actions (`.github/workflows/release.yml`)
 
 ### ファイル構成
 
 ```
 tanshu3/
-├── .github/                # GitHub Actionsなどの設定
+├── .github/                # GitHub Actions ワークフロー
+│   └── workflows/
+│       └── release.yml     # リリース自動化ワークフロー
 ├── coverage/               # テストカバレッジレポート
 ├── docs/                   # ドキュメント
-│   ├── deno_migration_plan.md        # Deno移行計画
+│   ├── release_plan.md     # リリース計画
 │   ├── 短期滞在手術等基本料３について.md # 短手３判定ロジック詳細
 │   └── 入院EF統合ファイルについて.md   # EFファイル仕様
 ├── memory-bank/            # プロジェクトメモリーバンク
 ├── public/                 # 公開ファイル (ブラウザで直接アクセス)
-├── scripts/                # ビルドスクリプトなど
-│   └── build.ts            # esbuild を使用したバンドルスクリプト
+├── scripts/                # ビルド・リリーススクリプトなど
+│   ├── build.ts            # esbuild を使用したバンドルスクリプト
+│   └── release.ts          # 単一HTML生成スクリプト
 ├── src/                    # ソースコード (TypeScript)
 │   ├── browser/            # ブラウザ環境依存コード
 │   ├── core/               # コアロジック (環境非依存)
@@ -80,14 +85,15 @@ tanshu3/
 
 ### コマンド一覧 (`deno.jsonc` の `tasks` で定義)
 
-| コマンド           | 説明                                     |
-| ------------------ | ---------------------------------------- |
-| `deno task dev`    | 開発用タスク (現在は `bundle` と同じ)    |
-| `deno task bundle` | esbuild を使用してプロダクション用ビルド |
-| `deno task test`   | すべてのテスト実行                       |
-| `deno task lint`   | Deno Lint によるコード検証               |
-| `deno task fmt`    | Deno Format によるコードフォーマット     |
-| `deno task check`  | 型チェック実行                           |
+| コマンド                  | 説明                                                    |
+| ------------------------- | ------------------------------------------------------- |
+| `deno task dev`           | 開発用タスク (現在は `bundle` と同じ)                   |
+| `deno task bundle`        | esbuild を使用してプロダクション用ビルド (`public/js/`) |
+| `deno task release:build` | 単一HTMLファイル (`dist/tanshu3.html`) を生成           |
+| `deno task test`          | すべてのテスト実行                                      |
+| `deno task lint`          | Deno Lint によるコード検証                              |
+| `deno task fmt`           | Deno Format によるコードフォーマット                    |
+| `deno task check`         | 型チェック実行                                          |
 
 ## 短手３判定ロジック
 
