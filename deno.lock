@@ -86,27 +86,5 @@
     "https://deno.land/x/denoflate@1.2.1/pkg/denoflate.js": "b9f9ad9457d3f12f28b1fb35c555f57443427f74decb403113d67364e4f2caf4",
     "https://deno.land/x/denoflate@1.2.1/pkg/denoflate_bg.wasm.js": "d581956245407a2115a3d7e8d85a9641c032940a8e810acbd59ca86afd34d44d",
     "https://deno.land/x/esbuild@v0.21.4/mod.js": "2baa2fee0098fe9cec9c1a5e66e394afce85ccb966a9be52d7c617ea5c67769f"
-  },
-  "workspace": {
-    "packageJson": {
-      "dependencies": [
-        "npm:@eslint/js@^9.23.0",
-        "npm:@types/jest@^29.5.14",
-        "npm:@types/node@^22.13.8",
-        "npm:@typescript-eslint/eslint-plugin@^8.28.0",
-        "npm:@typescript-eslint/parser@^8.28.0",
-        "npm:eslint-config-prettier@9",
-        "npm:eslint-plugin-prettier@5",
-        "npm:eslint@^9.23.0",
-        "npm:jest-environment-jsdom@^29.7.0",
-        "npm:jest@^29.7.0",
-        "npm:lint-staged@15",
-        "npm:prettier-plugin-eslint@^1.0.2",
-        "npm:prettier@3",
-        "npm:ts-jest@^29.2.6",
-        "npm:typescript-eslint@^8.28.0",
-        "npm:typescript@^5.8.2"
-      ]
-    }
   }
 }

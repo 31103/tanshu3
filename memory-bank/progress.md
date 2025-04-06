@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **Deno 移行作業中 (フェーズ7完了、フェーズ8準備中)。**
-- **直近のマイルストーン:** Deno 移行フェーズ7の完了 (ビルド/実行方法の確立 - esbuild 採用)。
-- **現在のタスク:** Deno 移行フェーズ8「クリーンアップとドキュメント更新」の準備。
+- **全体進捗:** **Deno 移行完了 (フェーズ8 進行中)。**
+- **直近のマイルストーン:** Deno 移行フェーズ7の完了 (ビルド/実行方法の確立 - esbuild 採用)、フェーズ8の一部完了 (ファイル削除、Memory Bank 更新)。
+- **現在のタスク:** Deno 移行フェーズ8「クリーンアップとドキュメント更新」の残作業 (`progress.md` 更新、`README.md` 更新)。
 
 ## 2. 完了した機能 (What Works)
 
@@ -41,11 +41,11 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 - **開発基盤:**
   - TypeScript による開発。
   - **Deno 移行中:**
-    - **ランタイム:** Node.js -> Deno (v2.2.7)
-    - **パッケージ管理:** npm -> URL Import / `import_map.json`
-    - **Lint/Format:** ESLint/Prettier -> `deno lint`/`deno fmt` (`deno.jsonc` で設定)
-    - **テスト:** Jest -> Deno Test (`deno.jsonc` で設定)
-    - **ビルド:** Parcel -> **esbuild (`deno.land/x/esbuild`)** (`deno.jsonc` の `bundle` タスクで実行)
+    - **ランタイム:** Deno (v2.2.7)
+    - **パッケージ管理:** URL Import / `import_map.json`
+    - **Lint/Format:** `deno lint`/`deno fmt` (`deno.jsonc` で設定)
+    - **テスト:** Deno Test (`deno.jsonc` で設定)
+    - **ビルド:** **esbuild (`deno.land/x/esbuild`)** (`deno.jsonc` の `bundle` タスクで実行)
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
 - **Deno 移行 (フェーズ1-7 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
@@ -72,16 +72,13 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - ビルドスクリプト `scripts/build.ts` を作成
     - `deno.jsonc` に `check`, `lint`, `fmt`, `test`, `bundle` タスクを定義
     - `deno task bundle` でビルド成功を確認
+  - **フェーズ8:** クリーンアップとドキュメント更新 (進行中)
+    - **[完了]** Node.js関連ファイル (`package.json`, `node_modules/` など) の削除。
+    - **[完了]** `memory-bank/techContext.md` の更新。
+    - **[完了]** `memory-bank/activeContext.md` の更新。
 - **リファクタリング:**
   - `NotificationSystem` 遅延初期化、`FileManager` への DI 導入。
-  - (旧) ESLint v9 へのアップデート。
-  - (旧) レガシーテスト・型定義削除。
-  - (旧) Jest テスト環境変更 (`jsdom`)。
-  - (旧) UI テスト修正 (一部)。
-  - (旧) `validator.ts` リファクタリング。
-- **Lint 警告修正 (一部):**
-  - (旧) `src/ui/components/file-manager.ts` の `@typescript-eslint/explicit-function-return-type` 警告修正。
-- **症例識別ロジック修正:** (Deno移行前に実施)
+- **症例識別ロジック修正:**
   - `parsers.ts` の `parseEFFile`, `mergeCases` 修正 (複合キー導入)。
   - 関連テスト修正・追加。
 
@@ -89,10 +86,12 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `docs/deno_migration_plan.md` に基づく。
 
-- **[未着手] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
-  - Node.js関連ファイルの削除
-  - `README.md`の更新
-  - Memory Bankの最終更新
+- **[進行中] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
+  - **[完了]** Node.js関連ファイルの削除
+  - **[完了]** Memory Bank (`techContext.md`, `activeContext.md`) の更新
+  - **[進行中]** Memory Bank (`progress.md`) の更新
+  - **[未着手]** `README.md` の更新
+  - **[スキップ]** Git フック設定
 - **[保留] Lint 警告修正:** `@typescript-eslint/explicit-function-return-type` 残り3箇所。
 - **[保留] テストの充実:** UI レイヤーなど。
 - **[保留] エラーハンドリング強化:** 全体見直し。
@@ -103,9 +102,8 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 4. 既知の問題とバグ (Known Issues & Bugs)
 
-- **[移行中] 開発環境:** Node.js と Deno のツール・設定が混在。
 - **[警告] 残存するLint警告:** `@typescript-eslint/explicit-function-return-type` 3箇所。
-- **[制約] UI テスト移行:** `deno-dom` の互換性に関する以下の制約を把握（対応済み）：
+- **[制約] UI テスト:** `deno-dom` の互換性に関する以下の制約を把握（対応済み）：
   - `element.click()`メソッド未実装
   - `style`プロパティの操作制限
   - `Document`型の不整合
@@ -116,9 +114,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
 
+- **[2025-04-06]:** Deno 移行フェーズ8開始。Node.js 関連ファイル削除、Memory Bank 更新 (`techContext.md`, `activeContext.md`)。
 - **[2025-04-06]:** Deno 移行フェーズ7完了。ビルドツールを Parcel から esbuild に変更。`deno.jsonc` にタスクを定義。
-- **[2025-04-05]:** Deno 移行フェーズ6完了。`module-integration_test.ts`と`data-flow_test.ts`の統合テストをDeno Test環境に移行し、14件すべてのテストがパス。
-- **[2025-04-05]:** Deno 移行フェーズ5完了。`file-manager_test.ts`、`notification_test.ts`と`result-viewer_test.ts`のすべてのテストが成功。テスト実行で20件すべてのテストがパス。
+- **[2025-04-05]:** Deno 移行フェーズ6完了。統合テストを Deno Test 環境に移行。
+- **[2025-04-05]:** Deno 移行フェーズ5完了。UI テストを Deno Test 環境に移行。
 - **[2025-04-05]:** Deno 移行フェーズ4完了 (UIレイヤー依存関係移行)。
 - **[2025-04-05]:** Deno 移行フェーズ3完了 (コアロジックテスト移行)。
 - **[2025-04-05]:** Deno 移行フェーズ2完了 (コアロジック依存関係移行)。
@@ -128,10 +127,10 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 - **[2025-04-05]:** ファイル選択 UI 改善。
 - **[2025-04-05]:** 症例識別ロジック修正。
 - **[2025-04-04]:** `validator.ts` リファクタリング。
-- **[2025-03-30]:** ESLint v9 移行。
-- **[2025-03-30]:** VS Code Prettier 設定標準化。
-- **[2025-03-30]:** Jest 環境変更 (`jsdom`)、UI テスト修正。
-- **[2025-03-29]:** レガシーコード削除。
-- **[2025-03-27]:** 開発ツール設定最適化。
+- **[2025-03-30]:** (旧) ESLint v9 移行。
+- **[2025-03-30]:** (旧) VS Code Prettier 設定標準化。
+- **[2025-03-30]:** (旧) Jest 環境変更 (`jsdom`)、UI テスト修正。
+- **[2025-03-29]:** (旧) レガシーコード削除。
+- **[2025-03-27]:** (旧) 開発ツール設定最適化。
 - **[日付不明]:** クリップボード API 変更。
-- **[日付不明]:** Parcel 採用。
+- **[日付不明]:** (旧) Parcel 採用。

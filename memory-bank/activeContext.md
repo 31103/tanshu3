@@ -4,7 +4,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 1. 現在の作業焦点 (Current Focus)
 
-- **Deno 移行:** フェーズ8「クリーンアップとドキュメント更新」準備。
+- **Deno 移行:** フェーズ8「クリーンアップとドキュメント更新」実行中。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
@@ -15,6 +15,9 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
     - **esbuild 導入:** `import_map.json` に `esbuild` を追加。ビルドスクリプト `scripts/build.ts` を作成。
     - **`deno.jsonc` tasks 定義:** `check`, `lint`, `fmt`, `test`, `bundle` タスクを定義。`bundle` タスクで `scripts/build.ts` を実行するように設定。
     - **動作確認:** `deno task bundle` で `public/js/main.js` が正常に生成され、`index.html` が `file://` 環境で動作することを確認。
+- **2025-04-06 (フェーズ8 進行中):**
+  - **Node.js 関連ファイル削除:** `package.json`, `package-lock.json`, `eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `tsconfig.json`, `tsconfig.test.json`, `test/jest/`, `node_modules/` を削除。
+  - **Memory Bank 更新:** `techContext.md` を Deno 環境に合わせて全面更新。
 - **2025-04-05:**
   - **Deno 移行 (フェーズ6 完了):**
     - **統合テストをDeno Test環境に移行:** すべての統合テストファイルをDeno用に書き換え、テストが正常に通ることを確認しました。
@@ -62,11 +65,11 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 3. 次のステップ (Next Steps)
 
-1. **Deno 移行 (フェーズ8):** クリーンアップとドキュメント更新を進める。
-   - Node.js関連ファイル (`package.json`, `package-lock.json`, `node_modules/`, `eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `tsconfig.json`, `tsconfig.test.json`, `test/jest/`) の削除。
-   - Git フック設定の検討 (Husky または手動)。
-   - `README.md` の更新 (セットアップ手順、実行方法など)。
-   - Memory Bank の最終更新 (`techContext.md` 全面書き換えなど)。
+1. **Deno 移行 (フェーズ8):** クリーンアップとドキュメント更新を継続。
+   - **[完了]** Node.js関連ファイルの削除。
+   - **[進行中]** Memory Bank の更新 (`activeContext.md`, `progress.md`)。
+   - **[未着手]** `README.md` の更新 (セットアップ手順、実行方法など)。
+   - **[スキップ]** Git フック設定。
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
@@ -75,7 +78,6 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
   - **タスク定義:** `deno.jsonc` の `tasks` で主要な開発コマンド (`check`, `lint`, `fmt`, `test`, `bundle`) を定義済み。
   - **権限フラグの管理:** `deno.jsonc` の `tasks` で必要な権限 (`--allow-read`, `--allow-write`) を設定済み。
   - **テスト環境の互換性:** `deno-dom` は `jsdom` と完全には互換性がなく、UIテストで確認された制約（DOMイベント処理、スタイル操作）が統合テストにも影響する可能性があります。
-  - **Node.js依存ファイルのクリーンアップ:** フェーズ8では、不要になったNode.js関連ファイル（`package.json`、`node_modules/`、`jest.config.js`など）を削除します。この作業は慎重に行い、機能停止が起きないようにします。
 - (他項目は変更なし)
 
 ## 5. 重要なパターンと好み (Key Patterns & Preferences)

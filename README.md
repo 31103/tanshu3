@@ -40,56 +40,54 @@
 git clone https://github.com/31103/tanshu3.git
 cd tanshu3
 
-# 依存パッケージのインストール
-npm install
-
-# ビルド
-npm run build
+# 依存関係のキャッシュ (初回実行時などに自動で行われます)
+# 必要に応じて deno cache scripts/build.ts --reload
 ```
 
 ### 開発環境
 
-- **Node.js**: 18.x以上
-- **パッケージマネージャ**: npm
-- **ビルドツール**: Parcel v2
+- **ランタイム**: Deno (v2.2.7 以上推奨)
+- **パッケージ管理**: URL Imports / Import Map (`import_map.json`)
+- **ビルドツール**: esbuild (`deno.land/x/esbuild`)
 - **言語**: TypeScript
-- **テスト**: Jest + jsdom
-- **コード品質**: ESLint v9 + Prettier
+- **テスト**: Deno Test + deno-dom
+- **コード品質**: Deno Lint + Deno Format
 
 ### ファイル構成
 
 ```
 tanshu3/
 ├── .github/                # GitHub Actionsなどの設定
-├── .husky/                 # Gitフック設定
 ├── coverage/               # テストカバレッジレポート
-├── dist/                   # ビルド出力ディレクトリ
 ├── docs/                   # ドキュメント
+│   ├── deno_migration_plan.md        # Deno移行計画
 │   ├── 短期滞在手術等基本料３について.md # 短手３判定ロジック詳細
 │   └── 入院EF統合ファイルについて.md   # EFファイル仕様
 ├── memory-bank/            # プロジェクトメモリーバンク
 ├── public/                 # 公開ファイル (ブラウザで直接アクセス)
+├── scripts/                # ビルドスクリプトなど
+│   └── build.ts            # esbuild を使用したバンドルスクリプト
 ├── src/                    # ソースコード (TypeScript)
 │   ├── browser/            # ブラウザ環境依存コード
-│   ├── core/               # コアロジック (ブラウザ/Node.js共通)
+│   ├── core/               # コアロジック (環境非依存)
 │   └── ui/                 # UI関連コード
 └── test/                   # テストコード
     ├── fixtures/           # テスト用データ
-    └── jest/               # Jestテスト
+    └── integration/        # 統合テスト (Deno Test)
 ```
 
-### コマンド一覧
+(コアロジックとUIコンポーネントのユニットテストは各ソースファイルの隣に `_test.ts` として配置)
 
-| コマンド                | 説明                                   |
-| ----------------------- | -------------------------------------- |
-| `npm start`             | 開発サーバー起動（ホットリロード対応） |
-| `npm run build`         | プロダクション用ビルド                 |
-| `npm test`              | すべてのテスト実行                     |
-| `npm run test:coverage` | テストカバレッジレポート生成           |
-| `npm run lint`          | ESLintによるコード検証                 |
-| `npm run lint:fix`      | ESLintによるコード検証と自動修正       |
-| `npm run check-format`  | Prettierによるフォーマット検証         |
-| `npm run check-all`     | すべての検証を実行                     |
+### コマンド一覧 (`deno.jsonc` の `tasks` で定義)
+
+| コマンド           | 説明                                     |
+| ------------------ | ---------------------------------------- |
+| `deno task dev`    | 開発用タスク (現在は `bundle` と同じ)    |
+| `deno task bundle` | esbuild を使用してプロダクション用ビルド |
+| `deno task test`   | すべてのテスト実行                       |
+| `deno task lint`   | Deno Lint によるコード検証               |
+| `deno task fmt`    | Deno Format によるコードフォーマット     |
+| `deno task check`  | 型チェック実行                           |
 
 ## 短手３判定ロジック
 

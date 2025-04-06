@@ -4,13 +4,13 @@ _このドキュメントは、プロジェクトで使用されている技術�
 
 ## 1. 主要技術スタック
 
-- **言語:** TypeScript (v5.7.3 - Deno内蔵), JavaScript (ES Modules), HTML5, CSS3
+- **言語:** TypeScript (Deno 内蔵), JavaScript (ES Modules), HTML5, CSS3
 - **ランタイム:** Deno (v2.2.7)
 - **フレームワーク/ライブラリ:** なし (Vanilla TypeScript/JavaScript)
-- **テスト:** Deno Test (Deno内蔵), deno-dom (UIテスト用)
-- **ビルド/バンドル:** **esbuild (`deno.land/x/esbuild`)**
-- **リンティング:** Deno Lint (Deno内蔵)
-- **フォーマット:** Deno Format (Deno内蔵)
+- **テスト:** Deno Test (Deno 内蔵), deno-dom (UI テスト用)
+- **ビルド/バンドル:** esbuild (`deno.land/x/esbuild`)
+- **リンティング:** Deno Lint (Deno 内蔵)
+- **フォーマット:** Deno Format (Deno 内蔵)
 - **パッケージ管理:** URL Imports, Import Map (`import_map.json`)
 - **実行環境:** Web ブラウザ (実行時)
 
@@ -46,7 +46,7 @@ Deno 環境では、`npm install` のような明示的なインストールス�
   - `path`: ファイルパス操作用ユーティリティ (例: `scripts/build.ts` で使用)。
 - **Deno Third Party Modules (`deno.land/x`):**
   - `deno-dom`: Deno Test での DOM 環境シミュレーション用。
-  - **`esbuild`**: JavaScript/TypeScript のバンドル用 (`scripts/build.ts` で使用)。
+  - `esbuild`: JavaScript/TypeScript のバンドル用 (`scripts/build.ts` で使用)。
 
 ## 5. ツール利用パターン
 
@@ -69,4 +69,4 @@ Deno 環境では、`npm install` のような明示的なインストールス�
   - 実行: `deno task bundle`
   - 出力: `public/js/main.js` および `public/js/main.js.map`。`file://` 環境での実行を維持。
 - **ステージング時チェック:**
-  - Git フック (例: Husky または手動設定) で `deno task lint` と `deno task fmt` を実行することを検討 (フェーズ8)。
+  - Git フックは設定しない方針。

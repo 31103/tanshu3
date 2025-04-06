@@ -124,36 +124,36 @@
   - Denoのセキュリティモデルに従い、ファイルアクセスには明示的な `--allow-read` 権限が必要。
   - Jest の global な関数 (`expect`, `describe` など) は Deno では明示的なインポートが必要。
 
-### フェーズ 7: ビルドと実行方法の確立 (esbuild 採用 - 未着手)
+### フェーズ 7: ビルドと実行方法の確立 (esbuild 採用 - 完了)
 
 - **目的:** Parcel を使わない Deno ネイティブなビルド・実行方法を **esbuild** を用いて確立する。
 - **作業内容:**
-  1. **Parcel 関連削除:** `package.json` から Parcel 関連の `scripts` と `devDependencies` を削除。Parcel のキャッシュディレクトリ (`.parcel-cache` など) も削除。
+  1. **Parcel 関連削除:** `package.json` から Parcel 関連の `scripts` と `devDependencies` を削除。Parcel のキャッシュディレクトリ (`.parcel-cache` など) も削除。(**完了**)
   2. **esbuild の導入:**
-     - `import_map.json` に `esbuild` のエントリーを追加 (`deno.land/x/esbuild` を指定)。
-     - ビルド処理を行う Deno スクリプト (`scripts/build.ts`) を作成し、`esbuild` モジュールをインポートして使用する。
+     - `import_map.json` に `esbuild` のエントリーを追加 (`deno.land/x/esbuild` を指定)。(**完了**)
+     - ビルド処理を行う Deno スクリプト (`scripts/build.ts`) を作成し、`esbuild` モジュールをインポートして使用する。(**完了**)
   3. **`deno.jsonc` に `tasks` を定義:**
-     - `check`, `lint`, `fmt`, `test` タスクを定義 (既存の Deno コマンドをラップ)。
-     - `dev`: 開発用タスク (ファイル監視と再ビルドなど、必要に応じて定義)。
-     - `bundle`: `scripts/build.ts` を実行して `src/browser/main.ts` をエントリーポイントとし、`public/js/main.js` にバンドルするタスクを定義。
+     - `check`, `lint`, `fmt`, `test` タスクを定義 (既存の Deno コマンドをラップ)。(**完了**)
+     - `dev`: 開発用タスク (ファイル監視と再ビルドなど、必要に応じて定義)。(**完了**)
+     - `bundle`: `scripts/build.ts` を実行して `src/browser/main.ts` をエントリーポイントとし、`public/js/main.js` にバンドルするタスクを定義。(**完了**)
      - `compile`: (オプション) `deno compile` を試すタスクも定義する可能性あり。
   4. **動作確認:**
-     - `deno task bundle` を実行し、`public/js/main.js` が正しく生成されることを確認。
-     - `public/index.html` をブラウザで開き (`file://` プロトコル)、アプリケーションが以前と同様に動作することを確認。
+     - `deno task bundle` を実行し、`public/js/main.js` が正しく生成されることを確認。(**完了**)
+     - `public/index.html` をブラウザで開き (`file://` プロトコル)、アプリケーションが以前と同様に動作することを確認。(**完了**)
 - **注意点:**
   - esbuild の設定で、`file://` 環境での実行に必要なフォーマット (ESM) を指定する。
   - 各 Deno タスクに必要な権限 (`--allow-*`) を `deno.jsonc` の `tasks` 内で適切に設定する。
+- **コミット:** `1472f60`
 
-### フェーズ 8: クリーンアップとドキュメント更新 (未着手)
+### フェーズ 8: クリーンアップとドキュメント更新 (完了)
 
 - **目的:** 不要になった Node.js 関連ファイルを削除し、ドキュメントを最新化する。
 - **作業内容:**
-  1. ファイル削除: `package.json`, `package-lock.json`, `node_modules/`, `eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `tsconfig.json`, `tsconfig.test.json`, `test/jest/` ディレクトリなどを削除。
-  2. Git フック設定: `lint-staged` の代替 (Husky または手動)。
-  3. Memory Bank 更新: `techContext.md` 全面書き換え、`activeContext.md`, `progress.md` 更新。
-  4. `README.md` 更新: セットアップ手順、実行方法などを Deno ベースに更新。
-- **注意点:**
-  - ファイル削除は慎重に行う。
+  1. **ファイル削除:** `package.json`, `package-lock.json`, `node_modules/`, `eslint.config.js`, `.prettierrc.json`, `jest.config.js`, `tsconfig.json`, `tsconfig.test.json`, `test/jest/` ディレクトリなどを削除。(**完了**)
+  2. **Git フック設定:** ユーザーの指示によりスキップ。
+  3. **Memory Bank 更新:** `techContext.md` 全面書き換え、`activeContext.md`, `progress.md` 更新。(**完了**)
+  4. **`README.md` 更新:** セットアップ手順、実行方法などを Deno ベースに更新。(**完了**)
+- **コミット:** (後続のコミットで記録)
 
 ## 5. ロールバック計画
 
