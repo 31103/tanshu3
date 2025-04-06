@@ -30,7 +30,7 @@ jobs:
             ${{ runner.os }}-deno-
 
       - name: Build single HTML file
-        run: deno task release:build
+        run: deno task release:build --allow-net
 
       - name: Create GitHub Release and Upload Artifact
         env:
