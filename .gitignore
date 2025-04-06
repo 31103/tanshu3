@@ -2,8 +2,7 @@
 # ビルド出力 (Build Output)
 # ----------------------------------------
 # esbuild によるバンドル出力 (scripts/build.ts で生成)
-public/js/main.js
-public/js/main.js.map
+public/js/*
 
 dist/
 
