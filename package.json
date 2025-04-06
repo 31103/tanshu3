@@ -2,19 +2,8 @@
   "name": "tanshu3",
   "version": "1.0.0",
   "description": "入院EF統合ファイル解析ツール",
-  "source": "src/browser/main.ts",
-  "main": "dist/browser/main.js",
   "type": "module",
-  "targets": {
-    "default": {
-      "source": "src/browser/main.ts",
-      "context": "browser",
-      "outputFormat": "global"
-    }
-  },
   "scripts": {
-    "build": "parcel build --dist-dir public/js --public-url ./",
-    "watch": "parcel watch --dist-dir public/js --public-url ./",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
@@ -39,7 +28,6 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.0.0",
-    "parcel": "^2.13.3",
     "prettier": "^3.0.0",
     "prettier-plugin-eslint": "^1.0.2",
     "ts-jest": "^29.2.6",

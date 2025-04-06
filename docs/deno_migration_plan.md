@@ -124,16 +124,25 @@
   - Denoのセキュリティモデルに従い、ファイルアクセスには明示的な `--allow-read` 権限が必要。
   - Jest の global な関数 (`expect`, `describe` など) は Deno では明示的なインポートが必要。
 
-### フェーズ 7: ビルドと実行方法の確立 (未着手)
+### フェーズ 7: ビルドと実行方法の確立 (esbuild 採用 - 未着手)
 
-- **目的:** Parcel を使わない Deno ネイティブなビルド・実行方法を確立する。
+- **目的:** Parcel を使わない Deno ネイティブなビルド・実行方法を **esbuild** を用いて確立する。
 - **作業内容:**
-  1. Parcel 関連削除: `package.json` から Parcel 関連の `scripts` と `targets` を削除。キャッシュディレクトリ削除。
-  2. `deno.jsonc` に `tasks` を定義: `check`, `lint`, `fmt`, `test`, `dev`, `bundle`, `compile` など。
-  3. 動作確認: `deno task bundle` で JS を生成し、`index.html` から読み込んで動作確認。`deno task compile` の動作も確認。
+  1. **Parcel 関連削除:** `package.json` から Parcel 関連の `scripts` と `devDependencies` を削除。Parcel のキャッシュディレクトリ (`.parcel-cache` など) も削除。
+  2. **esbuild の導入:**
+     - `import_map.json` に `esbuild` のエントリーを追加 (`deno.land/x/esbuild` を指定)。
+     - ビルド処理を行う Deno スクリプト (`scripts/build.ts`) を作成し、`esbuild` モジュールをインポートして使用する。
+  3. **`deno.jsonc` に `tasks` を定義:**
+     - `check`, `lint`, `fmt`, `test` タスクを定義 (既存の Deno コマンドをラップ)。
+     - `dev`: 開発用タスク (ファイル監視と再ビルドなど、必要に応じて定義)。
+     - `bundle`: `scripts/build.ts` を実行して `src/browser/main.ts` をエントリーポイントとし、`public/js/main.js` にバンドルするタスクを定義。
+     - `compile`: (オプション) `deno compile` を試すタスクも定義する可能性あり。
+  4. **動作確認:**
+     - `deno task bundle` を実行し、`public/js/main.js` が正しく生成されることを確認。
+     - `public/index.html` をブラウザで開き (`file://` プロトコル)、アプリケーションが以前と同様に動作することを確認。
 - **注意点:**
-  - `file://` 環境での実行維持のため `deno bundle` が有力。`deno compile` は Web UI アプリでは課題の可能性あり。
-  - 各 Deno コマンドに必要な権限 (`--allow-*`) を適切に設定。
+  - esbuild の設定で、`file://` 環境での実行に必要なフォーマット (ESM) を指定する。
+  - 各 Deno タスクに必要な権限 (`--allow-*`) を `deno.jsonc` の `tasks` 内で適切に設定する。
 
 ### フェーズ 8: クリーンアップとドキュメント更新 (未着手)
 

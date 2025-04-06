@@ -4,9 +4,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 ## 1. 現在のステータス (Current Status)
 
-- **全体進捗:** **Deno 移行作業中 (フェーズ6完了、フェーズ7準備中)。**
-- **直近のマイルストーン:** Deno 移行フェーズ6の完了 (統合テスト移行 - 全ての統合テスト完了)。
-- **現在のタスク:** Deno 移行フェーズ7「ビルド/実行方法の確立」の準備。
+- **全体進捗:** **Deno 移行作業中 (フェーズ7完了、フェーズ8準備中)。**
+- **直近のマイルストーン:** Deno 移行フェーズ7の完了 (ビルド/実行方法の確立 - esbuild 採用)。
+- **現在のタスク:** Deno 移行フェーズ8「クリーンアップとドキュメント更新」の準備。
 
 ## 2. 完了した機能 (What Works)
 
@@ -45,9 +45,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - **パッケージ管理:** npm -> URL Import / `import_map.json`
     - **Lint/Format:** ESLint/Prettier -> `deno lint`/`deno fmt` (`deno.jsonc` で設定)
     - **テスト:** Jest -> Deno Test (`deno.jsonc` で設定)
-    - **ビルド:** Parcel -> `deno bundle` (検討中)
+    - **ビルド:** Parcel -> **esbuild (`deno.land/x/esbuild`)** (`deno.jsonc` の `bundle` タスクで実行)
     - **VS Code連携:** Deno 拡張機能有効化 (`.vscode/settings.json`)。
-- **Deno 移行 (フェーズ1-6 完了):**
+- **Deno 移行 (フェーズ1-7 完了):**
   - **フェーズ1:** 環境設定 (`deno.jsonc`, `import_map.json`, `.gitignore`, `.vscode/settings.json`)。
   - **フェーズ2:** コアロジック依存関係移行 (インポートパス修正、`node.ts` 削除)。
   - **フェーズ3:** コアロジックテスト移行 (Jest -> Deno Test)。
@@ -66,6 +66,12 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
     - Node.jsのファイル操作APIをDenoの同等機能に置き換え
     - テスト実行で発生したエラーの修正
     - `deno test --allow-read test/integration/`で全テスト（14件）のパスを確認
+  - **フェーズ7:** ビルド/実行方法の確立
+    - Parcel 関連の依存関係とスクリプトを `package.json` から削除
+    - `esbuild` を `import_map.json` に追加
+    - ビルドスクリプト `scripts/build.ts` を作成
+    - `deno.jsonc` に `check`, `lint`, `fmt`, `test`, `bundle` タスクを定義
+    - `deno task bundle` でビルド成功を確認
 - **リファクタリング:**
   - `NotificationSystem` 遅延初期化、`FileManager` への DI 導入。
   - (旧) ESLint v9 へのアップデート。
@@ -83,10 +89,6 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 `docs/deno_migration_plan.md` に基づく。
 
-- **[未着手] Deno 移行 (フェーズ7):** ビルド/実行方法の確立 (`deno bundle` 検討)。
-  - Parcel関連の設定を削除
-  - `deno.jsonc`の`tasks`セクションを定義・拡充
-  - `file://`プロトコルでの動作確認
 - **[未着手] Deno 移行 (フェーズ8):** クリーンアップ、ドキュメント更新。
   - Node.js関連ファイルの削除
   - `README.md`の更新
@@ -108,12 +110,13 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - `style`プロパティの操作制限
   - `Document`型の不整合
 - **[改善点] 大量データ処理時のパフォーマンス:** 未測定。
-- **[要確認] ダウンロード機能:** Deno 環境での動作確認が必要。
+- **[要確認] ダウンロード機能:** Deno + esbuild 環境での動作確認が必要。
 
 ## 5. 意思決定の変遷 (Evolution of Decisions)
 
 `activeContext.md` の「最近の主な変更点」および `docs/deno_migration_plan.md` を参照。
 
+- **[2025-04-06]:** Deno 移行フェーズ7完了。ビルドツールを Parcel から esbuild に変更。`deno.jsonc` にタスクを定義。
 - **[2025-04-05]:** Deno 移行フェーズ6完了。`module-integration_test.ts`と`data-flow_test.ts`の統合テストをDeno Test環境に移行し、14件すべてのテストがパス。
 - **[2025-04-05]:** Deno 移行フェーズ5完了。`file-manager_test.ts`、`notification_test.ts`と`result-viewer_test.ts`のすべてのテストが成功。テスト実行で20件すべてのテストがパス。
 - **[2025-04-05]:** Deno 移行フェーズ4完了 (UIレイヤー依存関係移行)。

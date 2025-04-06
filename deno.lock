@@ -53,6 +53,11 @@
     "https://deno.land/std@0.224.0/internal/diff.ts": "6234a4b493ebe65dc67a18a0eb97ef683626a1166a1906232ce186ae9f65f4e6",
     "https://deno.land/std@0.224.0/internal/format.ts": "0a98ee226fd3d43450245b1844b47003419d34d210fa989900861c79820d21c2",
     "https://deno.land/std@0.224.0/internal/mod.ts": "534125398c8e7426183e12dc255bb635d94e06d0f93c60a297723abe69d3b22e",
+    "https://deno.land/std@0.224.0/path/_common/from_file_url.ts": "d672bdeebc11bf80e99bf266f886c70963107bdd31134c4e249eef51133ceccf",
+    "https://deno.land/std@0.224.0/path/_os.ts": "8fb9b90fb6b753bd8c77cfd8a33c2ff6c5f5bc185f50de8ca4ac6a05710b2c15",
+    "https://deno.land/std@0.224.0/path/from_file_url.ts": "911833ae4fd10a1c84f6271f36151ab785955849117dc48c6e43b929504ee069",
+    "https://deno.land/std@0.224.0/path/posix/from_file_url.ts": "951aee3a2c46fd0ed488899d024c6352b59154c70552e90885ed0c2ab699bc40",
+    "https://deno.land/std@0.224.0/path/windows/from_file_url.ts": "ced2d587b6dff18f963f269d745c4a599cf82b0c4007356bd957cb4cb52efc01",
     "https://deno.land/std@0.224.0/testing/mock.ts": "a963181c2860b6ba3eb60e08b62c164d33cf5da7cd445893499b2efda20074db",
     "https://deno.land/x/deno_dom@v0.1.49/build/deno-wasm/deno-wasm.js": "d6841a06342eb6a2798ef28de79ad69c0f2fa349fa04d3ca45e5fcfbf50a9340",
     "https://deno.land/x/deno_dom@v0.1.49/deno-dom-wasm.ts": "0669396686fb207f1354af33df6aabe2189b4eceafdb1bf7f3d6bbb2637b6b03",
@@ -76,7 +81,11 @@
     "https://deno.land/x/deno_dom@v0.1.49/src/dom/string-cache.ts": "8e935804f7bac244cc70cec90a28c9f6d30fea14c61c2c4ea48fca274376d786",
     "https://deno.land/x/deno_dom@v0.1.49/src/dom/utils-types.ts": "96db30e3e4a75b194201bb9fa30988215da7f91b380fca6a5143e51ece2a8436",
     "https://deno.land/x/deno_dom@v0.1.49/src/dom/utils.ts": "bc429635e9204051ba1ecc1b212031b5ee7c6bcd95120c91bef696804aa67e74",
-    "https://deno.land/x/deno_dom@v0.1.49/src/parser.ts": "e06b2300d693e6ae7564e53dfa5c9a9e97fdb8c044c39c52c8b93b5d60860be3"
+    "https://deno.land/x/deno_dom@v0.1.49/src/parser.ts": "e06b2300d693e6ae7564e53dfa5c9a9e97fdb8c044c39c52c8b93b5d60860be3",
+    "https://deno.land/x/denoflate@1.2.1/mod.ts": "f5628e44b80b3d80ed525afa2ba0f12408e3849db817d47a883b801f9ce69dd6",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate.js": "b9f9ad9457d3f12f28b1fb35c555f57443427f74decb403113d67364e4f2caf4",
+    "https://deno.land/x/denoflate@1.2.1/pkg/denoflate_bg.wasm.js": "d581956245407a2115a3d7e8d85a9641c032940a8e810acbd59ca86afd34d44d",
+    "https://deno.land/x/esbuild@v0.21.4/mod.js": "2baa2fee0098fe9cec9c1a5e66e394afce85ccb966a9be52d7c617ea5c67769f"
   },
   "workspace": {
     "packageJson": {
@@ -92,7 +101,6 @@
         "npm:jest-environment-jsdom@^29.7.0",
         "npm:jest@^29.7.0",
         "npm:lint-staged@15",
-        "npm:parcel@^2.13.3",
         "npm:prettier-plugin-eslint@^1.0.2",
         "npm:prettier@3",
         "npm:ts-jest@^29.2.6",
