@@ -1,0 +1,59 @@
+# .github/release-drafter.yml
+# Configuration for Release Drafter: https://github.com/release-drafter/release-drafter
+
+# Name template for the release draft
+name-template: 'v$NEXT_PATCH_VERSION'
+# Tag template for the release draft
+tag-template: 'v$NEXT_PATCH_VERSION'
+
+# Categories for Conventional Commits
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'feat'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧪 Testing'
+    labels:
+      - 'test'
+      - 'testing'
+  - title: '🔧 Maintenance & Chore'
+    labels:
+      - 'chore'
+      - 'ci'
+      - 'build'
+      - 'refactor'
+      - 'perf'
+      - 'style'
+      - 'revert'
+  - title: '📄 Documentation'
+    labels:
+      - 'docs'
+      - 'documentation'
+
+# Template for the release notes body
+template: |
+  ## Changes
+
+  $CHANGES
+
+# Exclude labels from appearing in the release notes
+exclude-labels:
+  - 'skip-changelog'
+
+# Automatically assign the latest tag to the release draft
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch # Default to patch version bump if no label is found

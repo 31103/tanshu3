@@ -60,7 +60,18 @@ cd tanshu3
 - **言語**: TypeScript
 - **テスト**: Deno Test + deno-dom
 - **コード品質**: Deno Lint + Deno Format
-- **CI/CD**: GitHub Actions (`.github/workflows/release.yml`)
+- **CI/CD**: GitHub Actions
+  - **CI (継続的インテグレーション):** `.github/workflows/ci.yml`
+    - **目的:** コード品質の維持と早期の問題発見。
+    - **トリガー:** `main` ブランチへの push および pull request 作成・更新時。
+    - **実行内容:** Lint チェック (`deno task lint`), Format チェック (`deno task fmt --check`), テスト実行 (`deno task test`), ビルド確認 (`deno task bundle`)。
+  - **CD (継続的デリバリー/デプロイメント):** `.github/workflows/release.yml`
+    - **目的:** リリースの自動化。
+    - **トリガー:** `v*.*.*` 形式のタグプッシュ時。
+    - **実行内容:**
+      1. **リリースノート自動生成:** [Conventional Commits](https://www.conventionalcommits.org/) 規約に基づき、`release-drafter` (`.github/release-drafter.yml` で設定) を使用してコミット履歴からリリースノートを含むドラフトを作成。
+      2. **ビルド:** 単一HTMLファイル (`dist/tanshu3.html`) を生成 (`deno task release:build`)。
+      3. **リリース公開:** 生成されたHTMLファイルを GitHub Release にアップロードし、ドラフトを公開。
 
 ### ファイル構成
 
@@ -68,7 +79,9 @@ cd tanshu3
 tanshu3/
 ├── .github/                # GitHub Actions ワークフロー
 │   └── workflows/
+│       ├── ci.yml          # CI ワークフロー
 │       └── release.yml     # リリース自動化ワークフロー
+├── .github/release-drafter.yml # リリースノート自動生成設定
 ├── coverage/               # テストカバレッジレポート
 ├── docs/                   # ドキュメント
 │   ├── release_plan.md     # リリース計画

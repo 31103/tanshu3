@@ -6,10 +6,24 @@ on:
       - 'v*.*.*' # vで始まるタグがプッシュされたときに実行
 
 jobs:
+  draft_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # to create release drafts
+      pull-requests: read  # to read pull request information
+    steps:
+      - name: Draft release notes
+        uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter.yml # Use our custom config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-and-release:
+    needs: draft_release # Wait for the draft to be created
     runs-on: ubuntu-latest # 実行環境
     permissions:
-      contents: write # リリース作成のために必要
+      contents: write # リリース編集・アセットアップロードのために必要
 
     steps:
       - name: Checkout repository
@@ -32,9 +46,9 @@ jobs:
       - name: Build single HTML file
         run: deno task release:build
 
-      - name: Create GitHub Release and Upload Artifact
+      - name: Edit GitHub Release and Upload Artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
         run: |
-          gh release create ${{ github.ref_name }} ./dist/tanshu3.html --generate-notes --title "Release ${{ github.ref_name }}"
-          echo "Release ${{ github.ref_name }} created with tanshu3.html artifact."
+          gh release edit ${{ github.ref_name }} --draft=false --add-asset ./dist/tanshu3.html
+          echo "Release ${{ github.ref_name }} published with tanshu3.html artifact."
