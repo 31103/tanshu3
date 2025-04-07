@@ -3,8 +3,8 @@
  * このファイルには、短手３該当症例の判定などの評価ロジックを含みます。
  */
 
-import { CaseData, OutputSettings } from './types.ts';
-import { calculateHospitalDays, formatDate } from './utils.ts'; // formatDate をインポート
+import { CaseData, OutputSettings, ProcedureDetail } from './types.ts'; // ProcedureDetail をインポート
+import { calculateHospitalDays, formatDate } from './utils.ts';
 import {
   COLONOSCOPY_PROCEDURE_CODES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
@@ -22,124 +22,136 @@ import {
  * @returns 短手３に該当する症例データ（ID昇順でソート済み）
  */
 export function evaluateCases(cases: CaseData[]): CaseData[] {
-  // 全症例に対して適格性と理由を設定
   const evaluatedCases = cases.map((c) => {
     try {
       // 評価結果を格納するオブジェクトを作成（元のオブジェクトをコピー）
-      const evaluatedCase = { ...c };
+      const evaluatedCase: CaseData = {
+        ...c,
+        procedureDetails: [...c.procedureDetails], // 配列をコピー
+      };
 
-      // 1. 退院日が '00000000' でない（退院が確定している）
+      // 1. 退院日チェック (変更なし)
       if (!c.discharge || c.discharge === '00000000') {
         evaluatedCase.isEligible = false;
         evaluatedCase.reason = INELIGIBILITY_REASONS.UNDISCHARGED;
         return evaluatedCase;
       }
 
-      // 2. 対象手術等の実施（少なくとも1つの対象手術等が実施されている）
-      const targetProceduresFound = c.procedures.filter((p) => TARGET_PROCEDURES.includes(p));
+      // 2. 対象手術等の実施チェック (procedureDetails を使用)
+      const targetProcedureDetails = c.procedureDetails.filter((pd) =>
+        TARGET_PROCEDURES.includes(pd.code)
+      );
 
-      if (targetProceduresFound.length === 0) {
+      if (targetProcedureDetails.length === 0) {
         evaluatedCase.isEligible = false;
         evaluatedCase.reason = INELIGIBILITY_REASONS.NO_TARGET_PROCEDURE;
         return evaluatedCase;
       }
 
-      // 3. 入院期間が5日以内
+      // 3. 入院期間チェック (変更なし)
       const hospitalDays = calculateHospitalDays(c.admission, c.discharge);
-
       if (hospitalDays === null || hospitalDays > MAX_HOSPITAL_DAYS) {
         evaluatedCase.isEligible = false;
         evaluatedCase.reason = INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED;
         return evaluatedCase;
       }
 
-      // 4. 入院期間中に対象手術等を2以上実施していないかチェック
-      // ただし、同一の対象手術等を複数回実施する場合は例外とする
-      if (targetProceduresFound.length > 1) {
-        // 対象手術等の種類数をカウント（重複を除外）
-        const uniqueTargetProcedures = new Set(targetProceduresFound);
-        if (uniqueTargetProcedures.size > 1) {
+      // 4. 複数種類の対象手術等チェック (procedureDetails を使用)
+      if (targetProcedureDetails.length > 1) {
+        const uniqueTargetProcedureCodes = new Set(targetProcedureDetails.map((pd) => pd.code));
+        if (uniqueTargetProcedureCodes.size > 1) {
           evaluatedCase.isEligible = false;
           evaluatedCase.reason = INELIGIBILITY_REASONS.MULTIPLE_TARGET_PROCEDURES;
           return evaluatedCase;
         }
       }
 
-      // 5. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック (他の手術チェックより先に実施)
-      // 内視鏡的大腸ポリープ・粘膜切除術を実施したかどうか
-      const hasColonoscopy = c.procedures.some((p) => COLONOSCOPY_PROCEDURE_CODES.includes(p));
-
-      // 特定加算が含まれているかどうか
-      const hasSpecialAddition = c.procedures.some((p) =>
-        COLONOSCOPY_SPECIAL_ADDITIONS.includes(p)
+      // 5. 内視鏡的大腸ポリープ・粘膜切除術の特定加算チェック (procedureDetails を使用)
+      const hasColonoscopy = c.procedureDetails.some((pd) =>
+        COLONOSCOPY_PROCEDURE_CODES.includes(pd.code)
       );
-
-      // 内視鏡的大腸ポリープ術に特定加算がある場合は対象外
+      const hasSpecialAddition = c.procedureDetails.some((pd) =>
+        COLONOSCOPY_SPECIAL_ADDITIONS.includes(pd.code)
+      );
       if (hasColonoscopy && hasSpecialAddition) {
         evaluatedCase.isEligible = false;
         evaluatedCase.reason = INELIGIBILITY_REASONS.SPECIAL_ADDITION;
         return evaluatedCase;
       }
 
-      // 6. 入院期間中に対象手術等に加えて、他の手術を実施していないかチェック
-      // 手術コードは通常 '15' で始まるが、診療明細名称に「加算」が含まれるコードは手術ではないため除外
-      const surgeryProcedures = c.procedures.filter((p, index) => {
-        // 対象手術等に含まれるコードは除外
-        if (TARGET_PROCEDURES.includes(p)) return false;
-
-        // '15'で始まるコードのみを対象
-        if (!p.startsWith('15')) return false;
-
-        // 診療明細名称に「加算」が含まれるコードは手術ではないため除外
-        if (
-          c.procedureNames &&
-          c.procedureNames[index] &&
-          c.procedureNames[index].includes('加算')
-        ) {
-          return false;
-        }
-
-        // 加算コードは通常、特定のパターンを持つ（例：150000490）
-        // 多くの加算コードは '1500' で始まり、その後に '00' が続く
-        if (p.startsWith('1500') && p.substring(4, 6) === '00') return false;
-
+      // 6. 他の手術の実施チェック (修正ロジック)
+      const otherSurgeryDetails = c.procedureDetails.filter((pd) => {
+        if (TARGET_PROCEDURES.includes(pd.code)) return false; // 対象手術は除外
+        if (!pd.code.startsWith('15')) return false; // 手術コード('15'始まり)以外は除外
+        if (pd.name.includes('加算')) return false; // 名称に「加算」を含むものは除外
+        // 修正: 1500xx... のパターンチェックを削除。加算の判定は名称で行う。
         return true;
       });
 
-      if (surgeryProcedures.length > 0) {
-        evaluatedCase.isEligible = false;
-        evaluatedCase.reason = INELIGIBILITY_REASONS.OTHER_SURGERY;
-        return evaluatedCase;
+      if (otherSurgeryDetails.length > 0) {
+        let foundDisqualifyingSurgery = false;
+        for (const targetDetail of targetProcedureDetails) {
+          for (const otherSurgery of otherSurgeryDetails) {
+            // 条件A: 対象手術と「同日」かつ「同一順序番号」で実施された対象外手術があるか
+            if (
+              otherSurgery.date === targetDetail.date &&
+              otherSurgery.sequenceNumber === targetDetail.sequenceNumber
+            ) {
+              foundDisqualifyingSurgery = true;
+              break; // この対象外手術は失格条件を満たすので内側ループを抜ける
+            }
+            // 条件B: 対象手術と「別日」で実施された対象外手術があるか
+            if (otherSurgery.date !== targetDetail.date) {
+              foundDisqualifyingSurgery = true;
+              break; // この対象外手術は失格条件を満たすので内側ループを抜ける
+            }
+          }
+          if (foundDisqualifyingSurgery) {
+            break; // 失格条件を満たす手術が見つかったので外側ループも抜ける
+          }
+        }
+
+        // 条件AまたはBに該当する他の手術が見つかった場合、対象外とする
+        if (foundDisqualifyingSurgery) {
+          evaluatedCase.isEligible = false;
+          evaluatedCase.reason = INELIGIBILITY_REASONS.OTHER_SURGERY;
+          return evaluatedCase;
+        }
       }
 
       // すべての条件を満たす場合は短手３対象症例
       evaluatedCase.isEligible = true;
-
-      // 実施された対象手術の名称を理由として設定
-      const procedureCode = targetProceduresFound[0]; // 最初の対象手術コード
-      evaluatedCase.reason = PROCEDURE_NAME_MAP[procedureCode] || '対象手術等';
+      // 実施された対象手術の名称を理由として設定 (最初の対象手術を使用)
+      const firstTargetCode = targetProcedureDetails[0]?.code;
+      evaluatedCase.reason = firstTargetCode
+        ? PROCEDURE_NAME_MAP[firstTargetCode] || '対象手術等'
+        : '対象手術等'; // fallback
 
       return evaluatedCase;
     } catch (error) {
-      console.error(
-        `症例 ${c.id} の評価中にエラーが発生しました: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+      console.error( // エラーログ改善
+        `症例 ${c.id} (入院日: ${c.admission}) の評価中にエラー:`,
+        error instanceof Error ? error.stack : String(error),
       );
-      // エラーが発生した場合は該当しないと判断
       return {
-        ...c,
+        ...c, // 元のデータを保持
+        procedureDetails: [...c.procedureDetails], // 配列をコピー
         isEligible: false,
         reason: `評価エラー: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   });
 
-  // 修正: フィルタリングせず、全ての評価済み症例を返す
-  // フィルタリングは formatResults で行う
-  // ID順にソート
-  return evaluatedCases.sort((a, b) => a.id.localeCompare(b.id));
+  // ID順にソート (変更なし)
+  return evaluatedCases.sort((a, b) => {
+    // IDで比較
+    const idCompare = a.id.localeCompare(b.id);
+    if (idCompare !== 0) return idCompare;
+    // IDが同じ場合は入院日で比較
+    return a.admission.localeCompare(b.admission);
+  });
 }
+// formatResults 関数は procedureDetails を直接使っていないため、修正不要
 
 /**
  * 結果をフォーマットする関数

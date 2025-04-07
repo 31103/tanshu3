@@ -10,8 +10,8 @@ import {
   assertFalse,
   assertStrictEquals,
 } from 'https://deno.land/std/assert/mod.ts';
-import { evaluateCases, formatResults } from './evaluator.ts'; // 拡張子を追加
-import { CaseData, OutputSettings } from './types.ts'; // 拡張子を追加
+import { evaluateCases, formatResults } from './evaluator.ts';
+import { CaseData, OutputSettings, ProcedureDetail } from './types.ts'; // ProcedureDetail をインポート
 import {
   COLONOSCOPY_PROCEDURE_CODES,
   COLONOSCOPY_SPECIAL_ADDITIONS,
@@ -32,7 +32,9 @@ Deno.test('evaluateCases関数: 短手３該当症例を正しく判定する（
       id: '12345',
       admission: '20220101',
       discharge: '20220103', // 3日間の入院
-      procedures: ['160218510'], // 対象手術コード
+      procedureDetails: [
+        { code: '160218510', name: '対象手術', date: '20220102', sequenceNumber: '0001' },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -47,7 +49,9 @@ Deno.test('evaluateCases関数: 退院日が確定していない症例は対象
       id: '12345',
       admission: '20220101',
       discharge: '00000000', // 未確定の退院日
-      procedures: ['160218510'],
+      procedureDetails: [
+        { code: '160218510', name: '対象手術', date: '20220102', sequenceNumber: '0001' },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -62,7 +66,9 @@ Deno.test('evaluateCases関数: 対象手術等が実施されていない症例
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['999999999'], // 対象外の手術コード
+      procedureDetails: [
+        { code: '999999999', name: '対象外手術', date: '20220102', sequenceNumber: '0001' },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -77,7 +83,9 @@ Deno.test(`evaluateCases関数: 入院期間が${MAX_HOSPITAL_DAYS}日を超え�
       id: '12345',
       admission: '20220101',
       discharge: '20220107', // 7日間の入院
-      procedures: ['160218510'],
+      procedureDetails: [
+        { code: '160218510', name: '対象手術', date: '20220102', sequenceNumber: '0001' },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -92,7 +100,10 @@ Deno.test('evaluateCases関数: 異なる対象手術等を複数実施してい
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510', '160218610'], // 異なる対象手術コードを2つ含む
+      procedureDetails: [
+        { code: '160218510', name: '対象手術1', date: '20220102', sequenceNumber: '0001' },
+        { code: '160218610', name: '対象手術2', date: '20220102', sequenceNumber: '0001' }, // 異なる対象手術
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -107,7 +118,11 @@ Deno.test('evaluateCases関数: 同一の対象手術等を複数回実施して
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['150253010', '150253010'], // 同一の対象手術コード（水晶体再建術）を2回実施
+      procedureDetails: [
+        { code: '150253010', name: '水晶体再建術', date: '20220102', sequenceNumber: '0001' },
+        { code: '150253010', name: '水晶体再建術', date: '20220102', sequenceNumber: '0001' }, // 同一手術を重複して記録（パーサーで重複排除される想定だが念のため）
+        { code: '150253010', name: '水晶体再建術', date: '20220102', sequenceNumber: '0002' }, // 同日別連番（これも同一手術とみなす）
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -115,20 +130,8 @@ Deno.test('evaluateCases関数: 同一の対象手術等を複数回実施して
   assert(result[0].isEligible);
 });
 
-Deno.test('evaluateCases関数: 対象手術等に加えて他の手術を実施している症例は対象外とする', () => {
-  const cases: CaseData[] = [
-    {
-      id: '12345',
-      admission: '20220101',
-      discharge: '20220103',
-      procedures: ['160218510', '150999999'], // 対象手術コードと対象外の手術コード
-    },
-  ];
-  const result = evaluateCases(cases);
-  assertEquals(result.length, 1);
-  assertFalse(result[0].isEligible);
-  assertEquals(result[0].reason, INELIGIBILITY_REASONS.OTHER_SURGERY);
-});
+// このテストは新しいロジックのテストケースに置き換えられるため削除
+// Deno.test('evaluateCases関数: 対象手術等に加えて他の手術を実施している症例は対象外とする', () => { ... });
 
 Deno.test('evaluateCases関数: 診療明細名称に「加算」が含まれるコードは手術とみなさない', () => {
   const cases: CaseData[] = [
@@ -136,11 +139,20 @@ Deno.test('evaluateCases関数: 診療明細名称に「加算」が含まれる
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: [
-        '150194510', // 体外衝撃波腎・尿管結石破砕術（対象手術等）
-        '150000490', // 時間外加算２（手術）
+      procedureDetails: [
+        {
+          code: '150194510',
+          name: '体外衝撃波腎・尿管結石破砕術',
+          date: '20220102',
+          sequenceNumber: '0001',
+        }, // 対象手術
+        {
+          code: '150000490',
+          name: '時間外加算２（手術）',
+          date: '20220102',
+          sequenceNumber: '0001',
+        }, // 加算コード
       ],
-      procedureNames: ['体外衝撃波腎・尿管結石破砕術', '時間外加算２（手術）'],
     },
   ];
   const result = evaluateCases(cases);
@@ -154,9 +166,9 @@ Deno.test('evaluateCases関数: 特定パターンの加算コード（1500で�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: [
-        '160218510', // 対象手術等
-        '150000123', // 加算コードのパターン
+      procedureDetails: [
+        { code: '160218510', name: '対象手術', date: '20220102', sequenceNumber: '0001' },
+        { code: '150000123', name: '特定加算', date: '20220102', sequenceNumber: '0001' }, // 加算コードのパターン
       ],
     },
   ];
@@ -171,7 +183,20 @@ Deno.test('evaluateCases関数: 内視鏡的大腸ポリープ・粘膜切除術
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: [COLONOSCOPY_PROCEDURE_CODES[0], COLONOSCOPY_SPECIAL_ADDITIONS[0]], // 内視鏡的大腸ポリープ・粘膜切除術と特定加算
+      procedureDetails: [
+        {
+          code: COLONOSCOPY_PROCEDURE_CODES[0],
+          name: '大腸ポリープ切除',
+          date: '20220102',
+          sequenceNumber: '0001',
+        },
+        {
+          code: COLONOSCOPY_SPECIAL_ADDITIONS[0],
+          name: '特定加算',
+          date: '20220102',
+          sequenceNumber: '0001',
+        },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -194,7 +219,14 @@ Deno.test('evaluateCases関数: 内視鏡的大腸ポリープ・粘膜切除術
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: [COLONOSCOPY_PROCEDURE_CODES[0]], // 内視鏡的大腸ポリープ・粘膜切除術（加算なし）
+      procedureDetails: [
+        {
+          code: COLONOSCOPY_PROCEDURE_CODES[0],
+          name: '大腸ポリープ切除',
+          date: '20220102',
+          sequenceNumber: '0001',
+        },
+      ],
     },
   ];
   const result = evaluateCases(cases);
@@ -208,19 +240,34 @@ Deno.test('evaluateCases関数: 複数の症例をID順にソートして返す'
       id: '23456',
       admission: '20220201',
       discharge: '20220203',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220202',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: '34567',
       admission: '20220301',
       discharge: '20220303',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220302',
+        sequenceNumber: '0001',
+      }],
     },
   ];
   const result = evaluateCases(cases);
@@ -236,18 +283,82 @@ Deno.test('evaluateCases関数: 複数の症例をID順にソートして返す'
 Deno.test('evaluateCases関数: 症例評価中にエラーが発生した場合は対象外とする', () => {
   const invalidCase: CaseData = {
     id: '12345',
-    admission: 'invalid', // 無効な入院日
+    admission: 'invalid', // 無効な入院日 -> calculateHospitalDays で null -> 対象外
     discharge: '20220103',
-    procedures: ['160218510'],
+    procedureDetails: [{
+      code: '160218510',
+      name: '対象手術',
+      date: '20220102',
+      sequenceNumber: '0001',
+    }],
   };
   const result = evaluateCases([invalidCase]);
   assertEquals(result.length, 1);
-  assertFalse(result[0].isEligible);
   // 修正: calculateHospitalDays が null を返すため、入院期間超過として扱われる
-  assertEquals(result[0].reason, INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED);
+  assertFalse(result[0].isEligible, '無効な入院日を持つ症例は対象外であるべき');
+  assertEquals(
+    result[0].reason,
+    INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED,
+    '無効な入院日の理由は入院期間超過であるべき',
+  );
 });
 
-// --- formatResults関数のテスト ---
+// --- 新しいテストケース (過剰判定修正の確認) ---
+
+Deno.test('evaluateCases関数: 対象手術と対象外手術が「同日・同一順序番号」の場合は対象外', () => {
+  const cases: CaseData[] = [
+    {
+      id: 'SameDaySameSeq',
+      admission: '20240704',
+      discharge: '20240706',
+      procedureDetails: [
+        { code: '150253010', name: '対象手術(水晶体)', date: '20240705', sequenceNumber: '0001' }, // 修正: 有効な対象手術コードを使用
+        { code: '150000110', name: '対象外手術(創傷)', date: '20240705', sequenceNumber: '0001' }, // 対象外手術
+      ],
+    },
+  ];
+  const result = evaluateCases(cases);
+  assertEquals(result.length, 1);
+  assertFalse(result[0].isEligible, '同日・同一順序番号の対象外手術がある場合は対象外');
+  assertEquals(result[0].reason, INELIGIBILITY_REASONS.OTHER_SURGERY);
+});
+
+Deno.test('evaluateCases関数: 対象手術と対象外手術が「別日」の場合は対象外', () => {
+  const cases: CaseData[] = [
+    {
+      id: 'DifferentDay',
+      admission: '20240704',
+      discharge: '20240707', // 退院日を調整
+      procedureDetails: [
+        { code: '150253010', name: '対象手術', date: '20240705', sequenceNumber: '0001' }, // 対象: 水晶体再建術
+        { code: '150089110', name: '対象外手術', date: '20240706', sequenceNumber: '0002' }, // 対象外: 前房、虹彩内異物除去術 (別日)
+      ],
+    },
+  ];
+  const result = evaluateCases(cases);
+  assertEquals(result.length, 1);
+  assertFalse(result[0].isEligible, '別日の対象外手術がある場合は対象外');
+  assertEquals(result[0].reason, INELIGIBILITY_REASONS.OTHER_SURGERY);
+});
+
+Deno.test('evaluateCases関数: 対象手術と対象外手術が「同日・別順序番号」の場合は対象', () => {
+  const cases: CaseData[] = [
+    {
+      id: 'SameDayDifferentSeq',
+      admission: '20240704',
+      discharge: '20240706',
+      procedureDetails: [
+        { code: '150253010', name: '対象手術', date: '20240705', sequenceNumber: '0001' }, // 対象: 水晶体再建術
+        { code: '150000110', name: '対象外手術(創傷)', date: '20240705', sequenceNumber: '0002' }, // 対象外だが別順序番号
+      ],
+    },
+  ];
+  const result = evaluateCases(cases);
+  assertEquals(result.length, 1);
+  assert(result[0].isEligible, '同日でも別順序番号の対象外手術なら対象');
+});
+
+// --- formatResults関数のテスト (修正不要) ---
 
 const defaultSettings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };
 
@@ -262,16 +373,21 @@ Deno.test('formatResults関数: 症例データを正しくフォーマットす
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }], // データ構造変更
       isEligible: true,
-      reason: '対象手術等', // 理由を追加
+      reason: '対象手術等',
     },
   ];
   const result = formatResults(cases, DEFAULT_RESULT_HEADER, defaultSettings);
   const lines = result.split('\n');
   assertEquals(lines.length, 2);
   assertEquals(lines[0], DEFAULT_RESULT_HEADER);
-  assertEquals(lines[1], '12345\t20220101\t20220103\tYes\t対象手術等'); // 理由を含む
+  assertEquals(lines[1], '12345\t20220101\t20220103\tYes\t対象手術等');
 });
 
 Deno.test('formatResults関数: 複数の症例をフォーマットする (デフォルト設定)', () => {
@@ -280,7 +396,12 @@ Deno.test('formatResults関数: 複数の症例をフォーマットする (デ�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術1',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
       reason: '対象手術等1',
     },
@@ -288,7 +409,12 @@ Deno.test('formatResults関数: 複数の症例をフォーマットする (デ�
       id: '23456',
       admission: '20220201',
       discharge: '20220203',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218610',
+        name: '対象手術2',
+        date: '20220202',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
       reason: '対象手術等2',
     },
@@ -306,15 +432,22 @@ Deno.test('formatResults関数: カスタムヘッダーを使用する (デフ�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
+      reason: '対象手術等', // 理由を追加
     },
   ];
-  const customHeader = 'ID\t入院日\t退院日\t対象\t理由'; // ヘッダーを修正
+  const customHeader = 'ID\t入院日\t退院日\t対象\t理由';
   const result = formatResults(cases, customHeader, defaultSettings);
   const lines = result.split('\n');
   assertEquals(lines.length, 2);
   assertEquals(lines[0], customHeader);
+  assertEquals(lines[1], '12345\t20220101\t20220103\tYes\t対象手術等'); // 理由を含む
 });
 
 Deno.test('formatResults関数: isEligibleフラグに基づいて対象/非対象を表示する (全症例表示)', () => {
@@ -323,7 +456,12 @@ Deno.test('formatResults関数: isEligibleフラグに基づいて対象/非対�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
       reason: '対象手術等',
     },
@@ -331,7 +469,12 @@ Deno.test('formatResults関数: isEligibleフラグに基づいて対象/非対�
       id: '23456',
       admission: '20220201',
       discharge: '20220207', // 7日間の入院
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218610',
+        name: '対象手術',
+        date: '20220202',
+        sequenceNumber: '0001',
+      }],
       isEligible: false,
       reason: INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED,
     },
@@ -353,15 +496,25 @@ Deno.test('formatResults関数: outputMode="eligibleOnly"の場合は対象症�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
-      reason: '対象手術等', // 理由を追加
+      reason: '対象手術等',
     },
     {
       id: '23456',
       admission: '20220201',
       discharge: '20220207', // 7日間の入院
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218610',
+        name: '対象手術',
+        date: '20220202',
+        sequenceNumber: '0001',
+      }],
       isEligible: false,
       reason: INELIGIBILITY_REASONS.HOSPITAL_DAYS_EXCEEDED,
     },
@@ -371,7 +524,7 @@ Deno.test('formatResults関数: outputMode="eligibleOnly"の場合は対象症�
   const lines = result.split('\n');
   assertEquals(lines.length, 2);
   assert(lines[1].startsWith('12345'));
-  assertEquals(lines[1], '12345\t20220101\t20220103\tYes\t対象手術等'); // 理由を含む
+  assertEquals(lines[1], '12345\t20220101\t20220103\tYes\t対象手術等');
 });
 
 Deno.test('formatResults関数: dateFormat="yyyy/mm/dd"の場合は日付をスラッシュ区切りでフォーマットする', () => {
@@ -380,7 +533,12 @@ Deno.test('formatResults関数: dateFormat="yyyy/mm/dd"の場合は日付をス�
       id: '12345',
       admission: '20220101',
       discharge: '20220103',
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218510',
+        name: '対象手術',
+        date: '20220102',
+        sequenceNumber: '0001',
+      }],
       isEligible: true,
       reason: '対象手術等',
     },
@@ -388,7 +546,12 @@ Deno.test('formatResults関数: dateFormat="yyyy/mm/dd"の場合は日付をス�
       id: '23456',
       admission: '20220201',
       discharge: '00000000', // 退院日未定
-      procedures: ['160218510'],
+      procedureDetails: [{
+        code: '160218610',
+        name: '対象手術',
+        date: '20220202',
+        sequenceNumber: '0001',
+      }],
       isEligible: false,
       reason: INELIGIBILITY_REASONS.UNDISCHARGED,
     },

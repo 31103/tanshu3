@@ -12,7 +12,7 @@ import { parseEFFile } from '../../src/core/common/parsers.ts';
 import { evaluateCases, formatResults } from '../../src/core/common/evaluator.ts';
 import { calculateHospitalDays, parseDate } from '../../src/core/common/utils.ts';
 import { DEFAULT_RESULT_HEADER } from '../../src/core/common/constants.ts';
-import type { CaseData, OutputSettings } from '../../src/core/common/types.ts';
+import type { CaseData, OutputSettings, ProcedureDetail } from '../../src/core/common/types.ts'; // ProcedureDetail をインポート
 
 // モジュール統合テスト
 Deno.test('パーサーと評価ロジックの連携が正しく動作すること', () => {
@@ -40,23 +40,23 @@ EF,TEST004,20240708,20240701,00,00,00,00,999999999`;
     assert('id' in caseData);
     assert('admission' in caseData);
     assert('discharge' in caseData);
-    assert('procedures' in caseData);
-    assertEquals(Array.isArray(caseData.procedures), true);
+    assert('procedureDetails' in caseData); // procedures -> procedureDetails
+    assertEquals(Array.isArray(caseData.procedureDetails), true); // procedures -> procedureDetails
   });
 
   // TEST001のケースを確認（存在する場合）
   const case001 = cases.find((c) => c.id === 'TEST001');
   if (case001) {
     assertEquals(case001.discharge, '00000000');
-    assert(case001.procedures.length >= 1);
-    assert(case001.procedures.includes('160218510'));
+    assert(case001.procedureDetails.length >= 1); // procedures -> procedureDetails
+    assert(case001.procedureDetails.some((pd) => pd.code === '160218510')); // procedures -> procedureDetails
   }
 
   // TEST002のケースを確認（存在する場合）
   const case002 = cases.find((c) => c.id === 'TEST002');
   if (case002) {
     assertEquals(case002.discharge, '20240705');
-    assert(case002.procedures.includes('150078810'));
+    assert(case002.procedureDetails.some((pd) => pd.code === '150078810')); // procedures -> procedureDetails
   }
 
   // 評価ロジックを適用
@@ -103,7 +103,12 @@ Deno.test('ユーティリティ関数と評価ロジックの連携が正しく
     id: 'TEST999',
     admission: admissionDate,
     discharge: dischargeDate,
-    procedures: ['150078810'], // 対象手術コード
+    procedureDetails: [{
+      code: '150078810',
+      name: '対象手術',
+      date: '20240702',
+      sequenceNumber: '0001',
+    }], // 対象手術コード
   };
 
   // 評価ロジックを適用
@@ -121,13 +126,23 @@ Deno.test('フォーマット機能と評価ロジックの連携が正しく動
       id: 'TEST101',
       admission: '20240701',
       discharge: '20240705',
-      procedures: ['150078810'],
+      procedureDetails: [{
+        code: '150078810',
+        name: '対象手術1',
+        date: '20240702',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: 'TEST102',
       admission: '20240702',
       discharge: '20240705',
-      procedures: ['150011310'],
+      procedureDetails: [{
+        code: '150011310',
+        name: '対象手術2',
+        date: '20240703',
+        sequenceNumber: '0001',
+      }],
     },
   ];
 

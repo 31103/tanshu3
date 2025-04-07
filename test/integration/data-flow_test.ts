@@ -13,7 +13,7 @@ import { mergeCases, parseEFFile } from '../../src/core/common/parsers.ts';
 import { evaluateCases, formatResults } from '../../src/core/common/evaluator.ts';
 import { calculateHospitalDays, parseDate } from '../../src/core/common/utils.ts';
 import { DEFAULT_RESULT_HEADER, TARGET_PROCEDURES } from '../../src/core/common/constants.ts';
-import type { CaseData, OutputSettings } from '../../src/core/common/types.ts';
+import type { CaseData, OutputSettings, ProcedureDetail } from '../../src/core/common/types.ts'; // ProcedureDetail をインポート
 
 // パスの設定
 const __dirname = dirname(fromFileUrl(import.meta.url));
@@ -119,9 +119,9 @@ Deno.test('複数月のデータを組み合わせて正しく評価できるこ
     // 退院日が設定されている
     assertNotEquals(eligibleCase.discharge, '00000000');
 
-    // 対象手術が少なくとも1つ含まれている
-    const hasTargetProcedure = eligibleCase.procedures.some((procedure) =>
-      TARGET_PROCEDURES.includes(procedure)
+    // 対象手術が少なくとも1つ含まれている (procedureDetails を使用)
+    const hasTargetProcedure = eligibleCase.procedureDetails.some((pd) =>
+      TARGET_PROCEDURES.includes(pd.code)
     );
     assertEquals(hasTargetProcedure, true);
 
@@ -216,15 +216,23 @@ Deno.test('月をまたぐ患者データを正しくマージ・評価できる
     id: 'crossMonthPatient',
     admission: '20240730', // 7月30日入院
     discharge: '00000000', // 7月中は退院日未定
-    procedures: [targetProcedureCode], // 対象手術あり
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240731',
+      sequenceNumber: '0001',
+    }], // 対象手術あり
   };
   const augustCase: CaseData = {
     id: 'crossMonthPatient',
     admission: '20240730', // 入院日は同じ
     discharge: '20240802', // 8月2日退院
-    procedures: [targetProcedureCode], // 対象手術あり
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240731',
+      sequenceNumber: '0001',
+    }], // 対象手術あり
   };
 
   // マージ処理
@@ -235,7 +243,7 @@ Deno.test('月をまたぐ患者データを正しくマージ・評価できる
   assertEquals(mergedCases[0].id, 'crossMonthPatient');
   assertEquals(mergedCases[0].admission, '20240730');
   assertEquals(mergedCases[0].discharge, '20240802'); // 退院日が更新されていること
-  assert(mergedCases[0].procedures.includes(targetProcedureCode));
+  assert(mergedCases[0].procedureDetails.some((pd) => pd.code === targetProcedureCode)); // procedureDetails をチェック
 
   // 評価処理
   const eligibleCases = evaluateCases(mergedCases);
@@ -255,15 +263,23 @@ Deno.test('退院日が00000000から確定日に更新されるケースを正�
     id: 'dischargeUpdatePatient',
     admission: '20240710',
     discharge: '00000000',
-    procedures: [targetProcedureCode],
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240711',
+      sequenceNumber: '0001',
+    }],
   };
   const augustCase: CaseData = {
     id: 'dischargeUpdatePatient',
     admission: '20240710',
     discharge: '20240712', // 7月12日に退院確定
-    procedures: [targetProcedureCode],
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240711',
+      sequenceNumber: '0001',
+    }],
   };
 
   const mergedCases = mergeCases([julyCase], [augustCase]);
@@ -285,8 +301,12 @@ Deno.test('入院日数がちょうど5日のケースを正しく評価でき�
     id: 'just5days',
     admission: '20240101',
     discharge: '20240105', // 1/1, 1/2, 1/3, 1/4, 1/5 の5日間
-    procedures: [targetProcedureCode],
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240102',
+      sequenceNumber: '0001',
+    }],
   };
   const evaluatedCases = evaluateCases([caseData]);
   assertEquals(evaluatedCases.length, 1);
@@ -306,8 +326,12 @@ Deno.test('入院日数が6日のケースは対象外となること', () => {
     id: 'over5days',
     admission: '20240101',
     discharge: '20240106', // 1/1 - 1/6 の6日間
-    procedures: [targetProcedureCode],
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240102',
+      sequenceNumber: '0001',
+    }],
   };
   const evaluatedCases = evaluateCases([caseData]);
   // evaluateCasesは評価済みケースを返す(長さ1)
@@ -328,8 +352,12 @@ Deno.test('入院日数が1日（同日入退院）のケースを正しく評�
     id: 'sameDay',
     admission: '20240101',
     discharge: '20240101', // 1日間
-    procedures: [targetProcedureCode],
-    procedureNames: ['対象手術'],
+    procedureDetails: [{
+      code: targetProcedureCode,
+      name: '対象手術',
+      date: '20240101',
+      sequenceNumber: '0001',
+    }],
   };
   const evaluatedCases = evaluateCases([caseData]);
   assertEquals(evaluatedCases.length, 1);
@@ -346,8 +374,12 @@ Deno.test('対象手術が含まれないケースは対象外となること', 
     id: 'noTargetProcedure',
     admission: '20240101',
     discharge: '20240103', // 3日間
-    procedures: ['999999'], // 対象外の手術コード
-    procedureNames: ['対象外手術'],
+    procedureDetails: [{
+      code: '999999',
+      name: '対象外手術',
+      date: '20240102',
+      sequenceNumber: '0001',
+    }], // 対象外の手術コード
   };
   const evaluatedCases = evaluateCases([caseData]);
   // evaluateCasesは評価済みケースを返す(長さ1)
@@ -366,29 +398,45 @@ Deno.test('複数の患者データを一括で評価できること', () => {
       id: 'eligible1',
       admission: '20240101',
       discharge: '20240103', // 3日間
-      procedures: [targetProcedureCode],
-      procedureNames: ['対象手術'],
+      procedureDetails: [{
+        code: targetProcedureCode,
+        name: '対象手術',
+        date: '20240102',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: 'eligible2',
       admission: '20240110',
       discharge: '20240112', // 3日間
-      procedures: [targetProcedureCode],
-      procedureNames: ['対象手術'],
+      procedureDetails: [{
+        code: targetProcedureCode,
+        name: '対象手術',
+        date: '20240111',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: 'notEligible1',
       admission: '20240120',
       discharge: '20240126', // 7日間 > 5日
-      procedures: [targetProcedureCode],
-      procedureNames: ['対象手術'],
+      procedureDetails: [{
+        code: targetProcedureCode,
+        name: '対象手術',
+        date: '20240121',
+        sequenceNumber: '0001',
+      }],
     },
     {
       id: 'notEligible2',
       admission: '20240201',
       discharge: '20240203', // 3日間だが対象手術なし
-      procedures: ['999999'],
-      procedureNames: ['対象外手術'],
+      procedureDetails: [{
+        code: '999999',
+        name: '対象外手術',
+        date: '20240202',
+        sequenceNumber: '0001',
+      }],
     },
   ];
 

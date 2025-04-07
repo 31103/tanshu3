@@ -3,60 +3,55 @@
  * このファイルには、ファイル解析に関連する関数を含みます。
  */
 
-import { CaseData, RawCaseData } from './types.ts';
-import { TARGET_PROCEDURES } from './constants.ts';
+import { CaseData, ProcedureDetail, RawCaseData } from './types.ts'; // ProcedureDetail をインポート
+// import { TARGET_PROCEDURES } from './constants.ts'; // TARGET_PROCEDURES はここでは不要になる
 
 /**
  * EFファイルの行からデータを抽出する共通関数
  * @param columns - データ列の配列
- * @returns 患者データ（対象手術の場合は完全、それ以外は基本情報のみ）またはnull（データが不十分な場合）
+ * @returns 抽出されたデータ（基本情報 + 診療行為詳細）またはnull（データ不足またはEファイル行）
  */
-function extractCaseData(
+function extractLineData(
   columns: string[],
-):
-  | (RawCaseData & { procedure: string; procedureName: string | null })
-  | { dataId: string; admission: string; discharge: string; procedure: null; procedureName: null }
-  | null {
-  // 少なくとも基本情報（ID, 入院日, 退院日）を含む列が必要
-  if (columns.length < 4) {
+): {
+  dataId: string;
+  admission: string;
+  discharge: string;
+  procedureDetail: ProcedureDetail | null; // 診療行為詳細、Fファイルでなければnull
+} | null {
+  // 必須列（データ識別番号、入院日、退院日、順序番号、行為明細番号、レセプトコード、実施日）の存在を確認
+  if (columns.length < 24) { // 実施年月日(列24)まで必要
     return null;
   }
 
   const dataId = columns[1].trim();
-  if (!dataId) {
-    return null;
-  }
+  if (!dataId) return null;
   const admission = columns[3].trim();
   const discharge = columns[2].trim();
+  const sequenceNumber = columns[5].trim(); // 順序番号 (列6)
+  const actionDetailNo = columns[6].trim(); // 行為明細番号 (列7)
+  const procedureCode = columns[8].trim(); // レセプト電算コード (列9)
+  const procedureName = columns[10].trim(); // 診療明細名称 (列11)
+  const procedureDate = columns[23].trim(); // 実施年月日 (列24)
 
-  // 行為明細番号を取得 (列が存在する場合のみ)
-  const actionDetailNo = columns.length > 6 ? columns[6].trim() : null;
-
-  // 行為明細番号が"000"の行（Eファイル）は日付更新にも不要なためスキップ
+  // 行為明細番号が"000"の行（Eファイル）はスキップ
   if (actionDetailNo === '000') {
     return null;
   }
 
-  // 基本情報
-  const basicInfo = { dataId, admission, discharge };
+  // Fファイルの場合、診療行為詳細を作成
+  const procedureDetail: ProcedureDetail = {
+    code: procedureCode,
+    name: procedureName || '(名称なし)', // 名称が空の場合のデフォルト値
+    date: procedureDate,
+    sequenceNumber: sequenceNumber,
+  };
 
-  // レセプト電算コードと診療明細名称を取得 (列が存在する場合のみ)
-  const procedure = columns.length > 8 ? columns[8].trim() : null;
-  const procedureName = columns.length > 10 ? columns[10].trim() : null;
-
-  // 短手3の対象手術かどうかを判定
-  if (!procedure || !TARGET_PROCEDURES.includes(procedure)) {
-    // 対象手術でなくても基本情報は返す（日付更新のため）
-    return { ...basicInfo, procedure: null, procedureName: null };
-  }
-
-  // 対象手術の場合、完全な情報を返す
-  // RawCaseData型にキャストして返す (procedureはstringであることが保証されている)
-  // procedureNameがnullの場合もデフォルト値を設定し、string型を保証
   return {
-    ...basicInfo,
-    procedure: procedure, // procedure is guaranteed to be string here
-    procedureName: procedureName ?? '(名称なし)', // Ensure string type for RawCaseData compatibility
+    dataId,
+    admission,
+    discharge,
+    procedureDetail, // Fファイルの詳細情報を返す
   };
 }
 
@@ -68,41 +63,33 @@ function extractCaseData(
  */
 export function parseEFFile(content: string): CaseData[] {
   const lines = content.split(/\r?\n/);
-  // キーを複合キー (dataId_admission) に変更
-  const caseMap: Record<string, CaseData> = {};
+  const caseMap: Record<string, CaseData> = {}; // キーは複合キー (dataId_admission)
 
-  // ヘッダー行を除いたデータ行を処理
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = 1; i < lines.length; i++) { // ヘッダー行(i=0)をスキップ
     const line = lines[i].trim();
-    if (!line) {
-      continue;
-    }
+    if (!line) continue;
 
-    try {
+    try { // try...catch を元に戻す
       const columns = line.split('\t');
-      const extractedData = extractCaseData(columns);
+      const extractedData = extractLineData(columns); // 新しい抽出関数を使用
 
       if (extractedData) {
-        const { dataId, discharge, admission, procedure, procedureName } = extractedData;
-
-        // 複合キーを作成
+        const { dataId, admission, discharge, procedureDetail } = extractedData;
         const caseKey = `${dataId}_${admission}`;
 
-        // 既存の症例データを取得または新規作成 (複合キーを使用)
+        // 既存の症例データを取得または新規作成
         let currentCase = caseMap[caseKey];
         if (!currentCase) {
           currentCase = {
             id: dataId,
             admission: admission,
             discharge: discharge, // 初期値として設定
-            procedures: [],
-            procedureNames: [],
+            procedureDetails: [], // procedureDetails を初期化
           };
           caseMap[caseKey] = currentCase;
         }
 
-        // 退院日の更新 (00000000 でなく、既存より新しい日付の場合)
-        // この症例 (複合キーで特定) の退院日を更新
+        // 退院日の更新ロジック (変更なし)
         if (
           discharge &&
           discharge !== '00000000' &&
@@ -113,18 +100,27 @@ export function parseEFFile(content: string): CaseData[] {
           currentCase.discharge = discharge;
         }
 
-        // 対象手術コードと名称を追加（procedureがnullでない場合のみ）
-        // この症例 (複合キーで特定) の手術リストに追加
-        if (procedure && !currentCase.procedures.includes(procedure)) {
-          currentCase.procedures.push(procedure);
-          if (!currentCase.procedureNames) {
-            currentCase.procedureNames = [];
+        // 診療行為詳細を追加 (procedureDetail が null でない場合)
+        if (procedureDetail) {
+          // 重複チェック（コード、日付、順序番号がすべて一致する場合を重複とみなす）
+          const isDuplicate = currentCase.procedureDetails.some(
+            (pd) =>
+              pd.code === procedureDetail.code &&
+              pd.date === procedureDetail.date &&
+              pd.sequenceNumber === procedureDetail.sequenceNumber,
+          );
+          if (!isDuplicate) {
+            currentCase.procedureDetails.push(procedureDetail);
           }
-          currentCase.procedureNames.push(procedureName ?? '(名称なし)');
         }
-      }
-    } catch {
-      // エラーが発生しても処理を継続するが、ログは残さない
+      } // End of if (extractedData) block
+    } // End of try block
+    catch (error) { // try...catch を元に戻す
+      // エラーログをより詳細に表示
+      console.error(
+        `Error processing line ${i + 1}: "${line}"\n`,
+        error instanceof Error ? error.stack : String(error),
+      );
       continue;
     }
   }
@@ -139,25 +135,23 @@ export function parseEFFile(content: string): CaseData[] {
  * @param newCases - 新しい症例データ
  * @returns 統合された症例データ
  */
-export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): CaseData[] {
-  // キーを複合キー (dataId_admission) に変更
-  const caseMap: Record<string, CaseData> = {};
+export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): CaseData[] { // 引数間にカンマを追加
+  const caseMap: Record<string, CaseData> = {}; // キーは複合キー (dataId_admission)
 
-  // 既存のケースをマップに追加 (複合キーを使用)
+  // 既存のケースをマップに追加
   for (const c of existingCases) {
     const caseKey = `${c.id}_${c.admission}`;
-    caseMap[caseKey] = createSafeCase(c); // 既存データも安全にコピー
+    caseMap[caseKey] = createSafeCase(c); // procedureDetails を初期化
   }
 
-  // 新しいケースをマージ (複合キーを使用)
+  // 新しいケースをマージ
   for (const c of newCases) {
     const caseKey = `${c.id}_${c.admission}`;
-    if (caseMap[caseKey]) {
-      // 既存症例の更新処理 (複合キーで特定された症例を更新)
-      updateExistingCase(caseMap[caseKey], c);
+    const existingCase = caseMap[caseKey];
+    if (existingCase) {
+      updateExistingCase(existingCase, c); // 既存症例を更新
     } else {
-      // 新しい症例を追加 (複合キーでマップに追加)
-      caseMap[caseKey] = createSafeCase(c);
+      caseMap[caseKey] = createSafeCase(c); // 新しい症例を追加
     }
   }
 
@@ -170,8 +164,7 @@ export function mergeCases(existingCases: CaseData[], newCases: CaseData[]): Cas
  * @param newCase - 新しい症例データ
  */
 function updateExistingCase(currentCase: CaseData, newCase: CaseData): void {
-  // 退院日が確定した場合（00000000 から具体的な日付に変わった場合）
-  // または、より新しい退院日が来た場合 (YYYYMMDD形式なので文字列比較でOK)
+  // 退院日の更新ロジック (変更なし)
   if (
     newCase.discharge &&
     newCase.discharge !== '00000000' &&
@@ -182,52 +175,47 @@ function updateExistingCase(currentCase: CaseData, newCase: CaseData): void {
     currentCase.discharge = newCase.discharge;
   }
 
-  // procedures と procedureNames の初期化を確実に行う
-  if (!Array.isArray(currentCase.procedures)) {
-    currentCase.procedures = [];
-  }
-  if (!Array.isArray(currentCase.procedureNames)) {
-    currentCase.procedureNames = [];
+  // procedureDetails の初期化を確実に行う
+  if (!Array.isArray(currentCase.procedureDetails)) {
+    currentCase.procedureDetails = [];
   }
 
-  // 新しい手術コードを追加
-  mergeProcedures(currentCase, newCase);
+  // 新しい診療行為詳細を追加
+  mergeProcedureDetails(currentCase, newCase); // 新しいマージ関数を呼び出す
 }
 
 /**
  * 安全な症例データオブジェクトを作成する
  * @param c - 元の症例データ
- * @returns 配列が初期化された症例データ
+ * @returns procedureDetails が初期化された症例データ
  */
 function createSafeCase(c: CaseData): CaseData {
   return {
     ...c,
-    procedures: Array.isArray(c.procedures) ? [...c.procedures] : [],
-    procedureNames: Array.isArray(c.procedureNames) ? [...c.procedureNames] : [],
+    // procedureDetails を確実に配列として初期化し、コピーする
+    procedureDetails: Array.isArray(c.procedureDetails) ? [...c.procedureDetails] : [],
   };
 }
 
 /**
- * 症例の処置データを統合する
+ * 症例の診療行為詳細データを統合する (旧 mergeProcedures から変更)
  * @param currentCase - 統合先の症例データ
  * @param newCase - 統合元の症例データ
  */
-function mergeProcedures(currentCase: CaseData, newCase: CaseData): void {
-  // 新しい手術コードを追加（重複を避ける）
-  const procedures = Array.isArray(newCase.procedures) ? newCase.procedures : [];
-  const procedureNames = Array.isArray(newCase.procedureNames) ? newCase.procedureNames : [];
+function mergeProcedureDetails(currentCase: CaseData, newCase: CaseData): void {
+  const newDetails = Array.isArray(newCase.procedureDetails) ? newCase.procedureDetails : [];
 
-  for (let i = 0; i < procedures.length; i++) {
-    const proc = procedures[i];
-    if (!currentCase.procedures.includes(proc)) {
-      currentCase.procedures.push(proc);
+  for (const newDetail of newDetails) {
+    // 重複チェック（コード、日付、順序番号がすべて一致する場合を重複とみなす）
+    const isDuplicate = currentCase.procedureDetails.some(
+      (existingDetail) =>
+        existingDetail.code === newDetail.code &&
+        existingDetail.date === newDetail.date &&
+        existingDetail.sequenceNumber === newDetail.sequenceNumber,
+    );
 
-      // procedureNamesが未定義の場合は初期化
-      if (!currentCase.procedureNames) {
-        currentCase.procedureNames = [];
-      }
-      // 対応する手術名も追加（存在しない場合はデフォルト値）
-      currentCase.procedureNames.push(procedureNames[i] ?? '(名称なし)');
+    if (!isDuplicate) {
+      currentCase.procedureDetails.push(newDetail);
     }
   }
 }

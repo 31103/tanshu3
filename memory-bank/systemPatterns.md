@@ -35,8 +35,27 @@ graph LR
         Evaluator --> Common
     end
 
-    style User fill:#f9f,stroke:#333,stroke-width:2px
+     style User fill:#f9f,stroke:#333,stroke-width:2px
 ```
+
+**データ構造:**
+
+- **`CaseData`:** 患者の入院症例全体を表す。以前は `procedures` (コード文字列配列) を持っていたが、現在は `procedureDetails` (後述の `ProcedureDetail` オブジェクト配列) を持つように変更された。これにより、個々の診療行為の日付や順序番号を保持できるようになった。
+- **`ProcedureDetail`:** 個々の診療行為（手術、検査など）の詳細情報を表す新しい型。`code` (レセプト電算コード), `name` (診療明細名称), `date` (実施年月日), `sequenceNumber` (順序番号) を含む。
+
+**データフロー:**
+
+1. **UI Layer:** ユーザーがファイルを選択。
+2. **CoreFacade (`file-processor.ts`):** UIからファイルリストを受け取る。
+3. **Adapter Layer (`browser.ts`):** ファイル内容を読み込む。
+4. **Parser (`parsers.ts`):** ファイル内容を解析。各行から `ProcedureDetail` オブジェクトを生成し、`CaseData` の `procedureDetails` 配列に格納する。**症例は `データ識別番号` + `入院年月日` で一意に識別される。**
+5. **Validator (`validator.ts`):** (基本的なファイル形式チェックは継続)
+6. **Evaluator (`evaluator.ts`):** `CaseData` の `procedureDetails` 配列を評価。
+   - 短手３対象手術を特定。
+   - **実施年月日と順序番号を考慮して**、対象外手術の有無をチェックする（同日・同一連番、または別日の対象外手術がある場合のみ対象外とする）。
+   - 入院日数、複数対象手術、特定加算などの条件もチェック。
+7. **CoreFacade:** 整形された結果をUIに返す。
+8. **UI Layer:** 結果を表示。
 
 ## 2. 主要な技術的決定
 
@@ -45,12 +64,12 @@ graph LR
 - **Parcel 採用:** `file://` 環境での動作に必要な設定が Webpack よりシンプルであり、迅速な開発セットアップが可能。依存関係を単一ファイルにバンドル。
 - **コアロジック分離:** UI やブラウザ API 依存のコード (`src/browser`, `src/ui`) と、純粋なビジネスロジック (`src/core`) を分離。テスト容易性、再利用性、保守性を高める。
 - **Adapter パターン採用:** ファイル読み込みなど環境依存の処理を抽象化し、コアロジックの独立性を維持。ブラウザ環境とテスト環境 (Node.js) での動作を両立。
-- **ESLint & Prettier 導入:** コーディング規約の強制とコードフォーマットの自動化により、コードの一貫性と品質を維持。
-- **Jest によるテスト:** ユニットテストと統合テストにより、コアロジックの正確性と安定性を担保。特に `validator` や `evaluator` のロジックはテストで品質を保証。
+- **Deno Lint & Deno Format 導入:** コーディング規約の強制とコードフォーマットの自動化により、コードの一貫性と品質を維持。
+- **Deno Test によるテスト:** ユニットテストと統合テストにより、コアロジックの正確性と安定性を担保。特に `validator` や `evaluator` のロジックはテストで品質を保証。
 - **`navigator.clipboard.writeText()` API 採用:** 廃止予定の `document.execCommand('copy')` を避け、モダンで信頼性の高いクリップボード操作を実現。
 - **GitHub Actions による CI/CD:**
-  - **CI:** `main` ブランチへの push/pull request 時に Lint/Format/Test/Build を自動実行し、コード品質を維持 (`.github/workflows/ci.yml`)。
-  - **CD:** タグプッシュ時にリリースノート自動生成 (`release-drafter` と Conventional Commits 規約を利用) とビルド成果物の GitHub Release への自動公開 (`.github/workflows/release.yml`)。
+- **CI:** `main` ブランチへの push/pull request 時に Lint/Format/Test/Build を自動実行し、コード品質を維持 (`.github/workflows/ci.yml`)。
+- **CD:** タグプッシュ時にリリースノート自動生成 (`release-drafter` と Conventional Commits 規約を利用) とビルド成果物の GitHub Release への自動公開 (`.github/workflows/release.yml`)。
 
 ## 3. デザインパターン
 
@@ -84,7 +103,7 @@ graph LR
   - `main.ts` からファイルリストと設定を受け取る。
   - `BrowserAdapter` を使用してファイル内容を非同期に読み込む。
   - 読み込んだ内容を `Validator` に渡して検証する。検証結果（エラー/警告）を `main.ts` 経由で `Notification` に通知する。
-  - 検証済みデータを `Parser` (`parsers.ts`) に渡して解析し、構造化データ（例: `CaseData[]`）に変換する。**各症例は `データ識別番号` + `入院年月日` で一意に識別される。**
+  - 検証済みデータを `Parser` (`parsers.ts`) に渡して解析し、構造化データ（`CaseData` と `ProcedureDetail`）に変換する。**各症例は `データ識別番号` + `入院年月日` で一意に識別される。**
   - 構造化データを `Evaluator` (`evaluator.ts`) に渡して短手３判定を行う。
   - 判定結果を `Utils` (`utils.ts`) を使って指定されたフォーマットに整形し、`main.ts` に返す。
 - `Validator`, `Parser`, `Evaluator` (Core Logic):
@@ -95,6 +114,6 @@ graph LR
 ## 5. 重要な実装パス (Critical Implementation Paths)
 
 - **ファイル処理と判定のメインフロー:** `main.ts` でのユーザー操作受付から `FileProcessor` (`file-processor.ts`) による一連の処理（読み込み -> 検証 -> 解析 -> 評価 -> 整形）を経て、`ResultViewer` (`result-viewer.ts`) に結果が表示されるまでの流れ。非同期処理（ファイル読み込み）を含む。
-- **短手３判定ロジック (`evaluator.ts`):** 入院日数、実施された手術コード（特に `COLONOSCOPY_PROCEDURE_CODES` など）、その他の条件（`docs/短期滞在手術等基本料３について.md` 参照）に基づいて**個々の症例 (`CaseData`)** の該当/非該当を判定するコアアルゴリズム。
-- **複数ファイル・月またぎ処理 (`parsers.ts` の `mergeCases` 関数):** 複数の EF ファイルから解析された症例データ (`CaseData[]`) を統合するロジック。**症例データ（`データ識別番号` + `入院年月日` で識別）** をファイル間でマージし、特に退院年月日が `00000000` から具体的な日付に更新されるケースを正しく処理する。
+- **短手３判定ロジック (`evaluator.ts`):** 入院日数、実施された診療行為（`ProcedureDetail`）、その他の条件（`docs/短期滞在手術等基本料３について.md` 参照）に基づいて**個々の症例 (`CaseData`)** の該当/非該当を判定するコアアルゴリズム。**特に、対象外手術のチェックにおいて、実施年月日と順序番号を考慮するようになった。**
+- **複数ファイル・月またぎ処理 (`parsers.ts` の `mergeCases` 関数):** 複数の EF ファイルから解析された症例データ (`CaseData[]`) を統合するロジック。**症例データ（`データ識別番号` + `入院年月日` で識別）** をファイル間でマージし、特に退院年月日が `00000000` から具体的な日付に更新されるケースや、`ProcedureDetail` の重複排除を正しく処理する。
 - **入力データ検証 (`validator.ts`):** EF ファイルの各行や必須項目（入院年月日、データ識別番号など）が仕様に適合しているかを確認するロジック。エラーと警告を区別し、ユーザーにフィードバックする。

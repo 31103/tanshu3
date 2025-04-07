@@ -7,12 +7,23 @@
  * 症例データの型定義
  * ファイルから抽出された患者の症例情報を表します。
  */
+export interface ProcedureDetail {
+  code: string; // レセプト電算コード (列9)
+  name: string; // 診療明細名称 (列11)
+  date: string; // 実施年月日 (列24)
+  sequenceNumber: string; // 順序番号 (列6)
+  // 必要に応じて他の列情報も追加可能
+}
+
+/**
+ * 症例データの型定義
+ * ファイルから抽出された患者の症例情報を表します。
+ */
 export interface CaseData {
   id: string; // データ識別番号
   admission: string; // 入院年月日（yyyymmdd形式）
   discharge: string; // 退院年月日（yyyymmdd形式）
-  procedures: string[]; // 実施された診療行為コードのリスト
-  procedureNames?: string[]; // 診療明細名称のリスト（procedures配列と同じ順序）
+  procedureDetails: ProcedureDetail[]; // 実施された診療行為詳細のリスト
   isEligible?: boolean; // 短手３対象症例かどうか
   reason?: string; // 対象/非対象の理由
 }
