@@ -50,5 +50,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
         run: |
-          gh release edit ${{ github.ref_name }} --draft=false --add-asset ./dist/tanshu3.html
-          echo "Release ${{ github.ref_name }} published with tanshu3.html artifact."
+          # リリースを公開状態にする (ドラフト解除)
+          gh release edit ${{ github.ref_name }} --draft=false
+          # ビルド成果物をアップロード
+          gh release upload ${{ github.ref_name }} ./dist/tanshu3.html
+          echo "Release ${{ github.ref_name }} published and tanshu3.html artifact uploaded."
