@@ -4,12 +4,20 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 1. 現在の作業焦点 (Current Focus)
 
-- **CI/CD 推進計画 (Issue #1):** 完了。CI ワークフロー実装、CD ワークフロー強化 (リリースノート自動生成)、関連ドキュメント更新。
-- **Deno 移行:** 完了。
+- **短手３判定ロジック修正完了:** データ区分とコードを用いた判定ロジック修正、テストコード修正、Memory Bank 更新。
+- **パーサー堅牢性向上 Issue 作成:** GitHub Issue #2 を作成。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
-- **2025-04-06 (最新):**
+- **2025-04-08 (最新):**
+  - **短手３判定ロジック修正 (fix/tanshu3-over-exclusion ブランチ):**
+    - `src/core/common/types.ts`: `ProcedureDetail` に `dataCategory` を追加。
+    - `src/core/common/parsers.ts`: データ区分をパースして `ProcedureDetail` に格納するように修正。
+    - `src/core/common/evaluator.ts`: 「他の手術」の判定基準を「データ区分 '50' かつコード '15' 始まり」に修正。
+    - 関連テスト (`evaluator_test.ts`, `parsers_test.ts`, `data-flow_test.ts`, `module-integration_test.ts`) を修正し、全テストパスを確認。
+    - コミット (`fix(evaluator): 正しいデータ区分とコードで他の手術を判定`)。
+  - **パーサー堅牢性向上 Issue 作成:** GitHub Issue #2 を作成し、パーサーが仕様外の行を処理する問題を記録。
+- **2025-04-06:**
   - **CI/CD 推進計画 (Issue #1) 完了:**
     - **CI ワークフロー実装:** `.github/workflows/ci.yml` を新規作成。`main` ブランチへの push/pull request 時に Lint/Format/Test/Build を実行。
     - **CD ワークフロー強化:**
@@ -95,14 +103,10 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
    - **[保留]** テストの充実 (UI レイヤーなど)。
    - **[保留]** エラーハンドリング強化。
    - **[保留]** コードコメント修正・強化。
-   - **[中断] 短手３過剰判定修正 (Issue #9):**
-     - **[完了]** データ構造 (`CaseData`, `ProcedureDetail`) 拡張。
-     - **[完了]** パーサー (`parsers.ts`) 修正 (実施日・順序番号の抽出)。
-     - **[完了]** 評価ロジック (`evaluator.ts`) 修正 (同日・同一連番/別日の判定導入)。
-     - **[完了]** テスト (`parsers_test.ts`, `evaluator_test.ts`, `data-flow_test.ts`, `module-integration_test.ts`) 修正・拡充。
-     - **[中断]** `parsers_test.ts` の3つのテストケースが失敗しており、原因調査が必要。
+   - **[完了] 短手３判定ロジック修正:** 上記「最近の主な変更点」参照。
+   - **[新規] パーサー堅牢性向上 (Issue #2):** 仕様外の行（例: 'NOT_EF' 始まり）を早期に検出・除外する改善。
    - **[保留]** Lint 警告修正 (`@typescript-eslint/explicit-function-return-type` 残り3箇所)。
-   - **[保留]** テストの充実 (UI レイヤーなど)。
+   - **[保留]** テストの充実 (UI レイヤー、パーサー堅牢性テストなど)。
    - **[保留]** エラーハンドリング強化。
    - **[保留]** コードコメント修正・強化。
    - **[保留]** UI/UX の継続的改善。
@@ -129,6 +133,13 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 ## 6. 学びと洞察 (Learnings & Insights)
 
+- **短手３判定ロジックのデバッグ:**
+  - 当初の「他の手術」判定ロジック (`startsWith('15')` のみ) では、麻酔 (`150279010`) など第10部手術でないものも対象外手術と誤判定していた。
+  - データ区分 (`50`) を利用することで、より正確に手術手技料を特定できることが判明。
+  - 最終的に「データ区分 `50` かつコード `15` 始まり」を「他の手術手技料」と判定するロジックに修正した。
+- **テスト駆動開発の重要性:**
+  - テストコード (`evaluator_test.ts` など) の修正を通じて、`ProcedureDetail` 型への `dataCategory` 追加漏れを発見できた。
+  - 統合テスト (`module-integration_test.ts`) の失敗から、パーサーの堅牢性に関する潜在的な問題を特定できた。
 - **Deno 統合テストの課題と解決策:**
   - **ファイル操作の違い:** Node.jsの`fs`モジュール（同期API）とDenoのファイル操作（非同期API）には大きな違いがあります：
     - `fs.readFileSync(path, 'utf-8')`は`await Deno.readTextFile(path)`に置き換える必要があります
