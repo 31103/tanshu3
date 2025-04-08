@@ -12,6 +12,7 @@ export interface ProcedureDetail {
   name: string; // 診療明細名称 (列11)
   date: string; // 実施年月日 (列24)
   sequenceNumber: string; // 順序番号 (列6)
+  dataCategory: string; // データ区分 (列4)
   // 必要に応じて他の列情報も追加可能
 }
 

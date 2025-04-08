@@ -221,6 +221,7 @@ Deno.test('月をまたぐ患者データを正しくマージ・評価できる
       name: '対象手術',
       date: '20240731',
       sequenceNumber: '0001',
+      dataCategory: 'XX', // 仮のデータ区分
     }], // 対象手術あり
   };
   const augustCase: CaseData = {
@@ -232,6 +233,7 @@ Deno.test('月をまたぐ患者データを正しくマージ・評価できる
       name: '対象手術',
       date: '20240731',
       sequenceNumber: '0001',
+      dataCategory: 'XX', // 仮のデータ区分
     }], // 対象手術あり
   };
 
@@ -268,6 +270,7 @@ Deno.test('退院日が00000000から確定日に更新されるケースを正�
       name: '対象手術',
       date: '20240711',
       sequenceNumber: '0001',
+      dataCategory: 'XX',
     }],
   };
   const augustCase: CaseData = {
@@ -279,6 +282,7 @@ Deno.test('退院日が00000000から確定日に更新されるケースを正�
       name: '対象手術',
       date: '20240711',
       sequenceNumber: '0001',
+      dataCategory: 'XX',
     }],
   };
 
@@ -306,6 +310,7 @@ Deno.test('入院日数がちょうど5日のケースを正しく評価でき�
       name: '対象手術',
       date: '20240102',
       sequenceNumber: '0001',
+      dataCategory: 'XX',
     }],
   };
   const evaluatedCases = evaluateCases([caseData]);
@@ -331,6 +336,7 @@ Deno.test('入院日数が6日のケースは対象外となること', () => {
       name: '対象手術',
       date: '20240102',
       sequenceNumber: '0001',
+      dataCategory: 'XX',
     }],
   };
   const evaluatedCases = evaluateCases([caseData]);
@@ -357,6 +363,7 @@ Deno.test('入院日数が1日（同日入退院）のケースを正しく評�
       name: '対象手術',
       date: '20240101',
       sequenceNumber: '0001',
+      dataCategory: 'XX',
     }],
   };
   const evaluatedCases = evaluateCases([caseData]);
@@ -379,6 +386,7 @@ Deno.test('対象手術が含まれないケースは対象外となること', 
       name: '対象外手術',
       date: '20240102',
       sequenceNumber: '0001',
+      dataCategory: '99',
     }], // 対象外の手術コード
   };
   const evaluatedCases = evaluateCases([caseData]);
@@ -403,6 +411,7 @@ Deno.test('複数の患者データを一括で評価できること', () => {
         name: '対象手術',
         date: '20240102',
         sequenceNumber: '0001',
+        dataCategory: 'XX',
       }],
     },
     {
@@ -414,6 +423,7 @@ Deno.test('複数の患者データを一括で評価できること', () => {
         name: '対象手術',
         date: '20240111',
         sequenceNumber: '0001',
+        dataCategory: 'XX',
       }],
     },
     {
@@ -425,6 +435,7 @@ Deno.test('複数の患者データを一括で評価できること', () => {
         name: '対象手術',
         date: '20240121',
         sequenceNumber: '0001',
+        dataCategory: 'XX',
       }],
     },
     {
@@ -436,6 +447,7 @@ Deno.test('複数の患者データを一括で評価できること', () => {
         name: '対象外手術',
         date: '20240202',
         sequenceNumber: '0001',
+        dataCategory: '99',
       }],
     },
   ];
