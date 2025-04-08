@@ -9,10 +9,12 @@ import { CaseData, ProcedureDetail, RawCaseData } from './types.ts'; // Procedur
 /**
  * EFファイルの行からデータを抽出する共通関数
  * @param columns - データ列の配列
- * @returns 抽出されたデータ（基本情報 + 診療行為詳細）またはnull（データ不足またはEファイル行）
+ * @param lineNumber - ファイル内の行番号 (1始まり、警告表示用)
+ * @returns 抽出されたデータ（基本情報 + 診療行為詳細）またはnull（データ不足、形式不正、またはEファイル行）
  */
 function extractLineData(
   columns: string[],
+  lineNumber: number, // 行番号を引数に追加
 ): {
   dataId: string;
   admission: string;
@@ -20,24 +22,55 @@ function extractLineData(
   dataCategory: string; // データ区分 (列4) を追加
   procedureDetail: ProcedureDetail | null; // 診療行為詳細、Fファイルでなければnull
 } | null {
-  // 必須列（データ識別番号、入院日、退院日、データ区分、順序番号、行為明細番号、レセプトコード、実施日）の存在を確認
-  if (columns.length < 24) { // 実施年月日(列24)まで必要
+  // 列数チェック (最低限必要な列数)
+  if (columns.length < 24) {
+    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to insufficient columns (${columns.length} < 24).`); // 通知は parseEFFile で集約
     return null;
   }
 
-  const dataId = columns[1].trim();
-  if (!dataId) return null;
-  const admission = columns[3].trim();
-  const discharge = columns[2].trim();
-  const dataCategory = columns[4].trim(); // データ区分 (列4) を抽出
-  const sequenceNumber = columns[5].trim(); // 順序番号 (列6)
-  const actionDetailNo = columns[6].trim(); // 行為明細番号 (列7)
-  const procedureCode = columns[8].trim(); // レセプト電算コード (列9)
-  const procedureName = columns[10].trim(); // 診療明細名称 (列11)
-  const procedureDate = columns[23].trim(); // 実施年月日 (列24)
+  // --- 必須項目と形式のチェック ---
+  const dataId = columns[1]?.trim(); // ?. を使用して安全にアクセス
+  const admission = columns[3]?.trim();
+  const discharge = columns[2]?.trim();
+  const dataCategory = columns[4]?.trim();
+  const sequenceNumber = columns[5]?.trim();
+  const actionDetailNo = columns[6]?.trim();
+  const procedureCode = columns[8]?.trim();
+  const procedureName = columns[10]?.trim(); // 必須ではないが取得
+  const procedureDate = columns[23]?.trim();
+
+  const dateRegex = /^\d{8}$/; // YYYYMMDD形式
+  const numberRegex = /^\d+$/; // 数値形式
+
+  // 必須項目チェック (主要なもの)
+  if (
+    !dataId || !admission || !discharge || !dataCategory || !sequenceNumber || !actionDetailNo ||
+    !procedureCode || !procedureDate
+  ) {
+    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to missing required field(s).`); // 通知は parseEFFile で集約
+    return null;
+  }
+
+  // 形式チェック
+  if (
+    !(dateRegex.test(admission) || admission === '00000000') ||
+    !(dateRegex.test(discharge) || discharge === '00000000') ||
+    !(dateRegex.test(procedureDate) || procedureDate === '00000000')
+  ) {
+    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to invalid date format.`); // 通知は parseEFFile で集約
+    return null;
+  }
+  if (!numberRegex.test(sequenceNumber) || !numberRegex.test(actionDetailNo)) {
+    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to invalid number format for sequence/action number.`); // 通知は parseEFFile で集約
+    return null;
+  }
+  // dataCategory, procedureCode は特定の形式チェックは一旦保留 (文字列として扱う)
+
+  // --- チェックここまで ---
 
   // 行為明細番号が"000"の行（Eファイル）はスキップ
   if (actionDetailNo === '000') {
+    // Eファイル行はエラーではないので警告は出さない
     return null;
   }
 
@@ -68,14 +101,16 @@ function extractLineData(
 export function parseEFFile(content: string): CaseData[] {
   const lines = content.split(/\r?\n/);
   const caseMap: Record<string, CaseData> = {}; // キーは複合キー (dataId_admission)
+  const skippedLines: { lineNumber: number; reason: string; lineContent: string }[] = []; // スキップされた行の情報
 
   for (let i = 1; i < lines.length; i++) { // ヘッダー行(i=0)をスキップ
+    const lineNumber = i + 1; // 1始まりの行番号
     const line = lines[i].trim();
-    if (!line) continue;
+    if (!line) continue; // 空行はスキップ
 
-    try { // try...catch を元に戻す
+    try {
       const columns = line.split('\t');
-      const extractedData = extractLineData(columns); // 新しい抽出関数を使用
+      const extractedData = extractLineData(columns, lineNumber); // 行番号を渡す
 
       if (extractedData) {
         // dataCategory も受け取るように修正
@@ -119,16 +154,49 @@ export function parseEFFile(content: string): CaseData[] {
             currentCase.procedureDetails.push(procedureDetail);
           }
         }
-      } // End of if (extractedData) block
-    } // End of try block
-    catch (error) { // try...catch を元に戻す
+      } else {
+        // extractLineData が null を返した場合（検証失敗またはEファイル行）
+        // Eファイル行は警告対象外とするため、ここで明示的な警告は出さない
+        // (extractLineData内で警告済み、または警告不要)
+        // 警告を出す場合は理由を特定する必要がある
+        const columns = line.split('\t');
+        if (columns.length < 24) {
+          skippedLines.push({
+            lineNumber,
+            reason: `Insufficient columns (${columns.length} < 24)`,
+            lineContent: line,
+          });
+        } else if (columns[6]?.trim() !== '000') { // Eファイル行以外で検証に失敗した場合
+          skippedLines.push({
+            lineNumber,
+            reason: 'Invalid data format or missing required field',
+            lineContent: line,
+          });
+        }
+      }
+    } catch (error) {
       // エラーログをより詳細に表示
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(
-        `Error processing line ${i + 1}: "${line}"\n`,
-        error instanceof Error ? error.stack : String(error),
+        `[Parser Error] Error processing line ${lineNumber}: "${line}"\n`,
+        error instanceof Error ? error.stack : errorMessage,
       );
-      continue;
+      skippedLines.push({ lineNumber, reason: `Error: ${errorMessage}`, lineContent: line }); // エラーが発生した行を記録
+      continue; // エラーが発生しても次の行へ
     }
+  }
+
+  // 処理終了後にスキップされた行の情報を警告として表示 (仮実装)
+  if (skippedLines.length > 0) {
+    console.warn(
+      `[Parser Summary] Skipped ${skippedLines.length} lines due to errors or validation issues:`,
+    );
+    skippedLines.forEach((skip) => {
+      // 行内容はデバッグ時以外は冗長なので省略
+      console.warn(`  - Line ${skip.lineNumber}: ${skip.reason}`);
+    });
+    // TODO: ここで NotificationSystem を使ってユーザーに通知する
+    // 例: notificationSystem.warn(`ファイル処理中に ${skippedLines.length} 行がスキップされました。詳細は開発者コンソールを確認してください。`);
   }
 
   return Object.values(caseMap);
