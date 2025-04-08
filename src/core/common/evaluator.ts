@@ -79,44 +79,21 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
         return evaluatedCase;
       }
 
-      // 6. 他の手術の実施チェック (修正ロジック)
+      // 6. 他の手術の実施チェック (データ区分 '50' かつ コード '15' 始まり)
       const otherSurgeryDetails = c.procedureDetails.filter((pd) => {
-        if (TARGET_PROCEDURES.includes(pd.code)) return false; // 対象手術は除外
-        if (!pd.code.startsWith('15')) return false; // 手術コード('15'始まり)以外は除外
-        if (pd.name.includes('加算')) return false; // 名称に「加算」を含むものは除外
-        // 修正: 1500xx... のパターンチェックを削除。加算の判定は名称で行う。
-        return true;
+        // データ区分が '50' (手術関連) かつ
+        // コードが '15' で始まり (手術手技料) かつ
+        // 短手３対象手術ではないものを抽出
+        return pd.dataCategory === '50' &&
+          pd.code.startsWith('15') &&
+          !TARGET_PROCEDURES.includes(pd.code);
       });
 
+      // 上記条件を満たす「他の手術手技料」が存在すれば、対象外とする
       if (otherSurgeryDetails.length > 0) {
-        let foundDisqualifyingSurgery = false;
-        for (const targetDetail of targetProcedureDetails) {
-          for (const otherSurgery of otherSurgeryDetails) {
-            // 条件A: 対象手術と「同日」かつ「同一順序番号」で実施された対象外手術があるか
-            if (
-              otherSurgery.date === targetDetail.date &&
-              otherSurgery.sequenceNumber === targetDetail.sequenceNumber
-            ) {
-              foundDisqualifyingSurgery = true;
-              break; // この対象外手術は失格条件を満たすので内側ループを抜ける
-            }
-            // 条件B: 対象手術と「別日」で実施された対象外手術があるか
-            if (otherSurgery.date !== targetDetail.date) {
-              foundDisqualifyingSurgery = true;
-              break; // この対象外手術は失格条件を満たすので内側ループを抜ける
-            }
-          }
-          if (foundDisqualifyingSurgery) {
-            break; // 失格条件を満たす手術が見つかったので外側ループも抜ける
-          }
-        }
-
-        // 条件AまたはBに該当する他の手術が見つかった場合、対象外とする
-        if (foundDisqualifyingSurgery) {
-          evaluatedCase.isEligible = false;
-          evaluatedCase.reason = INELIGIBILITY_REASONS.OTHER_SURGERY;
-          return evaluatedCase;
-        }
+        evaluatedCase.isEligible = false;
+        evaluatedCase.reason = INELIGIBILITY_REASONS.OTHER_SURGERY;
+        return evaluatedCase;
       }
 
       // すべての条件を満たす場合は短手３対象症例

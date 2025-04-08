@@ -32,6 +32,7 @@ Deno.test('parseEFFile関数: 有効なEFデータを正しくパースし、Pro
   const procedureDate = '20240705';
   const sequenceNumber = '0001';
   const actionDetailNo = '001'; // Fファイル行
+  const dataCategory = '50'; // データ区分
 
   // 24列のデータを作成
   const columns = [
@@ -39,7 +40,7 @@ Deno.test('parseEFFile関数: 有効なEFデータを正しくパースし、Pro
     '12345', // 2: データ識別番号
     '20240706', // 3: 退院年月日
     '20240704', // 4: 入院年月日
-    '50', // 5: データ区分
+    dataCategory, // 5: データ区分
     sequenceNumber, // 6: 順序番号
     actionDetailNo, // 7: 行為明細番号
     '641300', // 8: 病院点数マスタコード
@@ -70,6 +71,7 @@ Deno.test('parseEFFile関数: 有効なEFデータを正しくパースし、Pro
     name: procedureName,
     date: procedureDate,
     sequenceNumber: sequenceNumber,
+    dataCategory: dataCategory, // dataCategory を追加
   };
   assertEquals(result[0], {
     id: '12345',
@@ -85,13 +87,15 @@ Deno.test('parseEFFile関数: 同一患者・同一入院日の複数の診療�
   const sequenceNumber = '0001';
   const procedureCode1 = '150253010';
   const procedureName1 = '水晶体再建術';
+  const dataCategory1 = '50';
   const procedureCode2 = '150274010';
   const procedureName2 = '硝子体茎顕微鏡下離断術';
+  const dataCategory2 = '50';
 
   // 正しく24列のデータを設定
   const content = `ヘッダー行
-000000000\t12345\t20240706\t${admissionDate}\t50\t${sequenceNumber}\t001\t641300\t${procedureCode1}\tK282\t${procedureName1}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate}
-000000000\t12345\t20240706\t${admissionDate}\t50\t${sequenceNumber}\t002\t641300\t${procedureCode2}\tK280\t${procedureName2}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate}`;
+000000000\t12345\t20240706\t${admissionDate}\t${dataCategory1}\t${sequenceNumber}\t001\t641300\t${procedureCode1}\tK282\t${procedureName1}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate}
+000000000\t12345\t20240706\t${admissionDate}\t${dataCategory2}\t${sequenceNumber}\t002\t641300\t${procedureCode2}\tK280\t${procedureName2}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate}`;
 
   const result = parseEFFile(content);
 
@@ -105,12 +109,14 @@ Deno.test('parseEFFile関数: 同一患者・同一入院日の複数の診療�
       name: procedureName1,
       date: procedureDate,
       sequenceNumber: sequenceNumber,
+      dataCategory: dataCategory1,
     },
     {
       code: procedureCode2,
       name: procedureName2,
       date: procedureDate,
       sequenceNumber: sequenceNumber,
+      dataCategory: dataCategory2,
     },
   ]);
 });
@@ -124,13 +130,15 @@ Deno.test('parseEFFile関数: 同一患者・異なる入院日のデータは�
   const sequenceNumber2 = '0001';
   const procedureCode1 = '150253010';
   const procedureName1 = '水晶体再建術';
+  const dataCategory1 = '50';
   const procedureCode2 = '150089110';
   const procedureName2 = '前房、虹彩内異物除去術';
+  const dataCategory2 = '50';
 
   // 正しく24列のデータを設定
   const content = `ヘッダー行
-000000000\t12345\t20240706\t${admissionDate1}\t50\t${sequenceNumber1}\t001\t641300\t${procedureCode1}\tK282\t${procedureName1}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate1}
-000000000\t12345\t20240803\t${admissionDate2}\t50\t${sequenceNumber2}\t001\t641300\t${procedureCode2}\tK274\t${procedureName2}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate2}`;
+000000000\t12345\t20240706\t${admissionDate1}\t${dataCategory1}\t${sequenceNumber1}\t001\t641300\t${procedureCode1}\tK282\t${procedureName1}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate1}
+000000000\t12345\t20240803\t${admissionDate2}\t${dataCategory2}\t${sequenceNumber2}\t001\t641300\t${procedureCode2}\tK274\t${procedureName2}\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t${procedureDate2}`;
 
   const result = parseEFFile(content);
 
@@ -148,6 +156,7 @@ Deno.test('parseEFFile関数: 同一患者・異なる入院日のデータは�
       name: procedureName1,
       date: procedureDate1,
       sequenceNumber: sequenceNumber1,
+      dataCategory: dataCategory1,
     },
   ]);
 
@@ -160,6 +169,7 @@ Deno.test('parseEFFile関数: 同一患者・異なる入院日のデータは�
       name: procedureName2,
       date: procedureDate2,
       sequenceNumber: sequenceNumber2,
+      dataCategory: dataCategory2,
     },
   ]);
 });
@@ -219,6 +229,7 @@ Deno.test('mergeCases関数: 同一症例（ID+入院日）のデータを適切
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     {
@@ -233,6 +244,7 @@ Deno.test('mergeCases関数: 同一症例（ID+入院日）のデータを適切
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     {
@@ -258,6 +270,7 @@ Deno.test('mergeCases関数: 異なる症例（ID+入院日）のデータを正
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     {
@@ -272,12 +285,14 @@ Deno.test('mergeCases関数: 異なる症例（ID+入院日）のデータを正
     name: '手術B',
     date: '20220116',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const detail3: ProcedureDetail = {
     code: '345678',
     name: '手術C',
     date: '20220202',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     {
@@ -315,12 +330,14 @@ Deno.test('mergeCases関数: 同一症例の診療行為詳細の重複が排除
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const detail2: ProcedureDetail = {
     code: '789012',
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   }; // 既存
   const existingCases: CaseData[] = [
     {
@@ -335,12 +352,14 @@ Deno.test('mergeCases関数: 同一症例の診療行為詳細の重複が排除
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   }; // 重複
   const detail4: ProcedureDetail = {
     code: '345678',
     name: '手術C',
     date: '20220104',
     sequenceNumber: '0003',
+    dataCategory: '50',
   }; // 新規
   const newCases: CaseData[] = [
     {
@@ -363,6 +382,7 @@ Deno.test('mergeCases関数: 退院日が確定している既存データに、
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     {
@@ -377,6 +397,7 @@ Deno.test('mergeCases関数: 退院日が確定している既存データに、
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     {
@@ -397,6 +418,7 @@ Deno.test('mergeCases関数: 退院日が両方未確定の場合は未確定の
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     {
@@ -411,6 +433,7 @@ Deno.test('mergeCases関数: 退院日が両方未確定の場合は未確定の
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     {
@@ -431,6 +454,7 @@ Deno.test('mergeCases関数: より新しい退院日で更新される', () => 
     name: '手術A',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     {
@@ -445,6 +469,7 @@ Deno.test('mergeCases関数: より新しい退院日で更新される', () => 
     name: '手術B',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     {
@@ -464,12 +489,14 @@ Deno.test('mergeCases関数: 異なる症例間でデータが混ざらないこ
     name: 'ProcA1',
     date: '20220102',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const detailB1: ProcedureDetail = {
     code: 'P2',
     name: 'ProcB1',
     date: '20220111',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const existingCases: CaseData[] = [
     { id: 'A', admission: '20220101', discharge: '20220105', procedureDetails: [detailA1] },
@@ -480,18 +507,21 @@ Deno.test('mergeCases関数: 異なる症例間でデータが混ざらないこ
     name: 'ProcA1New',
     date: '20220103',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const detailB1_new: ProcedureDetail = {
     code: 'P4',
     name: 'ProcB1New',
     date: '20220112',
     sequenceNumber: '0002',
+    dataCategory: '50',
   };
   const detailA2: ProcedureDetail = {
     code: 'P5',
     name: 'ProcA2',
     date: '20220202',
     sequenceNumber: '0001',
+    dataCategory: '50',
   };
   const newCases: CaseData[] = [
     { id: 'A', admission: '20220101', discharge: '20220105', procedureDetails: [detailA1_new] }, // Aの追加手術

@@ -17,9 +17,10 @@ function extractLineData(
   dataId: string;
   admission: string;
   discharge: string;
+  dataCategory: string; // データ区分 (列4) を追加
   procedureDetail: ProcedureDetail | null; // 診療行為詳細、Fファイルでなければnull
 } | null {
-  // 必須列（データ識別番号、入院日、退院日、順序番号、行為明細番号、レセプトコード、実施日）の存在を確認
+  // 必須列（データ識別番号、入院日、退院日、データ区分、順序番号、行為明細番号、レセプトコード、実施日）の存在を確認
   if (columns.length < 24) { // 実施年月日(列24)まで必要
     return null;
   }
@@ -28,6 +29,7 @@ function extractLineData(
   if (!dataId) return null;
   const admission = columns[3].trim();
   const discharge = columns[2].trim();
+  const dataCategory = columns[4].trim(); // データ区分 (列4) を抽出
   const sequenceNumber = columns[5].trim(); // 順序番号 (列6)
   const actionDetailNo = columns[6].trim(); // 行為明細番号 (列7)
   const procedureCode = columns[8].trim(); // レセプト電算コード (列9)
@@ -45,12 +47,14 @@ function extractLineData(
     name: procedureName || '(名称なし)', // 名称が空の場合のデフォルト値
     date: procedureDate,
     sequenceNumber: sequenceNumber,
+    dataCategory: dataCategory, // dataCategory を追加
   };
 
   return {
     dataId,
     admission,
     discharge,
+    dataCategory, // dataCategory を返す
     procedureDetail, // Fファイルの詳細情報を返す
   };
 }
@@ -74,7 +78,8 @@ export function parseEFFile(content: string): CaseData[] {
       const extractedData = extractLineData(columns); // 新しい抽出関数を使用
 
       if (extractedData) {
-        const { dataId, admission, discharge, procedureDetail } = extractedData;
+        // dataCategory も受け取るように修正
+        const { dataId, admission, discharge, dataCategory, procedureDetail } = extractedData;
         const caseKey = `${dataId}_${admission}`;
 
         // 既存の症例データを取得または新規作成
@@ -107,7 +112,8 @@ export function parseEFFile(content: string): CaseData[] {
             (pd) =>
               pd.code === procedureDetail.code &&
               pd.date === procedureDetail.date &&
-              pd.sequenceNumber === procedureDetail.sequenceNumber,
+              pd.sequenceNumber === procedureDetail.sequenceNumber &&
+              pd.dataCategory === procedureDetail.dataCategory, // dataCategory も重複チェックに含める (念のため)
           );
           if (!isDuplicate) {
             currentCase.procedureDetails.push(procedureDetail);
@@ -211,7 +217,8 @@ function mergeProcedureDetails(currentCase: CaseData, newCase: CaseData): void {
       (existingDetail) =>
         existingDetail.code === newDetail.code &&
         existingDetail.date === newDetail.date &&
-        existingDetail.sequenceNumber === newDetail.sequenceNumber,
+        existingDetail.sequenceNumber === newDetail.sequenceNumber &&
+        existingDetail.dataCategory === newDetail.dataCategory, // dataCategory も重複チェックに含める (念のため)
     );
 
     if (!isDuplicate) {
