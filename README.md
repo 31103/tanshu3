@@ -91,10 +91,13 @@ tanshu3/
 ├── public/                 # 公開ファイル (ブラウザで直接アクセス)
 ├── scripts/                # ビルド・リリーススクリプトなど
 │   ├── build.ts            # esbuild を使用したバンドルスクリプト
+│   ├── bump-version.ts     # バージョン更新・タグ付け自動化スクリプト
 │   └── release.ts          # 単一HTML生成スクリプト
 ├── src/                    # ソースコード (TypeScript)
 │   ├── browser/            # ブラウザ環境依存コード
 │   ├── core/               # コアロジック (環境非依存)
+│   │   └── common/
+│   │       └── version.ts  # アプリケーションバージョン管理
 │   └── ui/                 # UI関連コード
 └── test/                   # テストコード
     ├── fixtures/           # テスト用データ
@@ -105,15 +108,32 @@ tanshu3/
 
 ### コマンド一覧 (`deno.jsonc` の `tasks` で定義)
 
-| コマンド                  | 説明                                                    |
-| ------------------------- | ------------------------------------------------------- |
-| `deno task dev`           | 開発用タスク (現在は `bundle` と同じ)                   |
-| `deno task bundle`        | esbuild を使用してプロダクション用ビルド (`public/js/`) |
-| `deno task release:build` | 単一HTMLファイル (`dist/tanshu3.html`) を生成           |
-| `deno task test`          | すべてのテスト実行                                      |
-| `deno task lint`          | Deno Lint によるコード検証                              |
-| `deno task fmt`           | Deno Format によるコードフォーマット                    |
-| `deno task check`         | 型チェック実行                                          |
+| コマンド                                       | 説明                                                    |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| `deno task dev`                                | 開発用タスク (現在は `bundle` と同じ)                   |
+| `deno task bundle`                             | esbuild を使用してプロダクション用ビルド (`public/js/`) |
+| `deno task release:build`                      | 単一HTMLファイル (`dist/tanshu3.html`) を生成           |
+| `deno task test`                               | すべてのテスト実行                                      |
+| `deno task lint`                               | Deno Lint によるコード検証                              |
+| `deno task fmt`                                | Deno Format によるコードフォーマット                    |
+| `deno task check`                              | 型チェック実行                                          |
+| `deno task release:bump [patch\|minor\|major]` | バージョン更新、コミット、タグ付け、プッシュを自動実行  |
+
+### リリース手順
+
+1. リリース準備が整ったら、変更内容に応じて以下のコマンドを実行します。
+   ```powershell
+   # パッチバージョンの場合 (バグ修正など)
+   deno task release:bump patch
+
+   # マイナーバージョンの場合 (機能追加など)
+   deno task release:bump minor
+
+   # メジャーバージョンの場合 (互換性のない変更)
+   deno task release:bump major
+   ```
+2. スクリプトが自動的に `src/core/common/version.ts` を更新し、コミット (`chore(release): ...`)、タグ付け (`vX.Y.Z`)、プッシュを行います。
+3. タグのプッシュをトリガーとして、GitHub Actions の CD ワークフロー (`release.yml`) が実行され、リリースノートの生成と成果物 (`tanshu3.html`) のアップロードが行われます。
 
 ## 短手３判定ロジック
 

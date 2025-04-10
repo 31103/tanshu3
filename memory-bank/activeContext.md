@@ -15,6 +15,14 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
     - `src/core/common/evaluator.ts`: 「他の手術」の判定ロジックを修正。データ区分 '50' かつコード '15' 始まりの条件に加え、**診療明細名称に「加算」を含まない** ことを条件に追加。これにより、「水晶体嚢拡張リング使用加算」などが「他の手術」として誤判定される問題を解消。
     - `src/core/common/evaluator_test.ts`: 上記修正を確認するためのテストケースを追加。
     - 全テストパスを確認。
+- **2025-04-10 (バージョン管理):**
+  - **バージョン表示機能実装:**
+    - `src/core/common/version.ts` を新規作成し、アプリケーションバージョン (`0.5.0`) を定義。
+    - `public/index.html` のフッターにバージョン表示用の `span#app-version` を追加。
+    - `src/browser/main.ts` を修正し、起動時に `version.ts` からバージョンを読み込み、フッターに表示するようにした。
+  - **バージョン更新・タグ付け自動化スクリプト実装:**
+    - `scripts/bump-version.ts` を新規作成。`patch`, `minor`, `major` 引数を受け取り、`version.ts` の更新、Git コミット (`chore(release): ...`)、Git タグ付け、Git プッシュを自動実行する機能を追加。依存ライブラリとして `deno.land/std/semver` と `deno.land/x/cliffy` を使用。
+    - `deno.jsonc` の `tasks` に `release:bump` を追加し、スクリプト実行タスクを定義。必要な権限 (`--allow-read`, `--allow-write`, `--allow-run=git`) を設定。
 - **2025-04-08:**
   - **短手３判定ロジック修正（旧） (fix/tanshu3-over-exclusion ブランチ):**
     - `src/core/common/types.ts`: `ProcedureDetail` に `dataCategory` を追加。
@@ -122,6 +130,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
    - **[保留]** UI/UX の継続的改善。
    - **[保留]** パフォーマンス最適化。
    - **[保留]** 結果ダウンロード機能の Deno 環境での動作確認。
+   - **[完了] バージョン表示と自動タグ付け:** 上記「最近の主な変更点」参照。
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
@@ -135,6 +144,10 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
   - **タスク定義:** `deno.jsonc` の `tasks` で主要な開発コマンド (`check`, `lint`, `fmt`, `test`, `bundle`) を定義済み。
   - **権限フラグの管理:** `deno.jsonc` の `tasks` で必要な権限 (`--allow-read`, `--allow-write`) を設定済み。
   - **テスト環境の互換性:** `deno-dom` は `jsdom` と完全には互換性がなく、UIテストで確認された制約（DOMイベント処理、スタイル操作）が統合テストにも影響する可能性があります。
+- **バージョン管理:**
+  - バージョン番号は `src/core/common/version.ts` で一元管理。
+  - UI (`public/index.html`) のフッターに表示。
+  - リリース時のバージョン更新、コミット、タグ付け、プッシュは `deno task release:bump [patch|minor|major]` コマンドで自動化 (`scripts/bump-version.ts`)。
 - (他項目は変更なし)
 
 ## 5. 重要なパターンと好み (Key Patterns & Preferences)

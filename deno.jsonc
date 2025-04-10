@@ -20,7 +20,8 @@
     "test": "deno test --allow-read", // Allow read for test fixtures
     "bundle": "deno run --allow-read --allow-write --allow-env --allow-run --allow-net scripts/build.ts", // Add --allow-net for esbuild
     "dev": "deno run --allow-read --allow-write --allow-env --allow-run scripts/build.ts", // Placeholder for dev task, currently just builds
-    "release:build": "deno run --allow-read --allow-write --allow-run=deno scripts/release.ts"
+    "release:build": "deno run --allow-read --allow-write --allow-run=deno scripts/release.ts",
+    "release:bump": "deno run --allow-read=src/core/common/version.ts --allow-write=src/core/common/version.ts --allow-run=git scripts/bump-version.ts" // バージョン更新＆タグ付けタスク
   },
   "compilerOptions": {
     // tsconfig.json から必要な設定を移行 (例: strict, lib)

@@ -9,6 +9,7 @@ import { ResultViewer } from '../ui/components/result-viewer.ts'; // ResultViewe
 import { getNotificationSystem } from '../ui/components/notification.ts'; // getNotificationSystem をインポート
 import { fileProcessor } from '../core/file-processor.ts';
 import { ErrorHandlerOptions } from '../core/common/types.ts'; // types.d.ts 削除に伴いパス変更
+import { APP_VERSION } from '../core/common/version.ts'; // バージョン情報をインポート
 
 /**
  * アプリケーションクラス
@@ -36,6 +37,12 @@ class Application {
     // DOM要素の取得
     this.loadingIndicator = document.getElementById('loadingIndicator');
     this.executeButton = document.getElementById('executeButton') as HTMLButtonElement;
+    const versionElement = document.getElementById('app-version'); // バージョン表示要素を取得
+
+    // バージョン表示
+    if (versionElement) {
+      versionElement.textContent = `v${APP_VERSION}`;
+    }
 
     // イベントリスナーの設定
     this.setupEventListeners();
