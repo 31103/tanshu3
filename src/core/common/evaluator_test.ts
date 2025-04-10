@@ -499,6 +499,35 @@ Deno.test('evaluateCases関数: 対象手術と「コード15始まりだがデ�
   assert(result[0].isEligible, 'コード15始まりでもデータ区分50でなければ対象');
 });
 
+Deno.test('evaluateCases関数: 対象手術と「加算」を含む手術コードがあっても対象 (例: 水晶体嚢拡張リング)', () => {
+  const cases: CaseData[] = [
+    {
+      id: 'KasanExclusion',
+      admission: '20250116',
+      discharge: '20250118',
+      procedureDetails: [
+        {
+          code: '150253010',
+          name: '水晶体再建術（眼内レンズを挿入）（その他）',
+          date: '20250116',
+          sequenceNumber: '0001',
+          dataCategory: '50',
+        }, // 対象手術
+        {
+          code: '150385170',
+          name: '水晶体嚢拡張リング使用加算（水晶体再建術）',
+          date: '20250116',
+          sequenceNumber: '0003',
+          dataCategory: '50',
+        }, // 「加算」を含むコード (データ区分50, コード15始まり)
+      ],
+    },
+  ];
+  const result = evaluateCases(cases);
+  assertEquals(result.length, 1);
+  assert(result[0].isEligible, '診療明細名称に「加算」を含む場合は他の手術とみなさない');
+});
+
 // --- formatResults関数のテスト (修正不要) ---
 
 const defaultSettings: OutputSettings = { outputMode: 'allCases', dateFormat: 'yyyymmdd' };

@@ -79,14 +79,16 @@ export function evaluateCases(cases: CaseData[]): CaseData[] {
         return evaluatedCase;
       }
 
-      // 6. 他の手術の実施チェック (データ区分 '50' かつ コード '15' 始まり)
+      // 6. 他の手術の実施チェック (データ区分 '50' かつ コード '15' 始まり、かつ「加算」を含まない)
       const otherSurgeryDetails = c.procedureDetails.filter((pd) => {
         // データ区分が '50' (手術関連) かつ
         // コードが '15' で始まり (手術手技料) かつ
-        // 短手３対象手術ではないものを抽出
+        // 短手３対象手術ではなく かつ
+        // 診療明細名称に「加算」を含まないものを抽出
         return pd.dataCategory === '50' &&
           pd.code.startsWith('15') &&
-          !TARGET_PROCEDURES.includes(pd.code);
+          !TARGET_PROCEDURES.includes(pd.code) &&
+          !pd.name.includes('加算'); // 診療明細名称に「加算」を含まない
       });
 
       // 上記条件を満たす「他の手術手技料」が存在すれば、対象外とする
