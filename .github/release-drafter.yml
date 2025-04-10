@@ -2,9 +2,9 @@
 # Configuration for Release Drafter: https://github.com/release-drafter/release-drafter
 
 # Name template for the release draft
-name-template: 'v$NEXT_PATCH_VERSION'
+name-template: '$RESOLVED_VERSION'
 # Tag template for the release draft
-tag-template: 'v$NEXT_PATCH_VERSION'
+tag-template: '$RESOLVED_VERSION'
 
 # Categories for Conventional Commits
 categories:
