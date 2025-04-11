@@ -42,14 +42,14 @@ jobs:
       - name: Generate Changelog with git-cliff
         uses: orhun/git-cliff-action@v3
         id: git-cliff # ステップIDを設定 (オプション)
-         with:
-           config: cliff.toml # 設定ファイルを指定
-           args: --latest # ★変更: --latest のみ指定
-         env:
-           OUTPUT: RELEASE_NOTES.md # ★変更: env.OUTPUT で出力ファイルを指定
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # リポジトリ情報取得に必要
+        with:
+          config: cliff.toml # 設定ファイルを指定
+          args: --latest
+        env:
+          OUTPUT: RELEASE_NOTES.md # ★変更: env.OUTPUT で出力ファイルを指定
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # リポジトリ情報取得に必要
 
-       # ★ 変更点なし: 生成された RELEASE_NOTES.md を使用
+      # ★ 変更点なし: 生成された RELEASE_NOTES.md を使用
       - name: Create GitHub Release and Upload Artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
