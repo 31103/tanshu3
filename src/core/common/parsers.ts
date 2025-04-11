@@ -24,7 +24,6 @@ function extractLineData(
 } | null {
   // 列数チェック (最低限必要な列数)
   if (columns.length < 24) {
-    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to insufficient columns (${columns.length} < 24).`); // 通知は parseEFFile で集約
     return null;
   }
 
@@ -47,7 +46,6 @@ function extractLineData(
     !dataId || !admission || !discharge || !dataCategory || !sequenceNumber || !actionDetailNo ||
     !procedureCode || !procedureDate
   ) {
-    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to missing required field(s).`); // 通知は parseEFFile で集約
     return null;
   }
 
@@ -57,7 +55,6 @@ function extractLineData(
     !(dateRegex.test(discharge) || discharge === '00000000') ||
     !(dateRegex.test(procedureDate) || procedureDate === '00000000')
   ) {
-    // console.warn(`[Parser Warn] Line ${lineNumber}: Skipped due to invalid date format.`); // 通知は parseEFFile で集約
     return null;
   }
   if (!numberRegex.test(sequenceNumber) || !numberRegex.test(actionDetailNo)) {
