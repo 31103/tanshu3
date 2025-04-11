@@ -7,7 +7,6 @@ on:
 
 jobs:
   # draft_release ジョブは削除
-
   build-and-release:
     # needs: draft_release は削除
     runs-on: ubuntu-latest # 実行環境
