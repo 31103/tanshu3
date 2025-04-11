@@ -38,20 +38,18 @@ jobs:
       - name: Build single HTML file
         run: deno task release:build
 
-      # ★ 追加: git-cliff をインストール
-      - name: Install git-cliff
-        run: |
-          curl -Ls https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          echo "$PWD" >> $GITHUB_PATH # Add current dir to PATH to find git-cliff
+      # ★ 変更点: orhun/git-cliff-action を使用してリリースノートを生成
+      - name: Generate Changelog with git-cliff
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff # ステップIDを設定 (オプション)
+        with:
+          config: cliff.toml # 設定ファイルを指定
+          args: -o RELEASE_NOTES.md --tag ${{ github.ref_name }} # 出力ファイルと対象タグを指定
+        env:
+          # OUTPUT: RELEASE_NOTES.md # with.args で出力ファイルを指定するため不要な場合が多い
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # リポジトリ情報取得に必要
 
-      # ★ 追加: git-cliff でリリースノートを生成
-      - name: Generate Changelog
-        id: generate_changelog
-        run: |
-          git-cliff --output RELEASE_NOTES.md ${{ github.ref_name }}
-          echo "Generated RELEASE_NOTES.md"
-
-      # ★ 変更点: gh release create を使用してリリース作成とアセットアップロード
+      # ★ 変更点なし: 生成された RELEASE_NOTES.md を使用
       - name: Create GitHub Release and Upload Artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
