@@ -1,0 +1,61 @@
+# cliff.toml
+# Configuration for git-cliff: https://github.com/orhun/git-cliff
+
+[changelog]
+# Changelog header
+header = """
+# Changelog\n
+All notable changes to this project will be documented in this file.\n
+"""
+# Changelog body template
+# Uses Conventional Commits types for grouping
+body = """
+{% if version %}\
+    ## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}(**{{ commit.scope }}**) {% endif %}{{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/31103/tanshu3/commit/{{ commit.id }}))\
+    {% endfor %}
+{% endfor %}\n
+"""
+# Remove trailing newline from the body
+trim = true
+# Changelog footer
+footer = ""
+
+[git]
+# Parse commits based on Conventional Commits specification
+conventional_commits = true
+# Filter out commits that are not conventional
+filter_unconventional = true
+# Process commits starting from the latest tag
+latest_tag_only = false
+# Sort commits by date
+sort_commits = "newest"
+# Tag pattern for version comparison
+tag_pattern = "v[0-9]*"
+# Skip tags that are not semantic versions
+skip_tags = ""
+# Ignore tags that match the given regex
+ignore_tags = ""
+
+# Define commit groups based on Conventional Commits types
+# Matches the categories from release-drafter.yml
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^test", group = "Testing" },
+  { message = "^chore", group = "Miscellaneous Tasks"},
+  { message = "^ci", group = "Continuous Integration"},
+  { message = "^build", group = "Build System"},
+  { message = "^refactor", group = "Code Refactoring"},
+  { message = "^perf", group = "Performance Improvements"},
+  { message = "^style", group = "Style"},
+  { message = "^revert", group = "Reverts"},
+  { message = "^docs", group = "Documentation" },
+  { body = ".*security", group = "Security" }, # Example: Detect security related commits
+]

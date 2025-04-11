@@ -6,28 +6,20 @@ on:
       - 'v*.*.*' # vで始まるタグがプッシュされたときに実行
 
 jobs:
-  draft_release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # to create release drafts
-      pull-requests: read # to read pull request information
-    steps:
-      - name: Draft release notes
-        uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter.yml # Use our custom config
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # draft_release ジョブは削除
 
   build-and-release:
-    needs: draft_release # Wait for the draft to be created
+    # needs: draft_release は削除
     runs-on: ubuntu-latest # 実行環境
     permissions:
-      contents: write # リリース編集・アセットアップロードのために必要
+      contents: write # リリース作成・アセットアップロードのために必要
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # オプション: チェンジログ生成のために全履歴を取得
+        with:
+          fetch-depth: 0
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -46,34 +38,27 @@ jobs:
       - name: Build single HTML file
         run: deno task release:build
 
-      - name: Check if release draft exists # ★追加: リリース存在確認ステップ
-        id: check_release
+      # ★ 追加: git-cliff をインストール
+      - name: Install git-cliff
+        run: |
+          curl -Ls https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          echo "$PWD" >> $GITHUB_PATH # Add current dir to PATH to find git-cliff
+
+      # ★ 追加: git-cliff でリリースノートを生成
+      - name: Generate Changelog
+        id: generate_changelog
+        run: |
+          git-cliff --output RELEASE_NOTES.md ${{ github.ref_name }}
+          echo "Generated RELEASE_NOTES.md"
+
+      # ★ 変更点: gh release create を使用してリリース作成とアセットアップロード
+      - name: Create GitHub Release and Upload Artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view ${{ github.ref_name }}; then
-            echo "Release draft found."
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Release draft NOT found for tag ${{ github.ref_name }}!"
-            echo "exists=false" >> $GITHUB_OUTPUT
-            # 必要に応じてここでワークフローを失敗させることも可能
-            # exit 1
-          fi
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --notes-file RELEASE_NOTES.md \
+            ./dist/tanshu3.html # アップロードするアセット
 
-      - name: Edit GitHub Release and Upload Artifact
-        if: steps.check_release.outputs.exists == 'true' # ★追加: リリースが存在する場合のみ実行
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
-        run: |
-          # リリースを公開状態にする (ドラフト解除)
-          gh release edit ${{ github.ref_name }} --draft=false
-          # ビルド成果物をアップロード
-          gh release upload ${{ github.ref_name }} ./dist/tanshu3.html
-          echo "Release ${{ github.ref_name }} published and tanshu3.html artifact uploaded."
-
-      - name: Handle missing release draft
-        if: steps.check_release.outputs.exists == 'false'
-        run: |
-          echo "::error::Release draft for tag ${{ github.ref_name }} was not found. Please check the 'draft_release' job logs and the release-drafter configuration."
-          exit 1 # ワークフローを失敗させる
+          echo "Release ${{ github.ref_name }} created and tanshu3.html artifact uploaded."
