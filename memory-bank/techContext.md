@@ -80,11 +80,11 @@ Deno 環境では、`npm install` のような明示的なインストールス�
     - トリガー: `main` ブランチへの push および pull request 作成・更新時。
     - 処理: Lint, Format チェック, テスト, ビルド確認を自動実行。
   - **CD:**
-    - 設定: `.github/workflows/release.yml`, `.github/release-drafter.yml`
+    - 設定: `.github/workflows/release.yml`, `cliff.toml`
     - トリガー: `v*.*.*` 形式のタグプッシュ。
     - 処理:
-      1. `release-drafter` を使用し、Conventional Commits 規約に基づいてリリースノートを自動生成し、ドラフトを作成。
-      2. `deno task release:build` を実行して単一HTMLファイルを生成。
-      3. 生成されたファイルを GitHub Release にアップロードし、ドラフトを公開。
+      1. `orhun/git-cliff-action@v3` を使用し、`cliff.toml` の設定と Conventional Commits 規約に基づいてリリースノートを生成 (`RELEASE_NOTES.md`)。
+      2. `deno task release:build` を実行して単一HTMLファイルを生成 (`dist/tanshu3.html`)。
+      3. `gh release create` コマンドを使用し、生成されたリリースノートとビルド成果物を含む GitHub Release を作成・公開。
 - **ステージング時チェック:**
   - Git フックは設定しない方針。

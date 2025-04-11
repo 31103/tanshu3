@@ -7,10 +7,22 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 - **短手３判定ロジック修正（加算除外）完了:** 「他の手術」判定時に診療明細名称に「加算」を含むものを除外するように修正。
 - **パーサー堅牢性向上 (Issue #2) 対応完了:** パーサーの検証ロジック強化、警告通知（仮実装）、単体テスト拡充。
 - **短手３判定ロジック修正（旧）完了:** データ区分とコードを用いた判定ロジック修正、テストコード修正、Memory Bank 更新。
+- **GitHub Actions リリースワークフロー修正完了:** `release-drafter` のタグプッシュ時の挙動の問題を解消するため、`git-cliff` と `git-cliff-action` を導入し、リリースノート生成とリリース作成プロセスを修正。
 
 ## 2. 最近の主な変更点 (Recent Changes)
 
-- **2025-04-10 (最新):**
+- **2025-04-11 (最新):**
+  - **GitHub Actions リリースワークフロー修正 (feature/fix-release-drafter-config ブランチ):**
+    - `release-drafter` がタグプッシュ時に期待通りに動作しない問題を特定 (`refs/tags/... is not supported as release target`)。
+    - リリースノート生成ツールを `release-drafter` から `git-cliff` に変更。
+    - `cliff.toml` 設定ファイルを追加し、Conventional Commits ベースのリリースノート生成ルールを定義。
+    - `.github/workflows/release.yml` を修正:
+      - `draft_release` ジョブを削除。
+      - `build-and-release` ジョブで `orhun/git-cliff-action@v3` を使用してリリースノート (`RELEASE_NOTES.md`) を生成するように変更 (`--latest` オプション使用)。
+      - `gh release create` コマンドを使用し、生成されたリリースノートとビルド成果物 (`tanshu3.html`) を含むリリースを直接作成するように変更。
+    - ワークフローの YAML 構文エラー (インデント) を修正。
+    - 修正後のワークフローが正常に完了することを確認。
+- **2025-04-10:**
   - **短手３判定ロジック修正（加算除外） (feature/fix-kasan-exclusion ブランチ):**
     - `src/core/common/evaluator.ts`: 「他の手術」の判定ロジックを修正。データ区分 '50' かつコード '15' 始まりの条件に加え、**診療明細名称に「加算」を含まない** ことを条件に追加。これにより、「水晶体嚢拡張リング使用加算」などが「他の手術」として誤判定される問題を解消。
     - `src/core/common/evaluator_test.ts`: 上記修正を確認するためのテストケースを追加。
@@ -131,14 +143,15 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
    - **[保留]** パフォーマンス最適化。
    - **[保留]** 結果ダウンロード機能の Deno 環境での動作確認。
    - **[完了] バージョン表示と自動タグ付け:** 上記「最近の主な変更点」参照。
+   - **[完了] GitHub Actions リリースワークフロー修正:** 上記「最近の主な変更点」参照。
 
 ## 4. 進行中の決定事項と考慮事項 (Active Decisions & Considerations)
 
 - **CI/CD パイプライン:** GitHub Actions を利用。
   - **CI:** `main` ブランチへの push/pull request をトリガーに、Lint/Format/Test/Build を実行 (`ci.yml`)。
-  - **CD:** タグプッシュをトリガーに、リリースノート自動生成 (`release-drafter`) とビルド成果物のリリース (`release.yml`)。
-- **コミット規約:** Conventional Commits を採用。リリースノート自動生成に利用。
-- **リリースプロセス:** タグプッシュによる自動化。`release-drafter` がリリースノートを作成し、`release.yml` がビルドと公開を行う。
+  - **CD:** タグプッシュをトリガーに、**`git-cliff` (`orhun/git-cliff-action`)** を使用してリリースノートを自動生成し、`gh release create` でビルド成果物と共にリリースを作成 (`release.yml`)。
+- **コミット規約:** Conventional Commits を採用。リリースノート自動生成 (`git-cliff`) に利用。
+- **リリースプロセス:** タグプッシュによる自動化。`git-cliff` がリリースノートを生成し、`release.yml` がビルドとリリース作成を行う。
 - **Deno 移行:** 完了。
 - **ビルド方法:** esbuild (`deno.land/x/esbuild`) を使用したバンドルプロセス (`deno task bundle`) と単一HTML生成 (`deno task release:build`) を維持。
   - **タスク定義:** `deno.jsonc` の `tasks` で主要な開発コマンド (`check`, `lint`, `fmt`, `test`, `bundle`) を定義済み。
@@ -192,4 +205,9 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
     - モンキーパッチでタイマーメソッドを置き換える
   - **`testing/mock`の制約:** Denoの`spy`関数は、Jestと異なり、`calls`プロパティが読み取り専用で、`.calls = []`でリセットできません。型エラーを回避するためには`any`キャストが必要な場合があります。
   - **テスト用サブクラス:** プライベートメソッドのテストが必要な場合は、テスト用のサブクラスを作成し、プライベートメソッドを公開するアプローチが効果的です。これにより、実装の詳細にアクセスしながらも、本番コードを変更せずにテストを行うことができます。
+- **GitHub Actions / リリースノート生成:**
+  - `release-drafter` はタグプッシュトリガーで期待通りに動作しない場合がある (`refs/tags/... is not supported as release target`)。プルリクエストベースのワークフローに適している。
+  - タグプッシュトリガーでリリースノートを生成する場合、`git-cliff` とその GitHub Action (`orhun/git-cliff-action`) が有効な代替手段となる。
+  - `git-cliff-action` を使用する際は、`--latest` オプションで直近のタグ間の差分を生成するように指示し、`env.OUTPUT` で出力ファイル名を指定するのが標準的な使い方。
+  - GitHub Release の本文には文字数制限 (125,000文字) があり、長大なリリースノートはエラー (`HTTP 422: body is too long`) を引き起こす可能性があるため、適切な範囲で生成する必要がある。
 - (既存の学びは変更なし)

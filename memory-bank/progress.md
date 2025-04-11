@@ -89,6 +89,11 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
   - **[完了]** リリースノート生成設定 (`.github/release-drafter.yml`) 作成。
   - **[完了]** `README.md` 更新。
   - **[完了]** Memory Bank 更新 (`systemPatterns.md`, `techContext.md`, `activeContext.md`, `progress.md`)。
+- **[完了] GitHub Actions リリースワークフロー修正:**
+  - `release-drafter` を `git-cliff` と `orhun/git-cliff-action` に置き換え。
+  - `cliff.toml` 設定ファイルを追加。
+  - タグプッシュ時に `git-cliff` でリリースノートを生成し、`gh release create` でリリースを作成するように `.github/workflows/release.yml` を修正。
+  - 関連するエラー（`release not found`, `body is too long`, YAML 構文エラー）を解決。
 - **リリース自動化 (旧):** (CI/CD 推進計画に統合・強化)
   - **[完了]** 単一HTML生成スクリプト (`scripts/release.ts`) 作成。
   - **[完了]** `deno.jsonc` に `release:build` タスク追加。
@@ -143,6 +148,9 @@ _このドキュメントは、プロジェクトの現在の状態、完了し�
 
 - **[2025-04-10]:** 短手３判定ロジック修正（加算除外）。「他の手術」判定時に、診療明細名称に「加算」を含むものを除外するように `evaluator.ts` を修正。関連テスト (`evaluator_test.ts`) を追加。
 - **[2025-04-08]:** 短手３判定ロジック修正（旧）。データ区分とコードを用いて「他の手術」を判定するように修正。関連テストコードも修正。パーサーの堅牢性に関する Issue #2 を作成。
+- **[2025-04-11]:** GitHub Actions リリースワークフロー修正。`release-drafter` を `git-cliff` に置き換え、関連エラーを修正。
+- **[2025-04-10]:** 短手３判定ロジック修正（加算除外）。
+- **[2025-04-08]:** 短手３判定ロジック修正（旧）。パーサー堅牢性 Issue #2 作成。
 - **[2025-04-06]:** CI/CD 推進計画 (Issue #1) 完了。CI ワークフロー実装、CD ワークフロー強化 (リリースノート自動生成)、関連ドキュメント更新。
 - **[2025-04-06]:** (旧) リリース自動化実装。単一HTML生成スクリプト、GitHub Actions ワークフロー導入。関連ドキュメント更新、バグ修正。(CI/CD 推進計画に統合)
 - **[2025-04-06]:** Deno 移行フェーズ8完了。Node.js 関連ファイル削除、Memory Bank 更新、README 更新。
