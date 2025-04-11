@@ -6,30 +6,19 @@ on:
       - 'v*.*.*' # vで始まるタグがプッシュされたときに実行
 
 jobs:
-  draft_release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # to create release drafts
-      pull-requests: read # to read pull request information
-    steps:
-      - name: Draft release notes
-        uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter.yml # Use our custom config
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  # draft_release ジョブは削除
   build-and-release:
-    needs: draft_release # Wait for the draft to be created
+    # needs: draft_release は削除
     runs-on: ubuntu-latest # 実行環境
     permissions:
-      contents: write # リリース編集・アセットアップロードのために必要
+      contents: write # リリース作成・アセットアップロードのために必要
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # オプション: チェンジログ生成のために全履歴を取得
         with:
-          fetch-depth: 0 # Fetch all history for release commands
+          fetch-depth: 0
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -48,12 +37,25 @@ jobs:
       - name: Build single HTML file
         run: deno task release:build
 
-      - name: Edit GitHub Release and Upload Artifact
+      # ★ 変更点: orhun/git-cliff-action を使用してリリースノートを生成
+      - name: Generate Changelog with git-cliff
+        uses: orhun/git-cliff-action@v3
+        id: git-cliff # ステップIDを設定 (オプション)
+        with:
+          config: cliff.toml # 設定ファイルを指定
+          args: --latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 自動的に提供されるトークン
+          OUTPUT: RELEASE_NOTES.md # ★変更: env.OUTPUT で出力ファイルを指定
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # リポジトリ情報取得に必要
+
+      # ★ 変更点なし: 生成された RELEASE_NOTES.md を使用
+      - name: Create GitHub Release and Upload Artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # リリースを公開状態にする (ドラフト解除)
-          gh release edit ${{ github.ref_name }} --draft=false
-          # ビルド成果物をアップロード
-          gh release upload ${{ github.ref_name }} ./dist/tanshu3.html
-          echo "Release ${{ github.ref_name }} published and tanshu3.html artifact uploaded."
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --notes-file RELEASE_NOTES.md \
+            ./dist/tanshu3.html # アップロードするアセット
+
+          echo "Release ${{ github.ref_name }} created and tanshu3.html artifact uploaded."
