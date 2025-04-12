@@ -18,6 +18,7 @@ _このドキュメントは、現在の作業焦点、最近の変更点、次�
 
 _(詳細な変更履歴は Git のコミットログを参照)_
 
+
 ## 3. 次のステップ (Next Steps)
 
 1. **Memory Bank 整理:**
@@ -43,6 +44,7 @@ _(詳細な変更履歴は Git のコミットログを参照)_
 - **技術スタック:** Deno, TypeScript, esbuild を中心とする。
 - **ビルド方法:** `deno task bundle` (開発用), `deno task release:build` (リリース用単一HTML)。
 - **バージョン管理:** `src/core/common/version.ts` で一元管理。`deno task release:bump` で自動更新。
+
 
 ## 5. 重要なパターンと好み (Key Patterns & Preferences)
 
