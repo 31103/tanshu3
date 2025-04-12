@@ -460,7 +460,6 @@ export function getNotificationSystem(): NotificationSystem {
     // DOMが準備できているか確認してからインスタンス化
     if (typeof document === 'undefined' || document.readyState === 'loading') {
       // DOM準備前に呼ばれた場合のエラーハンドリング（テスト環境などを考慮）
-      // console.warn('NotificationSystem accessed before DOM ready.');
       // 仮のコンテナIDで初期化するか、エラーを投げるか検討。
       // ここでは、テスト環境で document が未定義の場合を考慮し、
       // documentアクセスを避けるか、モックを期待する。

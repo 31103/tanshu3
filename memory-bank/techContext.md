@@ -5,11 +5,11 @@ _このドキュメントは、プロジェクトで使用されている技術�
 ## 1. 主要技術スタック
 
 - **言語:** TypeScript (Deno 内蔵), JavaScript (ES Modules), HTML5, CSS3
-- **ランタイム:** Deno (v2.2.7)
+- **ランタイム:** Deno (v2.2.7 以降推奨)
 - **フレームワーク/ライブラリ:** なし (Vanilla TypeScript/JavaScript)
-- **テスト:** Deno Test (Deno 内蔵), deno-dom (UI テスト用)
+- **テスト:** Deno Test (Deno 内蔵), deno-dom (UI テスト用 DOM シミュレーション)
 - **ビルド/バンドル:** esbuild (`deno.land/x/esbuild`) - `deno task bundle` 経由
-- **リリーススクリプト:** Deno (`scripts/release.ts`) - `deno task release:build` 経由
+- **リリース用単一HTML生成:** Deno スクリプト (`scripts/release.ts`) - `deno task release:build` 経由
 - **リンティング:** Deno Lint (Deno 内蔵)
 - **フォーマット:** Deno Format (Deno 内蔵)
 - **パッケージ管理:** URL Imports, Import Map (`import_map.json`)
@@ -18,73 +18,67 @@ _このドキュメントは、プロジェクトで使用されている技術�
 
 ## 2. 開発環境セットアップ
 
-1. **前提条件:** Deno (v2.2.7 以上推奨)
+1. **前提条件:** Deno (v2.2.7 以上推奨) がインストールされていること。
 2. **リポジトリクローン:** `git clone [リポジトリURL]`
-3. **依存関係:** Deno は URL インポートを使用するため、`npm install` は不要。初回実行時や `deno cache` コマンドで依存関係がダウンロード・キャッシュされる (`deno.lock` ファイル生成)。
-4. **開発モード:** `deno task dev` (現在は `bundle` と同じ動作)。
-5. **手動バンドル:** `deno task bundle` (内部で `deno run scripts/build.ts` を実行)。
-6. **テスト実行:** `deno task test`。
-7. **リンティング/フォーマット:**
-   - `deno task lint`
-   - `deno task fmt`
+3. **依存関係:** Deno は URL インポートを使用するため、`npm install` のようなステップは不要。初回実行時や `deno cache` コマンドで依存関係がダウンロード・キャッシュされ、`deno.lock` ファイルが生成・更新される。
+4. **開発モードでのバンドル:** `deno task bundle` (内部で `deno run --allow-read --allow-write scripts/build.ts` を実行し、`public/js/main.js` を生成)。
+5. **テスト実行:** `deno task test` (内部で `deno test --allow-read` を実行)。
+6. **リンティング:** `deno task lint` (内部で `deno lint` を実行)。
+7. **フォーマット:** `deno task fmt` (内部で `deno fmt` を実行)。
 8. **アプリケーション実行:** `public/index.html` を Web ブラウザで開く (`file://` プロトコル)。
-9. **コマンド実行環境に関する注意:** システム情報 (`environment_details`) ではデフォルトシェルが `cmd.exe` と表示される場合がありますが、実際のコマンド実行環境は **PowerShell (`pwsh.exe`)** である可能性が高いです。`execute_command` ツールを使用する際は、PowerShell 構文でコマンドを記述してください (例: `rmdir /s /q` ではなく `Remove-Item -Recurse -Force`)。
+9. **リリース用ビルド:** `deno task release:build` (内部で `deno run --allow-read --allow-write scripts/release.ts` を実行し、`dist/tanshu3.html` を生成)。
+10. **バージョン更新:** `deno task release:bump [patch|minor|major]` (内部で `deno run --allow-read --allow-write --allow-run=git scripts/bump-version.ts` を実行)。
+11. **VS Code 設定:** Deno 拡張機能をインストールし、有効化することを推奨 (`.vscode/settings.json` で設定済み)。
 
 ## 3. 技術的な制約
 
 - **実行環境:** Windows PC 上のモダンブラウザ (Chrome, Edge 推奨) で `file://` プロトコルで動作する必要がある。HTTP サーバー環境は想定しない。
-- **状態管理:** アプリケーションはステートレスである必要がある。状態を永続化する仕組み（LocalStorage なども含む）は原則として使用しない。
+- **状態管理:** アプリケーションはステートレスである必要がある。状態を永続化する仕組みは原則として使用しない。
 - **外部通信:** サーバーサイド API や外部データベースへのアクセスは行わない。すべての処理はブラウザ内で完結する。
-- **依存関係:** ランタイムの外部ライブラリ依存を極力避ける。コアロジックは Vanilla TypeScript/JavaScript で実装する。Deno 標準ライブラリ (`deno.land/std`) を活用する。
-- **ビルド:** 最終的な JavaScript コードは **esbuild** を使用して `public/js/` ディレクトリにバンドルされる必要がある (`deno task bundle` で実行)。
+- **依存関係:** ランタイムの外部ライブラリ依存を極力避ける。コアロジックは Vanilla TypeScript/JavaScript で実装する。Deno 標準ライブラリ (`deno.land/std`) や信頼できるサードパーティモジュール (`deno.land/x`) を活用する。
+- **ビルド:** 最終的な JavaScript コードは **esbuild** を使用して `public/js/` ディレクトリにバンドルされる必要がある (`deno task bundle` で実行)。リリース時には単一 HTML ファイル (`dist/tanshu3.html`) が生成される (`deno task release:build` で実行)。
 
 ## 4. 外部依存関係 (開発時)
 
-Deno 環境では、`npm install` のような明示的なインストールステップは不要。コード内で直接 URL を指定してインポートする。バージョン管理と利便性のため `import_map.json` を使用。
+`import_map.json` で管理。
 
 - **Deno Standard Library (`deno.land/std`):**
-  - `assert`: テスト用アサーション関数。
-  - `testing/mock`: `spy` などのテスト用モック関数。
-  - `path`: ファイルパス操作用ユーティリティ (例: `scripts/build.ts` で使用)。
+  - `assert`: テスト用アサーション。
+  - `testing/mock`: テスト用モック (`spy` など)。
+  - `path`: ファイルパス操作。
+  - `semver`: バージョン管理スクリプト用。
 - **Deno Third Party Modules (`deno.land/x`):**
-  - `deno-dom`: Deno Test での DOM 環境シミュレーション用。
-  - `esbuild`: JavaScript/TypeScript のバンドル用 (`scripts/build.ts` で使用)。
+  - `deno-dom`: UI テスト用 DOM シミュレーション。
+  - `esbuild`: JavaScript/TypeScript バンドル。
+  - `cliffy`: バージョン管理スクリプトの CLI 引数解析用。
 
 ## 5. ツール利用パターン
 
 - **リンティング (Deno Lint):**
-  - 設定ファイル: `deno.jsonc` の `lint` セクション
-  - 実行: `deno lint` (または `deno task lint`)
-  - 規約: Deno 推奨ルール (`tags: ["recommended"]`) をベースに、必要に応じて `rules.exclude` で調整。
+  - 設定: `deno.jsonc` の `lint` セクション。
+  - 実行: `deno task lint`。
+  - 規約: Deno 推奨ルール + プロジェクト固有ルール。
 - **フォーマット (Deno Format):**
-  - 設定ファイル: `deno.jsonc` の `fmt` セクション
-  - 実行: `deno fmt` (または `deno task fmt`)
-  - 規約: `deno.jsonc` の `fmt.options` で設定 (行長100, インデント2スペース, シングルクォート, proseWrap: preserve など)。VS Code と連携済み。
+  - 設定: `deno.jsonc` の `fmt` セクション。
+  - 実行: `deno task fmt`。
+  - 規約: プロジェクト固有設定 (行長100, インデント2スペースなど)。VS Code と連携済み。
 - **テスト (Deno Test):**
-  - 設定ファイル: `deno.jsonc` の `test` セクション (今後設定追加の可能性あり)
-  - 実行: `deno test --allow-read [対象ファイル/ディレクトリ]` (または `deno task test`)。
-  - 対象: `*_test.ts` または `*.test.ts` という命名規則のファイル。
-  - 環境: Deno ネイティブ環境。DOM が必要なテストは `deno-dom` を使用。
-  - カバレッジ: `deno coverage coverage/` でレポート生成可能 (要 `--coverage` フラグ付きテスト実行)。
+  - 設定: `deno.jsonc` の `test` セクション (権限設定など)。
+  - 実行: `deno task test`。
+  - 対象: `*_test.ts` または `*.test.ts` ファイル。
+  - 環境: Deno ネイティブ環境。UI テストは `deno-dom` を使用。
+  - カバレッジ: `deno task test --coverage=coverage/cov_profile && deno coverage coverage/cov_profile` で生成。
 - **ビルド/バンドル (esbuild):**
-  - 設定: `scripts/build.ts` 内で esbuild API を使用して設定。`deno.jsonc` の `tasks.bundle` で実行。
-  - 実行: `deno task bundle`
-  - 出力: `public/js/main.js` および `public/js/main.js.map`。`file://` 環境での実行を維持。
+  - 設定: `scripts/build.ts` 内。
+  - 実行: `deno task bundle`。
+  - 出力: `public/js/main.js` および `.map` ファイル。
 - **単一HTML生成 (リリース用):**
-  - 設定: `scripts/release.ts` で実装。`deno.jsonc` の `tasks.release:build` で実行。
-  - 実行: `deno task release:build`
+  - 設定: `scripts/release.ts` 内。
+  - 実行: `deno task release:build`。
   - 出力: `dist/tanshu3.html`。
 - **CI/CD (GitHub Actions):**
-  - **CI:**
-    - 設定: `.github/workflows/ci.yml`
-    - トリガー: `main` ブランチへの push および pull request 作成・更新時。
-    - 処理: Lint, Format チェック, テスト, ビルド確認を自動実行。
-  - **CD:**
-    - 設定: `.github/workflows/release.yml`, `cliff.toml`
-    - トリガー: `v*.*.*` 形式のタグプッシュ。
-    - 処理:
-      1. `orhun/git-cliff-action@v3` を使用し、`cliff.toml` の設定と Conventional Commits 規約に基づいてリリースノートを生成 (`RELEASE_NOTES.md`)。
-      2. `deno task release:build` を実行して単一HTMLファイルを生成 (`dist/tanshu3.html`)。
-      3. `gh release create` コマンドを使用し、生成されたリリースノートとビルド成果物を含む GitHub Release を作成・公開。
-- **ステージング時チェック:**
-  - Git フックは設定しない方針。
+  - **CI (`.github/workflows/ci.yml`):** `main` への push/PR 時に Lint/Format/Test/Build を実行。
+  - **CD (`.github/workflows/release.yml`, `.github/release-drafter.yml`):** `v*.*.*` タグプッシュ時にリリースノート自動生成と成果物 (`tanshu3.html`) の GitHub Release への公開。
+- **バージョン管理スクリプト (`scripts/bump-version.ts`):**
+  - 実行: `deno task release:bump [patch|minor|major]`。
+  - 処理: `src/core/common/version.ts` 更新、Git コミット、Git タグ付け、Git プッシュ。
