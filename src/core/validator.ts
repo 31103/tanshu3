@@ -60,7 +60,7 @@ export function readFileAsText(file: File): Promise<string> {
     };
 
     try {
-      reader.readAsText(file);
+      reader.readAsText(file, 'Shift_JIS'); // Specify Shift_JIS encoding
     } catch {
       reject(new Error('Read error: Cannot start reading file'));
     }
